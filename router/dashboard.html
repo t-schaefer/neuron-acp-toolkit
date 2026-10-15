@@ -191,6 +191,18 @@
     .route-cols { gap: 28px; }
     details.more { margin-top: 14px; } .find { margin: 4px 0; }
     #fleetQuick { gap: 8px; } .qdev { padding: 4px 11px; }
+    .step .num, h2 .num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%;
+        background: #0d6efd; color: #fff; font-size: 0.78rem; font-weight: 700; margin-right: 6px; }
+    #srcBrowse > summary { cursor: pointer; color: #0d6efd; font-size: 0.88rem; margin-top: 4px; }
+    body.mode-manual #srcBrowse > summary { display: none; }
+    .pcard { border: 1px solid #dee2e6; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; background: #fff; }
+    .pcard:hover { border-color: #0d6efd; } .pcard.sel { border: 2px solid #0d6efd; background: #f3f8ff; }
+    .pcard .pc-h { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+    .pcard .pc-src { font-size: 1.25rem; font-weight: 700; margin: 4px 0 2px 0; }
+    .pcard .pc-sub { color: #6c757d; font-size: 0.85rem; }
+    .pcard .pc-st { margin-top: 8px; font-size: 0.85rem; font-weight: 600; }
+    .pcard.idle { cursor: default; background: #f8f9fa; } .pcard.idle .pc-src { color: #adb5bd; font-size: 1rem; }
+    .emptyhint { color: #6c757d; padding: 14px 4px; }
     .hidden { display: none !important; }
     .drop-hint { position: fixed; inset: 0; background: rgba(13,110,253,0.12); border: 3px dashed #0d6efd; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 600; color: #0d6efd; z-index: 50; }
     body.filedrag .drop-hint { display: flex; }
@@ -256,28 +268,29 @@
             <span class="small"><b>View</b></span>
             <div class="field-toggle viewtog" id="viewToggle" title="ACTIVE = what the device runs now · PRESET = active + your staged changes (what TAKE will activate)"><button data-v="active">Active</button><button data-v="preset">Preset</button></div>
             <span id="presetBar" class="presetbar off"></span>
-            <span class="small muted" id="namesInfo"></span>
-            <span style="margin-left:auto" class="small muted">Offline file:</span>
-            <select id="cbfSelect" title=".cbf export as data source instead of the live read (illustration/offline)"></select>
+            <span style="margin-left:auto" class="small muted" id="namesInfo"></span>
+            <select id="cbfSelect" title="Data source: the live ACP2 read, or an offline .cbf export"></select>
         </div>
-        <h3 style="margin-top:4px" title="Case per side Main/Backup: A = IP, B = SDI, - = unused. Colour = check status, orange dot = preset staged.">Video paths</h3>
+        <h3 class="step" id="stepPaths" title="Case per side Main/Backup: A = IP, B = SDI, - = unused. Colour = check status, orange dot = preset staged.">Video paths</h3>
         <div class="chgrid" id="chGrid"></div>
     </div>
 
     <div class="layout">
         <section class="card area-src">
-            <h2>Sources <span class="muted small">(Identifier)</span>
-                <input type="text" id="srcFilter" placeholder="Filter: number, CC1, TX04 …" style="margin-left:auto; width:200px"></h2>
+            <h2 id="srcHead">Sources</h2>
             <div id="srcProposal"></div>
-            <div class="chips" id="srcCats"></div>
-            <div class="grid" id="srcGrid"></div>
-            <h3 id="srcChTitle">Channels</h3>
-            <div class="chs" id="srcChs"></div>
-            <div id="usedBy" class="small muted" style="margin-top:8px"></div>
+            <details id="srcBrowse" open><summary>Browse all sources</summary>
+                <input type="text" id="srcFilter" placeholder="Filter: number, CC1, TX04 …" style="width:100%; margin:8px 0">
+                <div class="chips" id="srcCats"></div>
+                <div class="grid" id="srcGrid"></div>
+                <h3 id="srcChTitle">Channels</h3>
+                <div class="chs" id="srcChs"></div>
+                <div id="usedBy" class="small muted" style="margin-top:8px"></div>
+            </details>
         </section>
 
         <section class="card area-dst">
-            <h2 id="dstHead">Destinations <span class="muted small">(Input Main / Backup)</span>
+            <h2 id="dstHead"><span id="dstHeadText">Destinations</span>
                 <input type="text" id="dstFilter" placeholder="Filter: number, CC1, TX04 …" style="margin-left:auto; width:200px"></h2>
             <div id="dstManual">
                 <div class="chips" id="dstCats"></div>
@@ -302,7 +315,7 @@
                     <div class="pending"><table><tbody id="pendBody"></tbody></table></div>
                 </div>
                 <div>
-                    <h3 style="margin-top:0">Activate</h3>
+                    <h3 style="margin-top:0" class="step" id="activateHead">Activate</h3>
                     <div id="applyLive">
                         <button class="btn take" id="takeBtn" style="width:100%" disabled title="Activate the preset: write it into the device over ACP2">TAKE (Preset → Active)</button>
                         <button class="btn" id="undoTakeBtn" style="width:100%; margin-top:6px" title="Restore the active values from before the last Take">Undo last Take (restore previous Active)</button>
@@ -598,7 +611,7 @@ function loadModel(j) {
     if (!R.selCh || !R.byN[R.selCh]) R.selCh = null;
     const i = R.info;
     $("routerTitle").innerHTML = `Router · <b>${esc(R.device || i.file)}</b> <span class="muted small">${esc(i.device)} · ${esc(i.ip)} · FW ${esc(i.version)} · ${i.source === "live" ? `live ACP2 read ${esc(ago(i.read_at))}` : "offline .cbf"}</span>`
-        + (i.source === "live" ? ` <button class="btn" id="checkAllBtn" title="Fresh read-only check of the selected channel">Check selected channel live</button>` : "");
+;
     const n = R.names;
     $("namesInfo").innerHTML = !(n.lists || []).length ? "no SRC/DST list – names missing" : n.device ? `names: ${esc(n.lists.join(", "))} → <b>${esc(n.device)}</b>` : `<span class="warn">device not found in ${esc(n.lists.join(", "))}</span>`;
     $("applyLive").classList.toggle("hidden", i.source !== "live"); $("applyCbf").classList.toggle("hidden", i.source === "live");
@@ -634,13 +647,20 @@ function renderMode() {
     for (const b of $("modeToggle").children) b.classList.toggle("active", b.dataset.m === R.mode);
     $("dstManual").classList.toggle("hidden", R.mode !== "manual"); $("dstAssisted").classList.toggle("hidden", R.mode === "manual");
     document.querySelector(".layout").classList.toggle("assisted", R.mode === "assisted");
+    document.body.classList.toggle("mode-manual", R.mode === "manual");
+    const A = R.mode === "assisted", num = k => A ? `<span class="num">${k}</span>` : "";
+    $("stepPaths").innerHTML = `${num(1)}Video path${A ? "" : "s"}`;
+    $("activateHead").innerHTML = `${num(5)}Activate`;
+    $("srcHead").innerHTML = `${num(2)}${A ? "Source" : "Sources"}`;
+    $("dstHeadText").innerHTML = `${num(3)}${A ? "Signal flow" : "Destinations"}`;
+    if (!A) $("srcBrowse").open = true; else if (R.browseOpen !== undefined) $("srcBrowse").open = R.browseOpen; else $("srcBrowse").open = false;
     for (const b of $("viewToggle").children) b.classList.toggle("active", b.dataset.v === R.view);
     document.body.classList.toggle("view-active", R.view === "active");
     const np = R.pending.size;
     $("presetBar").className = "presetbar " + (np ? "on" : "off");
     $("presetBar").innerHTML = np ? `PRESET: <b>${np}</b> change(s) staged – ${R.view === "active" ? "showing ACTIVE (device now)" : "showing PRESET (after TAKE)"}` : "Preset = Active (nothing staged)";
     $("dstFilter").classList.toggle("hidden", R.mode !== "manual");
-    $("dstHead").firstChild.textContent = R.mode === "manual" ? "Destinations " : "Assigned destinations ";
+
 }
 function caseCls(c) { return c === "A" ? "case-A" : c === "B" ? "case-B" : "case--"; }
 function renderChGrid() {
@@ -701,14 +721,17 @@ function proposalFor(n) {
 function selectProposed(p) { if (!p || !p.bk) return; R.srcCat = p.cat; R.selSrcBlock = p.bk; R.selSrcId = null; }
 function renderProposal() {
     const box = $("srcProposal");
-    if (R.mode !== "assisted" || !R.selCh) { box.innerHTML = ""; return; }
+    if (R.mode !== "assisted") { box.innerHTML = ""; return; }
+    if (!R.selCh) { box.innerHTML = `<div class="emptyhint">Pick a video path in <b>1</b> above.</div>`; return; }
     const c = R.byN[R.selCh];
-    box.innerHTML = `<div class="prop2"><b>Proposed for ${c.letter}</b>` + proposalFor(R.selCh).map(p => {
-        const st = !p.case ? `<span class="muted">unused</span>` : p.match ? `<span class="st-ok">✓</span>` : `<span class="st-wn" title="now: ${esc(p.current)}">⚠</span>`;
-        return `<div class="pr ${p.bk && p.bk === R.selSrcBlock ? "sel" : ""}" ${p.bk ? `data-pbk="${esc(p.bk)}" data-pcat="${p.cat}"` : ""} title="${esc((p.why || "") + (p.case ? `\nnow: ${p.current}` : ""))}">
-            <span class="side">${p.field === "main" ? "Main" : "Backup"}</span><span class="case ${caseCls(p.case)}">${p.case || "-"}</span>
-            <span>${p.case ? `<b>${esc(p.label)}</b> <span class="muted">${esc(p.name)}</span>` : '<span class="muted">Pattern</span>'}</span><span style="margin-left:auto">${st}</span></div>`;
-    }).join("") + `</div>`;
+    box.innerHTML = proposalFor(R.selCh).map(p => {
+        const head = `<div class="pc-h">${p.field === "main" ? "Main" : "Backup"} <span class="case ${caseCls(p.case)}">${p.case ? "Case " + p.case : "-"}</span></div>`;
+        if (!p.case) return `<div class="pcard idle">${head}<div class="pc-src">not used</div><div class="pc-sub">video input is Pattern – nothing to route</div></div>`;
+        const sub = p.case === "A" ? `${esc(p.name)}` : `De-Emb ${esc(p.bk.split(":")[1])}${p.name ? " · " + esc(p.name) : ""}`;
+        const st = p.match ? `<div class="pc-st st-ok">✓ routed</div>` : `<div class="pc-st st-wn">⚠ now ${esc(p.current)}</div>`;
+        return `<div class="pcard ${p.bk === R.selSrcBlock ? "sel" : ""}" data-pbk="${esc(p.bk)}" data-pcat="${p.cat}" title="${esc(p.why)}">${head}
+            <div class="pc-src">${esc(p.label)}</div><div class="pc-sub">${sub}</div>${st}</div>`;
+    }).join("");
 }
 function renderSrcGrid() {
     const hit = new Set(); const db = R.dstBlocks.get(R.selDstBlock);
@@ -933,18 +956,18 @@ function renderRouteLeft() {
         renderFill(); return;
     }
     const n = R.selCh;
-    if (!n) { $("routeLeft").innerHTML = `<h2>Route</h2><p class="muted">Pick a video path.</p>`; return; }
+    if (!n) { $("routeLeft").innerHTML = `<h2><span class="num">4</span>Add to Preset</h2><p class="muted">Pick a video path in 1.</p>`; return; }
     const a = R.analysis[n] || {}, c = R.byN[n];
     const ch = plannedFor(n, R.withDelay);
     const routes = ch.filter(x => x.field !== "delay").length, delays = ch.filter(x => x.field === "delay").length;
     const ck = channelKeys(n), chPreset = [...R.pending.keys()].filter(k => ck.has(k)).length;
     const cnt = { ok: 0, warn: 0, fail: 0 }; (a.findings || []).forEach(f => { if (cnt[f.level] !== undefined) cnt[f.level]++; });
-    $("routeLeft").innerHTML = `<h2>Route · ${c.letter}</h2>
+    $("routeLeft").innerHTML = `<h2><span class="num">4</span>Add to Preset · ${c.letter}</h2>
         <div class="sumchips"><span class="sumchip ok">✓ ${cnt.ok}</span>${cnt.warn ? `<span class="sumchip warn">⚠ ${cnt.warn}</span>` : ""}${cnt.fail ? `<span class="sumchip fail">✗ ${cnt.fail}</span>` : ""}
             <span class="presetbar ${chPreset ? "on" : "off"}">Preset ${chPreset}${chPreset ? ' <button class="btn" id="clearChPreset" style="padding:0 6px">clear</button>' : ""}</span></div>
         <details class="more" ${cnt.fail || cnt.warn ? "" : ""}><summary>Check details</summary>${(a.findings || []).map(f => `<div class="find"><span class="lv lv-${f.level}">${f.level.toUpperCase()}</span>${esc(f.text)}</div>`).join("")}</details>
         <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-            <button class="btn primary" id="planBtn" ${ch.length ? "" : "disabled"}>Stage template (${routes} routes${R.withDelay ? `, ${delays} delays` : ""})</button>
+            <button class="btn primary" id="planBtn" ${ch.length ? "" : "disabled"}>Add to Preset (${routes} routes${R.withDelay ? `, ${delays} delays` : ""})</button>
             <label><input type="checkbox" id="withDelay" ${R.withDelay ? "checked" : ""}> delays</label>
             <button class="btn" id="delayResetBtn" title="Delay targets back to 19.5 / 18.0 ms">reset delays</button>
             ${R.info?.source === "live" ? `<button class="btn" id="checkBtn" title="Fresh read-only ACP2 + NMOS check of this channel">Check live</button>` : ""}
@@ -997,6 +1020,7 @@ $("chGrid").onclick = e => { const t = e.target.closest("[data-n]"); if (!t) ret
     if (R.mode === "manual") { const c = R.byN[R.selCh]; R.dstCat = "emb"; R.selDstBlock = blockKey("emb", c.letter); }
     else { const pr = proposalFor(R.selCh); selectProposed(pr.find(p => p.field === "main" && p.bk) || pr.find(p => p.bk)); }
     renderAll(); };
+$("srcBrowse").querySelector("summary").addEventListener("click", () => { if (R.mode === "assisted") R.browseOpen = !$("srcBrowse").open; });
 $("srcProposal").onclick = e => { const r = e.target.closest("[data-pbk]"); if (!r) return; selectProposed({ bk: r.dataset.pbk, cat: r.dataset.pcat }); renderAll(); };
 $("srcCats").onclick = e => { const c = e.target.closest("[data-cat]"); if (c) { R.srcCat = c.dataset.cat; renderAll(); } };
 $("dstCats").onclick = e => { const c = e.target.closest("[data-cat]"); if (c) { R.dstCat = c.dataset.cat; renderAll(); } };
