@@ -1,0 +1,162 @@
+[
+  {
+    "ip": "10.12.80.16",
+    "name": "IPG01A",
+    "tag": "DCR",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.17",
+    "name": "IPG01B",
+    "tag": "DCR",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.18",
+    "name": "IPG02A",
+    "tag": "DCB",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.19",
+    "name": "IPG02B",
+    "tag": "DCB",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.20",
+    "name": "IPG03A",
+    "tag": "DCR",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": true
+  },
+  {
+    "ip": "10.12.80.21",
+    "name": "IPG03B",
+    "tag": "DCR",
+    "type": "CONVERT IP",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.22",
+    "name": "IPG04A",
+    "tag": "DCB",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.23",
+    "name": "IPG04B",
+    "tag": "DCB",
+    "type": "CONVERT IP",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.151",
+    "name": "IPG07A",
+    "tag": "DCR",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.152",
+    "name": "IPG07B",
+    "tag": "DCR",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.153",
+    "name": "IPG08A",
+    "tag": "DCB",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.154",
+    "name": "IPG08B",
+    "tag": "DCB",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.155",
+    "name": "IPG09A",
+    "tag": "DCR",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.156",
+    "name": "IPG09B",
+    "tag": "DCR",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.157",
+    "name": "IPG10A",
+    "tag": "DCB",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.158",
+    "name": "IPG10B",
+    "tag": "DCB",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.159",
+    "name": "IPG11A",
+    "tag": "DCR",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.160",
+    "name": "IPG11B",
+    "tag": "DCR",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.161",
+    "name": "IPG12A",
+    "tag": "DCB",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  },
+  {
+    "ip": "10.12.80.162",
+    "name": "IPG12B",
+    "tag": "DCB",
+    "type": "BRIDGE",
+    "write": false,
+    "poll": false
+  }
+]
