@@ -13,10 +13,21 @@ logged in - open it from any browser on the network.
 It talks to the devices over ACP2 (AN2 on TCP 2072, Axon's protocol) and,
 for the channel check, NMOS IS-04/IS-05 (GET only).
 
-IT IS READ-ONLY. The ACP2 client (../acp2/client.py) has no set-property code
-path. TAKE and "Undo last Take" are shown but the service refuses them and
-sends nothing, until writing is implemented, tested on a unit that is not on
-air, and enabled per device.
+WRITING (TAKE / UNDO) IS OFF BY DEFAULT. Reading uses ../acp2/client.py, which
+cannot write. Only TAKE and "Undo last Take" write, through ../acp2/writer.py
+and router/take.py, and only to a device with "write": true in devices.json:
+- only `Input Main` / `Input Backup` (u32) and `Delay` / `Stream Delay` (float);
+  source ids must exist on the device, delays within the device MIN..MAX,
+  no duplicates, at most 200 changes per take
+- every target is read fresh first; if the device no longer matches the
+  "Active" the preset was built on, the take is refused and NOTHING is written
+- those fresh values are saved as the undo state (live/<device>.undo.json)
+  before the first write; each value is read back right after writing and
+  the first failure stops the take
+- every take/undo is logged to service.log and live/<device>.takes.jsonl
+- no red/blue failover for writes (a retry on blue would overwrite the undo state)
+"Undo last Take" restores exactly the saved values, the same way. Test the
+first write on a unit that is not on air.
 
 Files
 -----
@@ -135,7 +146,8 @@ python3 router/tests/check_channel_live.py IPG03A 32             LIVE, read-only
 
 Unverified / not done
 ---------------------
-- Take / Undo (ACP2 set property) - not implemented, refused by the service.
+- Take / Undo: implemented and tested against the simulated device only
+  (tests/test_offline.py TakeTests). Not yet run against a real Neuron.
 - Red/blue failover: code path exists, no blue addresses known.
 - Only IPG03A has been read live so far. Other units: release them in
   devices.json one at a time and read them once.

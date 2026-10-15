@@ -46,7 +46,8 @@ class LiveModel(CbfModel):
             groups.setdefault(parent, Group(parent)).objects[rec["label"]] = Obj(
                 name=rec["label"], value=_value_str(rec), start=0, end=0,
                 writable=bool((rec.get("access") or 0) & 2), enums=enums,
-                minimum=str(rec.get("min", "")), maximum=str(rec.get("max", "")), oid=rec["id"])
+                minimum=str(rec.get("min", "")), maximum=str(rec.get("max", "")), oid=rec["id"],
+                ntype=rec.get("number_type", -1) if rec.get("object_type") == 3 else -1)
         self.text = ""
         self.devices = []
         ident = groups.get(("IDENTITY",))

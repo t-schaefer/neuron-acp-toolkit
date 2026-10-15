@@ -13,7 +13,8 @@ Tree (slot 1, the "card"), a small copy of the real BRIDGE menu:
 
 Channels: A1 Stream 1/Stream 1 (A/A), A2 SDI 02/Stream 2 (B/A, mixed),
           A3 SDI 03/SDI 03 (B/B), A4 Stream 4/Pattern (A/-).
-Every set-property request is recorded in `FakeNeuron.set_attempts` and refused.
+Every set-property request is recorded in `FakeNeuron.set_attempts`. It is refused
+unless the fake was created with allow_write=True (then number values are set).
 """
 import socketserver
 import struct
@@ -155,7 +156,8 @@ def encode_object(o):
 
 
 class FakeNeuron:
-    def __init__(self, **kw):
+    def __init__(self, allow_write=False, **kw):
+        self.allow_write = allow_write
         self.slots = {0: build_board_tree(), 1: build_card_tree(**kw)}
         self.set_attempts = []
         self.requests = 0
@@ -219,7 +221,13 @@ class FakeNeuron:
         o = tree.objs.get(obj_id)
         if func == 3:
             self.set_attempts.append((slot, obj_id, pid, payload[12:]))
-            return err(4)
+            if not self.allow_write or o is None or o["type"] != 3 or not (o["access"] & 2) or pid != 8:
+                return err(4 if o is not None else 1)
+            vtype = payload[13]
+            raw = payload[16:20]
+            o["value"] = round(struct.unpack(">f", raw)[0], 6) if vtype == 8 else struct.unpack(">I", raw)[0]
+            head = bytes([1, amtid, 3, 8]) + struct.pack(">II", obj_id, idx)
+            return self.frame(2, slot, 0, 4, head + _value_prop(8, o))
         if o is None:
             return err(1)
         head = bytes([1, amtid, func, pid]) + struct.pack(">II", obj_id, idx)
