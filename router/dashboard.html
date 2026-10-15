@@ -904,8 +904,10 @@ function sideFlow(n, field, side, a, both) {
     const curTxt = cur.length === 1 ? (+cur[0]).toFixed(1) : cur.length ? "mixed" : "?";
     const atTarget = cur.length === 1 && Math.abs(cur[0] - want) < 1e-6;
     const dly = (what) => `<div class="node dly ${pd.length ? "pre" : ""}" title="${esc(what)} – Active ${curTxt} ms${pd.length ? ", Preset " + pd.join("/") + " ms" : ""}">
-        ⏱ <b>Delay</b> <span class="sub">${curTxt} →</span><input type="number" step="0.1" min="0" max="${DELAY_MAX[side.case]}" value="${want}" data-delay="${delayId(side)}"> ms
-        ${pd.length ? `<span class="st st-pre">→ Preset: ${esc(pd.join("/"))} ms</span>` : atTarget ? '<span class="st st-ok">✓ at target</span>' : `<span class="st st-wn">⚠ template sets ${want} ms</span>`}
+        <div style="width:100%">⏱ <b>${side.case === "A" ? "Stream Delay" : "Delay"}</b></div>
+        <div style="width:100%">Device now: <b style="font-size:1rem">${curTxt} ms</b></div>
+        <div style="width:100%; display:flex; align-items:center; gap:6px">Target: <input type="number" step="0.1" min="0" max="${DELAY_MAX[side.case]}" value="${want}" data-delay="${delayId(side)}" title="what the template sets – not the device value"> ms
+        ${pd.length ? `<span class="st st-pre">→ Preset: ${esc(pd.join("/"))} ms</span>` : atTarget ? '<span class="st st-ok">✓ device is at target</span>' : `<span class="st st-wn">⚠ differs – template would set ${want} ms</span>`}</div>
         ${side.case === "A" ? streamEffect(side.stream) : ""}</div>`;
     if (side.case === "A") {
         const sn = streamName("in", side.stream);
