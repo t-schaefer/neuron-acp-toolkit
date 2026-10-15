@@ -163,6 +163,34 @@
     .prop2 { border: 1px solid #9ec5fe; background: #f3f8ff; border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; }
     .prop2 .pr { display: flex; align-items: center; gap: 8px; padding: 4px 4px; border-radius: 4px; cursor: pointer; font-size: 0.86rem; }
     .prop2 .pr:hover, .prop2 .pr.sel { background: #dbe9ff; } .prop2 .pr .side { width: 52px; font-weight: 700; border: none; padding: 0; }
+
+    /* ---- spacing ("entzerrt"): more room, same content ---- */
+    body { padding: 20px 28px; line-height: 1.45; }
+    header { margin-bottom: 16px; padding-bottom: 14px; }
+    .card { padding: 16px 18px; margin-bottom: 16px; border-radius: 10px; }
+    .card h2 { margin-bottom: 12px; } .card h3 { margin: 16px 0 8px 0; }
+    .layout { gap: 16px; }
+    .toolbar { gap: 12px; margin-bottom: 12px; }
+    .chips { gap: 8px; margin-bottom: 12px; }
+    .chgrid { gap: 6px; }
+    .chtile { padding: 6px 4px; border-radius: 6px; }
+    .grid { gap: 6px; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); max-height: 300px; }
+    .blk { padding: 6px 3px; border-radius: 6px; }
+    .chs { gap: 5px; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
+    .ch { padding: 4px 0; border-radius: 6px; }
+    .prop2 { padding: 10px 12px; margin-bottom: 14px; border-radius: 8px; }
+    .prop2 .pr { padding: 7px 6px; margin-top: 2px; }
+    .flows2 { gap: 20px; }
+    .sidecol h4 { margin-bottom: 10px; }
+    .node { padding: 9px 12px; border-radius: 8px; }
+    .down { padding: 4px 0 4px 18px; }
+    .branch { margin-top: 6px; padding-left: 14px; }
+    .sinkcard { padding: 12px; margin-bottom: 12px; border-radius: 8px; }
+    th, td { padding: 6px 10px; }
+    .sumchips { gap: 10px; margin: 8px 0 12px 0; }
+    .route-cols { gap: 28px; }
+    details.more { margin-top: 14px; } .find { margin: 4px 0; }
+    #fleetQuick { gap: 8px; } .qdev { padding: 4px 11px; }
     .hidden { display: none !important; }
     .drop-hint { position: fixed; inset: 0; background: rgba(13,110,253,0.12); border: 3px dashed #0d6efd; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 600; color: #0d6efd; z-index: 50; }
     body.filedrag .drop-hint { display: flex; }
