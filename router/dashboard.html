@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neuron Audio Router</title>
+<style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 16px 20px; background: #f8f9fa; color: #212529; font-size: 14px; }
+    header { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid #dee2e6; }
+    header .title { font-size: 1.3rem; font-weight: 600; margin-right: 6px; }
+    .muted { color: #6c757d; }
+    .small { font-size: 0.8rem; }
+    .mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+    select, input[type=text], input[type=number] { padding: 4px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.85rem; background: #fff; }
+    input[type=number] { width: 64px; }
+    .btn { padding: 4px 10px; border: 1px solid #ced4da; border-radius: 4px; background: #fff; cursor: pointer; font-size: 0.82rem; color: #212529; }
+    .btn:hover { border-color: #0d6efd; background: #e7f1ff; }
+    .btn.primary { background: #0d6efd; border-color: #0d6efd; color: #fff; font-weight: 600; }
+    .btn.primary:hover { background: #0b5ed7; }
+    .btn.danger { color: #dc3545; border-color: #dc3545; }
+    .btn:disabled { opacity: 0.45; cursor: default; background: #fff; border-color: #ced4da; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; color: #fff; font-weight: 600; }
+    .badge.success { background: #198754; } .badge.warning { background: #ffc107; color: #212529; }
+    .badge.danger { background: #dc3545; } .badge.secondary { background: #6c757d; } .badge.primary { background: #0d6efd; }
+    .alert { background: #f8d7da; color: #842029; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; white-space: pre-wrap; }
+    .note { background: #fff3cd; color: #664d03; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
+    .ok { background: #d1e7dd; color: #0f5132; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
+
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px minmax(0, 1fr); gap: 12px; align-items: start; }
+    @media (max-width: 1200px) { .layout { grid-template-columns: 1fr; } }
+    .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; min-width: 0; }
+    .card h2 { font-size: 1rem; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px; }
+    .card h3 { font-size: 0.85rem; margin: 12px 0 6px 0; color: #495057; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .chip { padding: 4px 12px; border: 1px solid #adb5bd; border-radius: 999px; background: #fff; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: #212529; }
+    .chip:hover { border-color: #0d6efd; background: #e7f1ff; }
+    .chip.active { background: #0d6efd; border-color: #0d6efd; color: #fff; }
+    .chip .n { font-weight: 400; opacity: 0.75; margin-left: 4px; }
+    .chip .pend { margin-left: 6px; padding: 0 6px; border-radius: 8px; background: #fd7e14; color: #fff; font-size: 0.7rem; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 3px; max-height: 260px; overflow-y: auto; padding: 2px; }
+    .grid.wide { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); }
+    .blk { position: relative; border: 1px solid #ced4da; border-radius: 4px; background: #fff; padding: 3px 2px; font-size: 0.76rem; text-align: center; cursor: pointer; user-select: none; line-height: 1.15; }
+    .blk:hover { border-color: #0d6efd; }
+    .blk.on { background: #e8f5ee; border-color: #8fd1ae; }
+    .blk.off { background: #f1f3f5; color: #adb5bd; }
+    .blk.sel { background: #0d6efd; border-color: #0d6efd; color: #fff; }
+    .blk.hit { box-shadow: inset 0 0 0 2px #6f42c1; }
+    .blk.dragover { background: #cfe2ff; border-color: #0d6efd; }
+    .blk .dot { position: absolute; top: 2px; right: 2px; width: 6px; height: 6px; border-radius: 50%; background: #fd7e14; }
+    .blk .sub { display: block; font-size: 0.62rem; opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.74rem; color: #6c757d; margin: 6px 0 0 2px; }
+    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; border: 1px solid #ced4da; vertical-align: -1px; margin-right: 4px; }
+
+    .chs { display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 3px; }
+    .ch { border: 1px solid #ced4da; border-radius: 4px; background: #fff; text-align: center; padding: 4px 0; font-size: 0.78rem; cursor: grab; user-select: none; }
+    .ch:hover { border-color: #0d6efd; background: #e7f1ff; }
+    .ch.sel { background: #6f42c1; border-color: #6f42c1; color: #fff; }
+    .ch.used { border-bottom: 3px solid #198754; }
+    .chs > span, .grid > span { grid-column: 1 / -1; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { padding: 3px 6px; text-align: left; border-bottom: 1px solid #e9ecef; white-space: nowrap; }
+    thead th { position: sticky; top: 0; background: #fff; border-bottom: 2px solid #dee2e6; z-index: 1; }
+    .slots { max-height: 520px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: 6px; }
+    .slots tr { cursor: pointer; }
+    .slots tr:hover td { background: #f1f6ff; }
+    .slots tr.sel td { background: #cfe2ff; }
+    .slots tr.dragover td { background: #cfe2ff; }
+    .slots td.chg { background: #fff0e0; }
+    .slots tr.hit td.v { color: #6f42c1; font-weight: 600; }
+    .slots td.v { max-width: 210px; overflow: hidden; text-overflow: ellipsis; }
+    .old { text-decoration: line-through; color: #adb5bd; margin-right: 4px; }
+    .warn { color: #b02a37; }
+
+    .field-toggle { display: inline-flex; border: 1px solid #ced4da; border-radius: 6px; overflow: hidden; }
+    .field-toggle button { border: none; background: #fff; padding: 4px 10px; font-size: 0.8rem; cursor: pointer; border-right: 1px solid #ced4da; }
+    .field-toggle button:last-child { border-right: none; }
+    .field-toggle button.active { background: #0d6efd; color: #fff; font-weight: 600; }
+
+    .fill { display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: center; font-size: 0.82rem; }
+    .fill .what { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pending { max-height: 360px; overflow-y: auto; }
+    .pending td { font-size: 0.76rem; }
+    .x { border: none; background: none; color: #adb5bd; cursor: pointer; font-size: 0.95rem; padding: 0 2px; }
+    .x:hover { color: #dc3545; }
+    .help { font-size: 0.78rem; color: #6c757d; line-height: 1.45; margin: 0; padding-left: 16px; }
+    .drop-hint { position: fixed; inset: 0; background: rgba(13,110,253,0.12); border: 3px dashed #0d6efd; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 600; color: #0d6efd; z-index: 50; }
+    body.filedrag .drop-hint { display: flex; }
+    .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+    <span class="title">Neuron Audio Router</span>
+    <select id="fileSelect" title="Exports in the cbf/ folder next to server.py"></select>
+    <label class="btn" title="Upload a .cbf export (or drop it anywhere on the page)">Upload .cbf<input type="file" id="fileInput" accept=".cbf" class="hidden"></label>
+    <span id="deviceInfo" class="small muted"></span>
+    <span style="margin-left:auto" class="badge secondary" title="Live access needs ACP2 (TCP 2072). There is no protocol documentation, so this tool only edits .cbf files.">Offline · .cbf only</span>
+</header>
+
+<div id="msg"></div>
+
+<div class="layout" id="app">
+    <!-- SOURCES -->
+    <section class="card">
+        <h2>Sources <span class="muted small">(Identifier)</span>
+            <input type="text" id="srcFilter" placeholder="Filter: number or stream name" style="margin-left:auto; width:200px"></h2>
+        <div class="chips" id="srcCats"></div>
+        <div class="grid" id="srcGrid"></div>
+        <div class="legend"><span><i style="background:#e8f5ee;border-color:#8fd1ae"></i>enabled</span><span><i style="background:#f1f3f5"></i>disabled / off</span><span><i style="box-shadow:inset 0 0 0 2px #6f42c1"></i>feeds selected destination</span></div>
+        <h3 id="srcChTitle">Channels</h3>
+        <div class="chs" id="srcChs"></div>
+        <div id="usedBy" class="small muted" style="margin-top:8px"></div>
+    </section>
+
+    <!-- ROUTE / PENDING -->
+    <section class="card">
+        <h2>Route</h2>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span class="small">Write to</span>
+            <div class="field-toggle" id="fieldToggle">
+                <button data-f="main">Main</button><button data-f="backup">Backup</button><button data-f="both">Both</button>
+            </div>
+        </div>
+        <div class="fill">
+            <span class="muted">Fill</span><span class="what" id="fillDst">select a destination block</span>
+            <span class="muted">from ch</span><span><input type="number" id="fillDstStart" min="1" value="1"></span>
+            <span class="muted">with</span><span class="what" id="fillSrc">select a source block</span>
+            <span class="muted">from ch</span><span><input type="number" id="fillSrcStart" min="1" value="1"></span>
+            <span class="muted">count</span><span><input type="number" id="fillCount" min="1" value="16"> <span class="small muted" id="fillMax"></span></span>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:6px;">
+            <button class="btn primary" id="fillBtn" disabled>Fill &rarr;</button>
+            <button class="btn" id="undoBtn" disabled title="Undo the last action (Ctrl/Cmd+Z)">Undo</button>
+        </div>
+        <ul class="help" style="margin-top:10px">
+            <li>Drag a <b>source block</b> onto a <b>destination block</b> to fill 1:1.</li>
+            <li>Drag a <b>source channel</b> onto a <b>slot</b>, or click a slot and then click source channels. The slot cursor moves down after each click, so you can shuffle quickly.</li>
+            <li>Nothing touches a device. Export writes a new .cbf to <span class="mono">exports/</span>.</li>
+        </ul>
+
+        <h3>Pending changes <span class="badge primary" id="pendCount">0</span>
+            <button class="btn danger" id="discardBtn" style="margin-left:auto" disabled>Discard all</button></h3>
+        <div id="pendWarn"></div>
+        <div class="pending"><table><tbody id="pendBody"></tbody></table></div>
+        <div style="margin-top:10px">
+            <input type="text" id="exportNote" placeholder="Note for the change log (optional)" style="width:100%; margin-bottom:6px">
+            <button class="btn primary" id="exportBtn" style="width:100%" disabled>Export patched .cbf</button>
+        </div>
+        <div id="exportResult" style="margin-top:8px"></div>
+    </section>
+
+    <!-- DESTINATIONS -->
+    <section class="card">
+        <h2>Destinations <span class="muted small">(Input Main / Backup)</span>
+            <input type="text" id="dstFilter" placeholder="Filter: number or stream name" style="margin-left:auto; width:200px"></h2>
+        <div class="chips" id="dstCats"></div>
+        <div class="grid" id="dstGrid"></div>
+        <div class="legend"><span><i style="background:#e8f5ee;border-color:#8fd1ae"></i>enabled</span><span><i style="background:#f1f3f5"></i>disabled / off</span><span><i style="background:#fd7e14;border-radius:50%;border:none;width:7px;height:7px"></i>pending change</span><span><i style="box-shadow:inset 0 0 0 2px #6f42c1"></i>uses selected source</span></div>
+        <h3 id="dstTitle">Slots</h3>
+        <div class="slots"><table>
+            <thead><tr><th>Ch</th><th>Main</th><th>Backup</th><th></th></tr></thead>
+            <tbody id="slotBody"></tbody>
+        </table></div>
+    </section>
+</div>
+<div class="drop-hint">Drop .cbf to upload</div>
+
+<script>
+"use strict";
+const SRC_CATS = [
+    { id: "ipin16", label: "IP In 16ch", kind: "ipin", test: b => b <= 128 },
+    { id: "ipin64", label: "IP In 64ch", kind: "ipin", test: b => b > 128 },
+    { id: "deemb", label: "De-Embedder", kind: "deemb" },
+    { id: "bank", label: "Delay Banks", kind: "bank" },
+    { id: "madiin", label: "MADI In", kind: "madiin" },
+];
+const DST_CATS = [
+    { id: "emb", label: "Embedder", kind: "emb" },
+    { id: "ipout", label: "IP Out", kind: "ipout" },
+    { id: "bank", label: "Delay Banks", kind: "bank" },
+    { id: "madiout", label: "MADI Out", kind: "madiout" },
+];
+const SHORT = { ipin: "IP", deemb: "DE", bank: "BK", madiin: "MA" };
+
+const S = {
+    file: null, info: null,
+    src: new Map(), srcIdx: new Map(), srcBlocks: new Map(), // blockKey -> {kind, block, label, name, enabled, ids:[]}
+    dst: new Map(), dstBlocks: new Map(),
+    pending: new Map(),   // "key|field" -> value
+    history: [],          // stack of [ [pkey, prevValueOrUndefined], ... ]
+    field: "main",
+    srcCat: "ipin16", dstCat: "emb",
+    selSrcBlock: null, selDstBlock: null, selSrcId: null, selSlot: null,
+    exported: null,
+};
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const blockKey = (kind, block) => `${kind}:${block}`;
+function msg(text, cls = "alert") { $("msg").innerHTML = text ? `<div class="${cls}">${esc(text)}</div>` : ""; }
+function store(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function recall(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+async function api(path, opts) {
+    const r = await fetch(path, opts);
+    const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+    if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+    return j;
+}
+function rows(table) { return table.rows.map(r => Object.fromEntries(table.cols.map((c, i) => [c, r[i]]))); }
+function blockSort(a, b) { return typeof a.block === "number" ? a.block - b.block : String(a.block).localeCompare(String(b.block), undefined, { numeric: true }); }
+
+function srcShort(id) {
+    if (id === 0 || id == null) return "—";
+    const s = S.src.get(id);
+    if (!s) return `#${id}?`;
+    return `${SHORT[s.kind]} ${s.block}.${s.ch}`;
+}
+function srcLong(id) {
+    const s = S.src.get(id);
+    if (!s) return id === 0 ? "nothing (0)" : `unknown id ${id}`;
+    let t = `${s.block_label} ch ${s.ch}`;
+    if (s.name) t += ` · ${s.name}`;
+    if (s.kind === "bank" && s.delay != null) t += ` · ${s.delay.toFixed(1)} ms`;
+    return `${t}  [id ${id}]`;
+}
+function dstLabel(key) { const d = S.dst.get(key); return d ? `${d.block_label} ch ${d.ch}` : key; }
+const value = (key, field) => { const p = S.pending.get(`${key}|${field}`); return p !== undefined ? p : S.dst.get(key)[field]; };
+const isChanged = (key, field) => S.pending.has(`${key}|${field}`);
+
+// ---------- loading ----------
+async function loadFiles(select) {
+    const j = await api("/api/files");
+    const sel = $("fileSelect");
+    sel.innerHTML = `<option value="">— choose a .cbf (${j.files.length}) —</option>` +
+        j.files.map(f => `<option value="${esc(f.name)}">${esc(f.name)}  ·  ${f.modified.replace("T", " ")}</option>`).join("");
+    const want = select || recall("nar.file");
+    if (want && j.files.some(f => f.name === want)) { sel.value = want; await loadModel(want); }
+    else if (!j.files.length) msg(`No .cbf files yet. Upload one, or copy exports into ${j.cbf_dir}`, "note");
+}
+
+async function loadModel(name) {
+    if (!name) return;
+    msg("Loading " + name + " …", "note");
+    const j = await api("/api/model?file=" + encodeURIComponent(name));
+    S.file = name; S.info = j.info; store("nar.file", name);
+    S.src.clear(); S.srcIdx.clear(); S.srcBlocks.clear(); S.dst.clear(); S.dstBlocks.clear();
+    for (const s of rows(j.sources)) {
+        S.src.set(s.id, s);
+        S.srcIdx.set(`${s.kind}:${s.block}:${s.ch}`, s.id);
+        const bk = blockKey(s.kind, s.block);
+        if (!S.srcBlocks.has(bk)) S.srcBlocks.set(bk, { kind: s.kind, block: s.block, label: s.block_label, name: s.name, enabled: s.enabled, delay: s.delay, ids: [] });
+        S.srcBlocks.get(bk).ids.push(s.id);
+    }
+    for (const d of rows(j.destinations)) {
+        S.dst.set(d.key, d);
+        const bk = blockKey(d.kind, d.block);
+        if (!S.dstBlocks.has(bk)) S.dstBlocks.set(bk, { kind: d.kind, block: d.block, label: d.block_label, name: d.name, enabled: d.enabled, delay: d.delay, keys: [] });
+        S.dstBlocks.get(bk).keys.push(d.key);
+    }
+    for (const b of S.srcBlocks.values()) b.ids.sort((a, c) => S.src.get(a).ch - S.src.get(c).ch);
+    for (const b of S.dstBlocks.values()) b.keys.sort((a, c) => S.dst.get(a).ch - S.dst.get(c).ch);
+    // restore unsent work for this exact file
+    S.pending = new Map((recall("nar.pending." + name) || []).filter(([k]) => S.dst.has(k.split("|")[0])));
+    S.history = []; S.exported = null;
+    S.selSrcBlock = S.selDstBlock = S.selSrcId = S.selSlot = null;
+    const i = j.info;
+    $("deviceInfo").innerHTML = `<b>${esc(i.device)}</b> · <span class="mono">${esc(i.ip)}</span> · FW ${esc(i.version)} · ${i.sources} sources · ${i.destinations} destinations`;
+    msg(S.pending.size ? `Restored ${S.pending.size} unsent change(s) for this file from your last session.` : "", "note");
+    renderAll();
+}
+
+async function upload(file) {
+    if (!file) return;
+    if (!/\.cbf$/i.test(file.name)) { msg("Only .cbf files can be uploaded."); return; }
+    try {
+        const j = await api("/api/upload", { method: "POST", headers: { "X-File-Name": encodeURIComponent(file.name) }, body: file });
+        await loadFiles(j.name);
+    } catch (e) { msg("Upload failed: " + e.message); }
+}
+
+// ---------- editing ----------
+function setValues(list) { // list of [key, field("main"|"backup"), value]
+    const undo = [];
+    for (const [key, field, v] of list) {
+        const pk = `${key}|${field}`;
+        undo.push([pk, S.pending.get(pk)]);
+        if (S.dst.get(key)[field] === v) S.pending.delete(pk); else S.pending.set(pk, v);
+    }
+    if (undo.length) S.history.push(undo);
+    persist();
+}
+function fields() { return S.field === "both" ? ["main", "backup"] : [S.field]; }
+function assign(key, srcId) { setValues(fields().map(f => [key, f, srcId])); }
+function undo() {
+    const u = S.history.pop(); if (!u) return;
+    for (const [pk, prev] of u.reverse()) prev === undefined ? S.pending.delete(pk) : S.pending.set(pk, prev);
+    persist(); renderAll();
+}
+function persist() { S.exported = null; store("nar.pending." + S.file, S.pending.size ? [...S.pending] : null); }
+
+function fillPlan() {
+    const db = S.dstBlocks.get(S.selDstBlock), sb = S.srcBlocks.get(S.selSrcBlock);
+    if (!db || !sb) return null;
+    const ds = +$("fillDstStart").value || 1, ss = +$("fillSrcStart").value || 1;
+    const max = Math.max(0, Math.min(db.keys.length - ds + 1, sb.ids.length - ss + 1));
+    const n = Math.min(+$("fillCount").value || 0, max);
+    const plan = [];
+    for (let i = 0; i < n; i++) plan.push([db.keys[ds - 1 + i], sb.ids[ss - 1 + i]]);
+    return { plan, max };
+}
+function doFill(dstBk, srcBk) {
+    if (dstBk) S.selDstBlock = dstBk;
+    if (srcBk) S.selSrcBlock = srcBk;
+    const fp = fillPlan(); if (!fp || !fp.plan.length) return;
+    setValues(fp.plan.flatMap(([k, id]) => fields().map(f => [k, f, id])));
+    renderAll();
+}
+
+// ---------- rendering ----------
+function renderAll() { renderCats(); renderSrcGrid(); renderSrcChs(); renderDstGrid(); renderSlots(); renderFill(); renderPending(); renderField(); }
+
+function renderField() {
+    for (const b of $("fieldToggle").children) b.classList.toggle("active", b.dataset.f === S.field);
+}
+
+function catBlocks(cats, catId, blocks) {
+    const c = cats.find(c => c.id === catId);
+    return [...blocks.values()].filter(b => b.kind === c.kind && (!c.test || c.test(b.block))).sort(blockSort);
+}
+function renderCats() {
+    const pendBlocks = new Map();
+    for (const pk of S.pending.keys()) { const d = S.dst.get(pk.split("|")[0]); pendBlocks.set(d.kind, (pendBlocks.get(d.kind) || 0) + 1); }
+    $("srcCats").innerHTML = SRC_CATS.map(c => {
+        const n = catBlocks(SRC_CATS, c.id, S.srcBlocks).length;
+        return n ? `<button class="chip ${c.id === S.srcCat ? "active" : ""}" data-cat="${c.id}">${c.label}<span class="n">${n}</span></button>` : "";
+    }).join("");
+    $("dstCats").innerHTML = DST_CATS.map(c => {
+        const n = catBlocks(DST_CATS, c.id, S.dstBlocks).length, p = pendBlocks.get(c.kind);
+        return n ? `<button class="chip ${c.id === S.dstCat ? "active" : ""}" data-cat="${c.id}">${c.label}<span class="n">${n}</span>${p ? `<span class="pend">${p}</span>` : ""}</button>` : "";
+    }).join("");
+}
+function matches(b, f) {
+    if (!f) return true;
+    f = f.toLowerCase();
+    return String(b.block).toLowerCase() === f || (b.name || "").toLowerCase().includes(f) || b.label.toLowerCase().includes(f);
+}
+function blockTitle(b) {
+    let t = b.label + (b.name ? `\n${b.name}` : "") + (b.enabled ? "" : "\n(disabled / off)");
+    if (b.kind === "bank" && b.delay != null) t += `\nDelay ${b.delay.toFixed(3)} ms`;
+    return t;
+}
+function blockSub(b) {
+    if (b.kind === "bank") return b.delay ? b.delay.toFixed(1) : "";
+    if (b.kind === "emb") return (b.name || "").split(" / ")[0];
+    return b.name || "";
+}
+function renderSrcGrid() {
+    // source blocks that feed the selected destination block get a purple ring
+    const hit = new Set();
+    const db = S.dstBlocks.get(S.selDstBlock);
+    if (db) for (const k of db.keys) for (const f of ["main", "backup"]) { const s = S.src.get(value(k, f)); if (s) hit.add(blockKey(s.kind, s.block)); }
+    const f = $("srcFilter").value.trim();
+    const list = catBlocks(SRC_CATS, S.srcCat, S.srcBlocks).filter(b => matches(b, f));
+    $("srcGrid").className = "grid" + (S.srcCat === "deemb" ? "" : "");
+    $("srcGrid").innerHTML = list.map(b => {
+        const bk = blockKey(b.kind, b.block);
+        return `<div class="blk ${bk === S.selSrcBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""}" draggable="true" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}">${esc(b.block)}<span class="sub">${esc(blockSub(b))}</span></div>`;
+    }).join("") || `<span class="small muted">no match</span>`;
+}
+function renderSrcChs() {
+    const b = S.srcBlocks.get(S.selSrcBlock);
+    if (!b) { $("srcChTitle").textContent = "Channels"; $("srcChs").innerHTML = `<span class="small muted">Select a source block.</span>`; $("usedBy").innerHTML = ""; return; }
+    const used = usedIds();
+    $("srcChTitle").innerHTML = `${esc(b.label)} ${b.name ? `<span class="muted">· ${esc(b.name)}</span>` : ""} ${b.enabled ? "" : `<span class="badge secondary">disabled</span>`}`;
+    $("srcChs").innerHTML = b.ids.map(id => {
+        const s = S.src.get(id);
+        return `<div class="ch ${id === S.selSrcId ? "sel" : ""} ${used.has(id) ? "used" : ""}" draggable="true" data-id="${id}" title="${esc(srcLong(id))}${used.has(id) ? "\nrouted somewhere" : ""}">${s.ch}</div>`;
+    }).join("");
+    renderUsedBy();
+}
+function usedIds() {
+    const u = new Set();
+    for (const k of S.dst.keys()) { u.add(value(k, "main")); u.add(value(k, "backup")); }
+    return u;
+}
+function renderUsedBy() {
+    const id = S.selSrcId;
+    if (id == null) { $("usedBy").innerHTML = "Click a channel to see where it is routed."; return; }
+    const hits = [];
+    for (const k of S.dst.keys()) {
+        const m = value(k, "main") === id, bk = value(k, "backup") === id;
+        if (m || bk) hits.push(`${dstLabel(k)} (${m && bk ? "main+backup" : m ? "main" : "backup"})`);
+    }
+    $("usedBy").innerHTML = `<b>${esc(srcLong(id))}</b><br>` + (hits.length ? "→ " + hits.map(esc).join(", ") : "not routed anywhere");
+}
+function renderDstGrid() {
+    const hit = new Set();
+    const sb = S.srcBlocks.get(S.selSrcBlock);
+    if (sb) { const ids = new Set(sb.ids); for (const k of S.dst.keys()) if (ids.has(value(k, "main")) || ids.has(value(k, "backup"))) { const d = S.dst.get(k); hit.add(blockKey(d.kind, d.block)); } }
+    const pend = new Set([...S.pending.keys()].map(pk => { const d = S.dst.get(pk.split("|")[0]); return blockKey(d.kind, d.block); }));
+    const f = $("dstFilter").value.trim();
+    const list = catBlocks(DST_CATS, S.dstCat, S.dstBlocks).filter(b => matches(b, f));
+    $("dstGrid").className = "grid" + (S.dstCat === "emb" ? " wide" : "");
+    $("dstGrid").innerHTML = list.map(b => {
+        const bk = blockKey(b.kind, b.block);
+        return `<div class="blk ${bk === S.selDstBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""}" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}">${pend.has(bk) ? `<span class="dot"></span>` : ""}${esc(b.block)}<span class="sub">${esc(blockSub(b))}</span></div>`;
+    }).join("") || `<span class="small muted">no match</span>`;
+}
+function renderSlots() {
+    const b = S.dstBlocks.get(S.selDstBlock);
+    if (!b) { $("dstTitle").textContent = "Slots"; $("slotBody").innerHTML = `<tr><td colspan="4" class="muted small">Select a destination block.</td></tr>`; return; }
+    let extra = b.kind === "ipout" && S.dst.get(b.keys[0]).channels ? ` · ${S.dst.get(b.keys[0]).channels} ch configured` : "";
+    if (b.kind === "bank" && b.delay != null) extra = ` · Delay ${b.delay.toFixed(3)} ms`;
+    $("dstTitle").innerHTML = `${esc(b.label)} ${b.name ? `<span class="muted">· ${esc(b.name)}</span>` : ""}<span class="muted small">${esc(extra)}</span> ${b.enabled ? "" : `<span class="badge danger" title="Routing into a disabled stream is usually a wrong target (see docs/lessons-learned.md)">disabled</span>`}`;
+    const selIds = new Set(S.srcBlocks.get(S.selSrcBlock)?.ids || []);
+    $("slotBody").innerHTML = b.keys.map(k => {
+        const d = S.dst.get(k);
+        const cell = f => {
+            const v = value(k, f), ch = isChanged(k, f);
+            return `<td class="v ${ch ? "chg" : ""}" title="${esc(srcLong(v))}${ch ? "\nwas: " + esc(srcLong(d[f])) : ""}">${ch ? `<span class="old">${esc(srcShort(d[f]))}</span>` : ""}${esc(srcShort(v))}</td>`;
+        };
+        const hit = selIds.has(value(k, "main")) || selIds.has(value(k, "backup"));
+        const diff = value(k, "main") !== value(k, "backup");
+        return `<tr data-key="${esc(k)}" class="${k === S.selSlot ? "sel" : ""} ${hit ? "hit" : ""}"><td>${d.ch}</td>${cell("main")}${cell("backup")}<td class="small ${diff ? "warn" : "muted"}" title="${diff ? "Main and Backup point at different sources" : ""}">${diff ? "M≠B" : ""}</td></tr>`;
+    }).join("");
+}
+function renderFill() {
+    const db = S.dstBlocks.get(S.selDstBlock), sb = S.srcBlocks.get(S.selSrcBlock);
+    $("fillDst").textContent = db ? db.label + (db.name ? ` · ${db.name}` : "") : "select a destination block";
+    $("fillSrc").textContent = sb ? sb.label + (sb.name ? ` · ${sb.name}` : "") : "select a source block";
+    const fp = fillPlan();
+    $("fillMax").textContent = fp ? `max ${fp.max}` : "";
+    $("fillBtn").disabled = !fp || !fp.plan.length;
+    $("undoBtn").disabled = !S.history.length;
+}
+function warningsFor(key, srcId) {
+    const w = [], d = S.dst.get(key), s = S.src.get(srcId);
+    if (!d.enabled) w.push(d.kind === "emb" ? "embedder off" : "destination stream disabled");
+    if (s && !s.enabled) w.push("source disabled");
+    if (!s && srcId !== 0) w.push("unknown source");
+    return w;
+}
+function renderPending() {
+    const items = [...S.pending.entries()].map(([pk, v]) => { const [key, field] = pk.split("|"); return { key, field, v }; });
+    const order = k => { const d = S.dst.get(k); return [DST_CATS.findIndex(c => c.kind === d.kind), typeof d.block === "number" ? d.block : String(d.block), d.ch]; };
+    items.sort((a, b) => { const x = order(a.key), y = order(b.key); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; return a.field < b.field ? 1 : -1; });
+    $("pendCount").textContent = items.length;
+    $("discardBtn").disabled = $("exportBtn").disabled = !items.length;
+    let nWarn = 0;
+    $("pendBody").innerHTML = items.map(({ key, field, v }) => {
+        const w = warningsFor(key, v); if (w.length) nWarn++;
+        return `<tr><td title="${esc(dstLabel(key))}">${esc(dstLabel(key))}</td><td class="muted">${field === "main" ? "M" : "B"}</td>
+            <td><span class="old">${esc(srcShort(S.dst.get(key)[field]))}</span>${esc(srcShort(v))}${w.length ? ` <span class="warn" title="${esc(w.join(", "))}">⚠</span>` : ""}</td>
+            <td><button class="x" data-pk="${esc(key + "|" + field)}" title="Revert this change">×</button></td></tr>`;
+    }).join("") || `<tr><td class="muted small">No changes yet.</td></tr>`;
+    $("pendWarn").innerHTML = nWarn ? `<div class="note">${nWarn} change(s) marked ⚠. Hover for the reason, check before exporting.</div>` : "";
+}
+
+// ---------- events ----------
+$("fileSelect").onchange = e => loadModel(e.target.value).catch(err => msg(err.message));
+$("fileInput").onchange = e => upload(e.target.files[0]);
+$("srcCats").onclick = e => { const c = e.target.closest("[data-cat]"); if (c) { S.srcCat = c.dataset.cat; renderAll(); } };
+$("dstCats").onclick = e => { const c = e.target.closest("[data-cat]"); if (c) { S.dstCat = c.dataset.cat; renderAll(); } };
+$("srcFilter").oninput = renderSrcGrid;
+$("dstFilter").oninput = renderDstGrid;
+$("fieldToggle").onclick = e => { const b = e.target.closest("[data-f]"); if (b) { S.field = b.dataset.f; store("nar.field", S.field); renderField(); } };
+for (const id of ["fillDstStart", "fillSrcStart", "fillCount"]) $(id).oninput = renderFill;
+
+$("srcGrid").onclick = e => {
+    const b = e.target.closest("[data-bk]"); if (!b) return;
+    S.selSrcBlock = b.dataset.bk; S.selSrcId = null; $("fillSrcStart").value = 1;
+    renderAll();
+};
+$("dstGrid").onclick = e => {
+    const b = e.target.closest("[data-bk]"); if (!b) return;
+    S.selDstBlock = b.dataset.bk; S.selSlot = null; $("fillDstStart").value = 1;
+    $("fillCount").value = S.dstBlocks.get(S.selDstBlock).keys.length;
+    renderAll();
+};
+$("srcChs").onclick = e => {
+    const c = e.target.closest("[data-id]"); if (!c) return;
+    const id = +c.dataset.id;
+    S.selSrcId = id;
+    if (S.selSlot) { // shuffle mode: assign and advance the slot cursor
+        assign(S.selSlot, id);
+        const keys = S.dstBlocks.get(S.selDstBlock).keys, i = keys.indexOf(S.selSlot);
+        S.selSlot = keys[i + 1] || null;
+    }
+    renderAll();
+};
+$("slotBody").onclick = e => {
+    const r = e.target.closest("[data-key]"); if (!r) return;
+    S.selSlot = S.selSlot === r.dataset.key ? null : r.dataset.key;
+    const s = S.src.get(value(r.dataset.key, S.field === "backup" ? "backup" : "main"));
+    if (s && S.selSlot) { S.selSrcBlock = blockKey(s.kind, s.block); S.selSrcId = s.id; S.srcCat = SRC_CATS.find(c => c.kind === s.kind && (!c.test || c.test(s.block))).id; }
+    renderAll();
+};
+$("fillBtn").onclick = () => doFill();
+$("undoBtn").onclick = undo;
+$("discardBtn").onclick = () => { if (confirm(`Discard all ${S.pending.size} pending changes?`)) { S.pending.clear(); S.history = []; persist(); renderAll(); } };
+$("pendBody").onclick = e => { const x = e.target.closest("[data-pk]"); if (!x) return; const pk = x.dataset.pk; S.history.push([[pk, S.pending.get(pk)]]); S.pending.delete(pk); persist(); renderAll(); };
+document.addEventListener("keydown", e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "z" && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); undo(); }
+    if (e.key === "Escape") { S.selSlot = null; renderSlots(); }
+});
+
+// drag & drop: source block -> destination block (fill), source channel -> slot
+let drag = null;
+document.addEventListener("dragstart", e => {
+    const ch = e.target.closest?.(".ch[data-id]"), blk = e.target.closest?.("#srcGrid [data-bk]");
+    drag = ch ? { type: "ch", id: +ch.dataset.id } : blk ? { type: "blk", bk: blk.dataset.bk } : null;
+    if (drag) e.dataTransfer.setData("text/plain", JSON.stringify(drag));
+});
+document.addEventListener("dragend", () => { drag = null; document.querySelectorAll(".dragover").forEach(x => x.classList.remove("dragover")); });
+function dropTarget(e) {
+    if (!drag) return null;
+    return drag.type === "blk" ? e.target.closest?.("#dstGrid [data-bk]") : e.target.closest?.("#slotBody [data-key]");
+}
+document.addEventListener("dragover", e => {
+    const t = dropTarget(e);
+    document.querySelectorAll(".dragover").forEach(x => x !== t && x.classList.remove("dragover"));
+    if (t) { e.preventDefault(); t.classList.add("dragover"); }
+    else if (!drag && e.dataTransfer.types.includes("Files")) { e.preventDefault(); document.body.classList.add("filedrag"); }
+});
+document.addEventListener("dragleave", e => { if (!e.relatedTarget) document.body.classList.remove("filedrag"); });
+document.addEventListener("drop", e => {
+    document.body.classList.remove("filedrag");
+    const t = dropTarget(e);
+    if (t) {
+        e.preventDefault();
+        if (drag.type === "blk") { $("fillDstStart").value = 1; $("fillSrcStart").value = 1; $("fillCount").value = 999; doFill(t.dataset.bk, drag.bk); $("fillCount").value = S.dstBlocks.get(t.dataset.bk).keys.length; renderFill(); }
+        else { assign(t.dataset.key, drag.id); S.selSrcId = drag.id; renderAll(); }
+    } else if (e.dataTransfer.files.length) { e.preventDefault(); upload(e.dataTransfer.files[0]); }
+    drag = null;
+});
+
+$("exportBtn").onclick = async () => {
+    const changes = [...S.pending.entries()].map(([pk, v]) => { const [key, field] = pk.split("|"); return { key, field, value: v }; });
+    const warn = changes.filter(c => warningsFor(c.key, c.value).length).length;
+    if (!confirm(`Write ${changes.length} change(s) into a NEW copy of ${S.file}?` + (warn ? `\n\n${warn} change(s) carry a ⚠ warning.` : "") + "\n\nThe original file is not modified."))
+        return;
+    $("exportBtn").disabled = true;
+    try {
+        const r = await api("/api/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ file: S.file, changes, note: $("exportNote").value }) });
+        $("exportResult").innerHTML = `<div class="ok">Exported <b>${esc(r.export_file)}</b> with ${r.changes.length} change(s), Object_Count and read-back verified.<br>
+            <a href="/api/download?file=${encodeURIComponent(r.export_file)}">Download .cbf</a> · change log saved next to it in exports/.<br>
+            Pending changes stay here, so the next export again contains everything relative to the original.</div>`;
+    } catch (e) {
+        $("exportResult").innerHTML = `<div class="alert">Export failed, nothing written:\n${esc(e.message)}</div>`;
+    } finally { $("exportBtn").disabled = !S.pending.size; }
+};
+
+S.field = recall("nar.field") || "main";
+renderField();
+loadFiles().catch(e => msg("Server not reachable: " + e.message));
+</script>
+</body>
+</html>

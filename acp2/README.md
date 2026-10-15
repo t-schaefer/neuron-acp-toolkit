@@ -33,6 +33,17 @@ to a production broadcast chain. That's a worse failure mode than saying
    Python, in which case we may not need to reimplement the wire protocol
    at all).
 
+## Observed on IPG03A (10.12.80.20, FW 7.0.3), 2026-10-15, read-only probes
+
+- TCP 2072 open, which is very likely ACP2. Nothing was sent there.
+- UDP 2071 (ACP1, per the "AxonNet objects and ACP rev 1.3" PDF + AxonNet SDK
+  1.0): one `getObject(Root)` request to slots 0 and 1, **no reply**. The Neuron
+  does not answer ACP1. ACP1 could not address the Neuron tree anyway (1-byte
+  object IDs, at most 256 per group, against about 39,000 objects).
+- HTTP 80 redirects to HTTPS, and HTTPS `/` returns 500 (nginx).
+- No ACP2 documentation is available (confirmed by the user). Until that
+  changes, `router/` works on `.cbf` files only.
+
 ## What's already here
 
 `client.py` sketches the *shape* a client like this usually takes —

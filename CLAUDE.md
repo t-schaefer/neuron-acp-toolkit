@@ -49,6 +49,9 @@ Don't repeat that class of mistake.
   (tree navigation + the ID formulas as code), `csv_lookup.py` (building
   fresh TX/RX lookups from the route-master CSVs — never trust a pickled/
   cached lookup across sessions, see lessons-learned)
+- `router/` — **Neuron Audio Router**, a local web app (`python3 router/server.py`,
+  port 8091) for graphical audio routing on `.cbf` files: load, drag/fill/shuffle,
+  export a verified patched copy. Offline only. See `router/README.md`.
 - `acp2/` — skeleton for a live-configuration client over EVS's ACP2 protocol,
   meant to eventually replace the "patch file → manual re-import" workflow.
   Not functional yet — needs the EVS ACP2 SDK/protocol spec, which this
