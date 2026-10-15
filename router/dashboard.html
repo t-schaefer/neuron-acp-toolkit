@@ -216,6 +216,11 @@
     .basis .brow { display: grid; grid-template-columns: 140px 1fr; gap: 8px; padding: 3px 0; }
     .basis .bl { color: #6c757d; }
     .pcard .pc-why { margin-top: 6px; font-size: 0.78rem; color: #495057; }
+    .cbox-wrap { position: fixed; inset: 0; background: rgba(33,37,41,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .cbox { background: #fff; border-radius: 10px; padding: 18px 20px; max-width: 560px; width: calc(100% - 32px); box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+    .cbox-text { white-space: pre-wrap; font-size: 0.9rem; line-height: 1.5; max-height: 60vh; overflow-y: auto; }
+    .cbox-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+    .cbox-btns .btn { padding: 6px 16px; font-size: 0.9rem; }
     .hidden { display: none !important; }
     .drop-hint { position: fixed; inset: 0; background: rgba(13,110,253,0.12); border: 3px dashed #0d6efd; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 600; color: #0d6efd; z-index: 50; }
     body.filedrag .drop-hint { display: flex; }
@@ -359,6 +364,26 @@
 <script>
 "use strict";
 // ================= helpers =================
+// In-page confirmation dialog. window.confirm() is not shown by every browser
+// (the desktop app's browser pane answers it with "cancel" without a dialog).
+function confirmBox(text, okLabel = "OK", danger = false) {
+    return new Promise(resolve => {
+        const wrap = document.createElement("div");
+        wrap.className = "cbox-wrap";
+        wrap.innerHTML = `<div class="cbox" role="dialog" aria-modal="true">
+            <div class="cbox-text"></div>
+            <div class="cbox-btns"><button class="btn" data-a="no">Cancel</button>
+            <button class="btn ${danger ? "take" : "primary"}" data-a="yes"></button></div></div>`;
+        wrap.querySelector(".cbox-text").textContent = text;
+        wrap.querySelector('[data-a="yes"]').textContent = okLabel;
+        const done = v => { wrap.remove(); document.removeEventListener("keydown", key); resolve(v); };
+        const key = e => { if (e.key === "Escape") done(false); };
+        wrap.addEventListener("click", e => { const a = e.target.closest("[data-a]"); if (a) done(a.dataset.a === "yes"); else if (e.target === wrap) done(false); });
+        document.addEventListener("keydown", key);
+        document.body.appendChild(wrap);
+        wrap.querySelector('[data-a="no"]').focus();
+    });
+}
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 function msg(text, cls = "alert") { $("msg").innerHTML = text ? `<div class="${cls}">${esc(text)}</div>` : ""; }
@@ -467,7 +492,7 @@ $("fleetBody").onclick = async e => {
         const dev = act.dataset.dev;
         if (act.dataset.act === "open") return openDevice(dev);
         if (act.dataset.act === "read") {
-            if (!confirm(`Read the routing tree of ${dev} over ACP2?\n\nRead-only (get object only), about 41,000 requests one at a time, ~5 minutes.`)) return;
+            if (!(await confirmBox(`Read the routing tree of ${dev} over ACP2?\n\nRead-only (get object only), about 41,000 requests one at a time, ~5 minutes.`, "Read"))) return;
             try { await post("/api/read", { device: dev }); msg(`Reading ${dev} …`, "note"); pollState(); } catch (err) { msg(err.message); }
         }
         return;
@@ -480,7 +505,7 @@ $("fleetQuick").onclick = e => { const q = e.target.closest("[data-q]"); if (!q)
     const d = (F.state?.devices || []).find(x => x.name === q.dataset.q);
     if (d && d.snapshot) openDevice(d.name); else { F.open = q.dataset.q; setFleetCollapsed(false); renderFleet(); } };
 if (recall("nar.fleetCollapsed")) $("fleetCard").classList.add("collapsed");
-$("pauseBtn").onclick = async () => { const p = !F.state?.paused; if (p || confirm("Resume polling the released devices?")) { await post("/api/polling", { paused: p }); pollState(); } };
+$("pauseBtn").onclick = async () => { const p = !F.state?.paused; if (p || await confirmBox("Resume polling the released devices?", "Resume")) { await post("/api/polling", { paused: p }); pollState(); } };
 $("addDeviceForm").onsubmit = async e => {
     e.preventDefault();
     try { await post("/api/devices", { ip: $("newIp").value, name: $("newName").value, tag: $("newTag").value }); e.target.reset(); msg("Device added (poll = no, write = no). Release it in devices.json.", "ok"); pollState(); }
@@ -1144,7 +1169,7 @@ function renderWriteToggle() {
 $("writeToggle").onclick = async () => {
     const dev = (F.state?.devices || []).find(d => d.name === R.device); if (!dev) return;
     const on = !dev.write;
-    if (on && !confirm(`Enable WRITING to ${dev.name} (${dev.ip}) – LIVE DEVICE?\n\nTAKE and Undo will then write routing and delay values over ACP2.`)) { msg("Writing stays off (cancelled).", "note"); return; }
+    if (on && !(await confirmBox(`Enable WRITING to ${dev.name} (${dev.ip}) – LIVE DEVICE?\n\nTAKE and Undo will then write routing and delay values over ACP2.`, "Enable writing", true))) { msg("Writing stays off (cancelled).", "note"); return; }
     try { await post("/api/devices/write", { device: dev.name, write: on }); await pollState(); renderAll(); }
     catch (e) { msg(e.message); }
 };
@@ -1207,7 +1232,7 @@ $("dstAssisted").addEventListener("change", e => {
     store(delayKey(id), Math.round(v * 1000) / 1000); msg(""); renderAll();
 });
 $("undoEditBtn").onclick = undoEdit;
-$("discardBtn").onclick = () => { if (confirm(`Discard all ${R.pending.size} pending changes?`)) { R.pending.clear(); R.history = []; persist(); renderAll(); } };
+$("discardBtn").onclick = async () => { if (await confirmBox(`Discard all ${R.pending.size} staged value(s) from the Preset?\n\nNothing on the device changes.`, "Discard")) { R.pending.clear(); R.history = []; persist(); renderAll(); } };
 $("pendBody").onclick = e => { const x = e.target.closest("[data-pk]"); if (!x) return; R.history.push([[x.dataset.pk, R.pending.get(x.dataset.pk)]]); R.pending.delete(x.dataset.pk); persist(); renderAll(); };
 document.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key === "z" && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); undoEdit(); } if (e.key === "Escape") { R.selSlot = null; renderAll(); } });
 const changeList = () => [...R.pending.entries()].map(([pk, v]) => { const [key, field] = pk.split("|"); return { key, field, value: v }; });
@@ -1239,7 +1264,7 @@ async function takeChanges(changes, what) {
     // one code path for: whole preset, one change group, one video path
     if (!changes.length) return;
     const lines = groupChanges(changes).map(g => `• ${g.target}${g.what !== "delay" ? " · " + g.what : ""}: ${g.from} → ${g.to} (${g.count} ${g.unit === "ch" ? "ch" : g.unit + (g.count > 1 ? "s" : "")})`);
-    if (!confirm(`TAKE ${what} on ${R.device} – LIVE DEVICE\n\n${lines.join("\n")}\n\n${changes.length} value(s). The current values are read first and saved for “Undo last Take”; every value is read back after writing.`)) {
+    if (!(await confirmBox(`TAKE ${what} on ${R.device} – LIVE DEVICE\n\n${lines.join("\n")}\n\n${changes.length} value(s). The current values are read first and saved for “Undo last Take”; every value is read back after writing.`, `TAKE ${changes.length} value(s)`, true))) {
         $("applyResult").innerHTML = `<div class="note">TAKE ${esc(what)} cancelled – nothing was written.</div>`;
         $("applyResult").scrollIntoView({ block: "nearest" });
         return;
@@ -1261,7 +1286,7 @@ $("pendSummary").onclick = e => {
         R.history.push(undo); persist(); renderAll(); }
 };
 $("undoTakeBtn").onclick = async () => {
-    if (!confirm(`UNDO on ${R.device} – LIVE DEVICE\n\nRestore the values from before the last Take?`)) {
+    if (!(await confirmBox(`UNDO on ${R.device} – LIVE DEVICE\n\nRestore the values from before the last Take?`, "Undo last Take", true))) {
         $("applyResult").innerHTML = `<div class="note">Undo cancelled – nothing was written.</div>`;
         return;
     }
@@ -1271,7 +1296,7 @@ $("undoTakeBtn").onclick = async () => {
     await reloadModel(); pollState();
 };
 $("exportBtn").onclick = async () => {
-    if (!confirm(`Write ${R.pending.size} change(s) into a NEW copy of ${R.file}? The original is not modified.`)) return;
+    if (!(await confirmBox(`Write ${R.pending.size} change(s) into a NEW copy of ${R.file}? The original is not modified.`, "Export"))) return;
     try { const r = await post("/api/export", { file: R.file, changes: changeList(), note: $("exportNote").value });
         $("applyResult").innerHTML = `<div class="ok">Exported <b>${esc(r.export_file)}</b> (${r.changes.length} changes, verified). <a href="/api/download?file=${encodeURIComponent(r.export_file)}">Download</a></div>`; }
     catch (e) { $("applyResult").innerHTML = `<div class="alert">Export failed: ${esc(e.message)}</div>`; }
