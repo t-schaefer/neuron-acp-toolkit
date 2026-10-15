@@ -65,6 +65,9 @@ def build_card_tree(delay_b=16.8, delay_a=19.5):
         st = t.node(ip_audio, f"STREAM {s}")
         t.enum(st, "Stream", ["Disabled", "Enabled"], 1 if s != 8 else 0)
         t.num(st, "Stream Delay", delay_a if s != 4 else 0.0, rw=True, vtype=8)
+        # like the real device: stream 7 receives no media -> it can apply no delay
+        t.num(st, "Maximum Stream Delay", 0.0 if s == 7 else 4095.719971, vtype=8)
+        t.string(st, "Info", "No media found" if s == 7 else "Ok")
         t.string(st, "SDP File", f"v=0\r\ns=SRC.IN {s}\r\n")
         chs = t.node(st, "AUDIO CHANNELS")
         for k in range(1, 17):

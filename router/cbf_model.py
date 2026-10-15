@@ -197,6 +197,9 @@ class CbfModel:
             return {"kind": "ipin", "block": n, "ch": k,
                     "block_label": f"IP In {n}", "name": self.sdp_name(sp),
                     "stream_delay": self._float(self.obj(sp, "Stream Delay")),
+                    # device status: max delay it can apply now (0 = no media), and the Info text
+                    "stream_max_delay": self._float(self.obj(sp, "Maximum Stream Delay")),
+                    "stream_info": (self.obj(sp, "Info").value if self.obj(sp, "Info") else ""),
                     "enabled": self.enum_label(self.obj(sp, "Stream")) == "Enabled"}
         # PROCESSING VIDEO/PATH X/CHANNEL nn/DE-EMBEDDER/AUDIO CHANNEL k
         if p[0] == "PROCESSING VIDEO" and len(p) == 5 and p[3] == "DE-EMBEDDER":

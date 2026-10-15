@@ -286,7 +286,8 @@ def safe_name(name, pattern, what):
 
 
 def model_payload(m, device_label):
-    src_cols = ["id", "kind", "block", "ch", "block_label", "name", "enabled", "delay", "bank", "slot", "stream_delay"]
+    src_cols = ["id", "kind", "block", "ch", "block_label", "name", "enabled", "delay", "bank", "slot", "stream_delay",
+                "stream_max_delay", "stream_info"]
     dst_cols = ["key", "kind", "block", "ch", "block_label", "name", "enabled",
                 "main", "backup", "current", "channels", "delay", "bank", "slot", "own_id"]
     lists, errors = load_lists()
@@ -348,6 +349,7 @@ def _after_write(d, m, result):
                 written[m.target({"key": e["key"], "field": e["field"]}).oid] = e["after"]
             except Exception:
                 pass
+    written.update(result.get("status_values") or {})      # stream status read after a delay take
     if written:
         take_mod.update_snapshot(snapshot_path(d["name"]), written)
 
@@ -536,6 +538,20 @@ class Handler(BaseHTTPRequestHandler):
                 save_devices(devices)
                 log.info("device added: %s %s", name, ip)
                 self._json({"ok": True, "devices": len(devices)})
+            elif u.path == "/api/devices/write":
+                # the "Write ON/OFF" switch in the router header; same effect as editing devices.json
+                name, on = req.get("device", ""), bool(req.get("write"))
+                devices = load_devices()
+                hit = [d for d in devices if normalize_device(d["name"]) == normalize_device(name)]
+                if not hit:
+                    raise ValueError(f"unknown device {name!r}")
+                if on and not hit[0].get("poll"):
+                    raise ValueError(f"{hit[0]['name']} is not released for device access (poll=false) - cannot enable writing")
+                hit[0]["write"] = on
+                save_devices(devices)
+                log.warning("WRITE %s for %s (switched in the UI)", "ENABLED" if on else "disabled", hit[0]["name"])
+                _state_cache["t"] = 0
+                self._json({"device": hit[0]["name"], "write": on})
             elif u.path == "/api/read":
                 self._json(start_read(req.get("device", "")))
             elif u.path == "/api/check":

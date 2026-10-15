@@ -288,6 +288,15 @@ class TakeTests(unittest.TestCase):
         self.assertIn("Nothing was written", str(cm.exception))
         self.assertEqual(self.fake.set_attempts, [])
 
+    def test_stream_delay_without_media_warns(self):
+        r = self.do_take([{"key": "streamdelay:7", "field": "delay", "value": 19.0},
+                          {"key": "streamdelay:1", "field": "delay", "value": 19.0}])
+        self.assertTrue(r["ok"], r)
+        by = {e["key"]: e for e in r["items"]}
+        self.assertIn("NOT effective", by["streamdelay:7"].get("warning", ""))   # no media: stored, cannot act
+        self.assertNotIn("warning", by["streamdelay:1"])                          # receiving: fine
+        self.assertEqual(self.model.sources[(7 - 1) * 16 + 1]["stream_info"], "No media found")
+
     def test_writer_refuses_other_types(self):
         import writer
         with writer.Acp2Writer("127.0.0.1") as w:

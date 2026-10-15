@@ -133,7 +133,6 @@
     .presetbar { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; }
     .presetbar.on { background: #fff3e0; border: 1px solid #fd7e14; color: #8a3c00; } .presetbar.off { background: #e8f5ee; border: 1px solid #8fd1ae; color: #0f5132; }
     .chtile .pdot { position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%; background: #fd7e14; }
-    body.view-active .slots td.chg { background: transparent; }
     .ap { font-size: 0.72rem; line-height: 1.35; margin-top: 2px; }
     .ap .act { color: #146c43; } .ap .pre { color: #b45309; font-weight: 600; } .ap .eq { color: #6c757d; }
     .plan td.act { color: #146c43; } .plan td.pre { background: #fff3e0; color: #8a3c00; font-weight: 600; } .plan td.eq { color: #adb5bd; text-align: center; }
@@ -274,8 +273,8 @@
         <div class="toolbar">
             <span class="small"><b>Mode</b></span>
             <div class="field-toggle" id="modeToggle"><button data-m="assisted">Assisted</button><button data-m="manual">Manual</button></div>
-            <span class="small"><b>View</b></span>
-            <div class="field-toggle viewtog" id="viewToggle" title="ACTIVE = what the device runs now · PRESET = active + your staged changes (what TAKE will activate)"><button data-v="active">Active</button><button data-v="preset">Preset</button></div>
+            <span class="small"><b>Write</b></span>
+            <button class="btn" id="writeToggle" title="Allow TAKE / Undo to write to this device (devices.json &quot;write&quot;)">…</button>
             <span id="presetBar" class="presetbar off"></span>
             <span style="margin-left:auto" class="small muted" id="namesInfo"></span>
             <select id="cbfSelect" title="Data source: the live ACP2 read, or an offline .cbf export"></select>
@@ -385,6 +384,7 @@ async function pollState() {
     try {
         F.state = await api("/api/state");
         renderFleet();
+        if (R.info) { renderWriteToggle(); renderPending(); }
         if (R.device) refreshJob();
     } catch (e) { $("lastUpdate").textContent = "service not reachable: " + e.message; }
 }
@@ -511,7 +511,7 @@ const R = {
     pending: new Map(), history: [], field: "main", mode: recall("nar.mode") || "assisted",
     srcCat: "ipin16", dstCat: "emb", selSrcBlock: null, selDstBlock: null, selSrcId: null, selSlot: null, selCh: null,
     drag: null, withDelay: true, checks: {},   // channel n -> last live check result html
-    view: recall("nar.view") || "preset",                   // "active" = device as it runs, "preset" = active + staged changes
+    view: "preset",   // tables show Active and the staged Preset side by side; there is no separate view switch any more
 };
 // Delay targets (docs/device-status.md): Case A = Stream Delay on the IP input, Case B = Delay on the 8 banks.
 const DELAY_DEFAULT = { A: 19.5, B: 18.0 };
@@ -649,7 +649,6 @@ $("cbfSelect").onchange = e => { if (e.target.value) { R.file = e.target.value; 
 // ----- editing -----
 function persist() { store("nar.pending." + (R.device ? "dev:" + R.device : "cbf:" + R.file), R.pending.size ? [...R.pending] : null); }
 function setValues(list) {
-    if (R.view !== "preset") { R.view = "preset"; store("nar.view", "preset"); }   // editing always happens in the preset
     const undo = [];
     for (const [key, field, v] of list) {
         const pk = `${key}|${field}`; undo.push([pk, R.pending.get(pk)]);
@@ -676,11 +675,11 @@ function renderMode() {
     $("srcHead").innerHTML = `${num(2)}${A ? "Source" : "Sources"}`;
     $("dstHeadText").innerHTML = `${num(3)}${A ? "Signal flow" : "Destinations"}`;
     if (!A) $("srcBrowse").open = true; else if (R.browseOpen !== undefined) $("srcBrowse").open = R.browseOpen; else $("srcBrowse").open = false;
-    for (const b of $("viewToggle").children) b.classList.toggle("active", b.dataset.v === R.view);
-    document.body.classList.toggle("view-active", R.view === "active");
     const np = R.pending.size;
     $("presetBar").className = "presetbar " + (np ? "on" : "off");
-    $("presetBar").innerHTML = np ? `PRESET: <b>${np}</b> change(s) staged – ${R.view === "active" ? "showing ACTIVE (device now)" : "showing PRESET (after TAKE)"}` : "Preset = Active (nothing staged)";
+    $("presetBar").innerHTML = np ? `Preset: <b>${np}</b> value(s) staged – not on the device until TAKE (orange = staged)`
+                                  : "Nothing staged – everything shown is what the device runs now";
+    renderWriteToggle();
     $("dstFilter").classList.toggle("hidden", R.mode !== "manual");
 
 }
@@ -906,7 +905,8 @@ function sideFlow(n, field, side, a, both) {
     const atTarget = cur.length === 1 && Math.abs(cur[0] - want) < 1e-6;
     const dly = (what) => `<div class="node dly ${pd.length ? "pre" : ""}" title="${esc(what)} – Active ${curTxt} ms${pd.length ? ", Preset " + pd.join("/") + " ms" : ""}">
         ⏱ <b>Delay</b> <span class="sub">${curTxt} →</span><input type="number" step="0.1" min="0" max="${DELAY_MAX[side.case]}" value="${want}" data-delay="${delayId(side)}"> ms
-        ${pd.length ? `<span class="st st-pre">→ Preset: ${esc(pd.join("/"))} ms</span>` : atTarget ? '<span class="st st-ok">✓ at target</span>' : `<span class="st st-wn">⚠ template sets ${want} ms</span>`}</div>`;
+        ${pd.length ? `<span class="st st-pre">→ Preset: ${esc(pd.join("/"))} ms</span>` : atTarget ? '<span class="st st-ok">✓ at target</span>' : `<span class="st st-wn">⚠ template sets ${want} ms</span>`}
+        ${side.case === "A" ? streamEffect(side.stream) : ""}</div>`;
     if (side.case === "A") {
         const sn = streamName("in", side.stream);
         const es = nodeStatus(embKeys, fields, `IP In ${side.stream}`);
@@ -1106,7 +1106,20 @@ function renderPending() {
 }
 
 // ----- events -----
-$("viewToggle").onclick = e => { const b = e.target.closest("[data-v]"); if (b) { R.view = b.dataset.v; store("nar.view", R.view); renderAll(); } };
+function renderWriteToggle() {
+    const dev = (F.state?.devices || []).find(d => d.name === R.device), b = $("writeToggle");
+    const live = R.info?.source === "live";
+    b.disabled = !live || !dev || !dev.poll;
+    b.className = "btn " + (dev && dev.write ? "take" : "");
+    b.textContent = !live ? "n/a (offline file)" : !dev ? "…" : dev.write ? "● ON – click to turn off" : "OFF – click to enable";
+}
+$("writeToggle").onclick = async () => {
+    const dev = (F.state?.devices || []).find(d => d.name === R.device); if (!dev) return;
+    const on = !dev.write;
+    if (on && !confirm(`Enable WRITING to ${dev.name} (${dev.ip}) – LIVE DEVICE?\n\nTAKE and Undo will then write routing and delay values over ACP2.`)) return;
+    try { await post("/api/devices/write", { device: dev.name, write: on }); await pollState(); renderAll(); }
+    catch (e) { msg(e.message); }
+};
 $("modeToggle").onclick = e => { const b = e.target.closest("[data-m]"); if (b) { R.mode = b.dataset.m; store("nar.mode", R.mode); renderAll(); } };
 $("chGrid").onclick = e => { const t = e.target.closest("[data-n]"); if (!t) return; R.selCh = +t.dataset.n;
     if (R.mode === "manual") { const c = R.byN[R.selCh]; R.dstCat = "emb"; R.selDstBlock = blockKey("emb", c.letter); }
@@ -1176,9 +1189,19 @@ async function writeCall(path, body) {
     const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
     return { ok: r.ok, status: r.status, ...j };
 }
+function streamEffect(S) {
+    // a Stream Delay only acts while the stream receives media (device: Maximum Stream Delay > 0, Info "Ok")
+    const s = R.src.get((S - 1) * 16 + 1); if (!s) return "";
+    const mx = s.stream_max_delay, info = s.stream_info || "";
+    if (mx === null || mx === undefined) return "";
+    if (mx > 0 && (!info || info === "Ok")) return `<div class="sub" style="width:100%">IP In ${S}: receiving, device can apply up to ${Math.round(mx)} ms</div>`;
+    return `<div class="st-wn" style="width:100%; font-weight:600">⚠ IP In ${S}: ${esc(info || "no media")} – the device cannot apply a delay now (max ${mx} ms). A value can be stored; it acts once the stream receives media.</div>`;
+}
 function writeResultHtml(kind, r) {
     const res = r.result || r, items = res.items || [];
-    const head = r.ok && res.ok ? `<div class="ok"><b>${kind} done</b>: ${res.written} value(s) written and read back in ${res.seconds} s${res.skipped?.length ? `, ${res.skipped.length} already at target` : ""}.</div>`
+    const warns = items.filter(e => e.warning);
+    const head = r.ok && res.ok ? `<div class="${warns.length ? "note" : "ok"}"><b>${kind} done</b>: ${res.written} value(s) written and read back in ${res.seconds} s${res.skipped?.length ? `, ${res.skipped.length} already at target` : ""}.`
+        + warns.map(e => `<br>⚠ <b>${esc(dstLabel(e.key))}</b>: ${esc(e.warning)}`).join("") + `</div>`
         : `<div class="alert"><b>${kind} ${res.written ? "stopped" : "refused"}</b>: ${esc(r.error || res.error || "")}${res.written ? `\n${res.written} value(s) were written before it stopped – use “Undo last Take”.` : "\nNothing was written."}</div>`;
     const rows = items.slice(0, 40).map(e => `<tr><td>${esc(dstLabel(e.key))}</td><td class="muted">${e.field === "main" ? "M" : e.field === "backup" ? "B" : "Δ"}</td>
         <td>${esc(String(e.before))} → ${esc(String(e.after ?? "?"))}</td><td>${e.ok ? '<span class="st-ok">✓</span>' : `<span class="warn" title="${esc(e.error || "")}">✗</span>`}</td></tr>`).join("");
