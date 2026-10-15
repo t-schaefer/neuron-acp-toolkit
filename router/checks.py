@@ -159,7 +159,7 @@ class ChannelAnalysis:
             if side["case"] == "A" and side.get("stream"):
                 self._check_stream_in(field, side)
                 want = self._block_ids("ipin", side["stream"])
-                self._plan_emb(field, want, f"Case A: IP In {side['stream']}")
+                self._plan_emb(field, want, f"IP route: IP In {side['stream']}")
             if side["case"] == "B":
                 self._check_case_b(field, side)
 
@@ -189,10 +189,10 @@ class ChannelAnalysis:
         if d is not None:
             good = abs(d - self.delay_a) < 1e-3
             self.findings.append(_f(OK if good else WARN, f"{field}: IP In {S} Stream Delay {d:.1f} ms"
-                                    + ("" if good else f" (Case A target {self.delay_a} ms)")))
+                                    + ("" if good else f" (IP route target {self.delay_a} ms)")))
             if not good:
                 self.changes.append({"key": f"streamdelay:{S}", "field": "delay", "value": self.delay_a,
-                                     "why": f"Case A delay on IP In {S}"})
+                                     "why": f"IP route delay on IP In {S}"})
 
     def _check_case_b(self, field, side):
         N, g, L = side["sdi"], side["group"], side.get("deemb")
@@ -218,21 +218,21 @@ class ChannelAnalysis:
         cur_in = self._feeding(bank_keys, "main")
         self.findings.append(_f(OK if cur_in == ("deemb", L) else WARN,
                                 f"{field}: delay group {g} (banks {(g-1)*8+1}-{g*8}) fed by {self._fmt(cur_in)}"
-                                + ("" if cur_in == ("deemb", L) else f", Case B needs De-Emb {L} (SDI {N})")))
+                                + ("" if cur_in == ("deemb", L) else f", SDI route needs De-Emb {L} (SDI {N})")))
         for k, sid in zip(bank_keys, deemb):
             for f in ("main", "backup"):
-                self._want(k, f, sid, f"Case B: SDI {N} -> delay group {g}")
+                self._want(k, f, sid, f"SDI route: SDI {N} -> delay group {g}")
         delays = sorted({round(self.m.sources[self._dst(k)["own_id"]]["delay"] or 0, 3)
                          for k in bank_keys if self._dst(k).get("own_id") in self.m.sources})
         good = delays == [self.delay_b]
         self.findings.append(_f(OK if good else WARN, f"{field}: delay group {g} delay {', '.join(f'{d:.1f}' for d in delays)} ms"
-                                + ("" if good else f" (Case B target {self.delay_b} ms)")))
+                                + ("" if good else f" (SDI route target {self.delay_b} ms)")))
         if not good:
             for b in range((g - 1) * 8 + 1, g * 8 + 1):
                 self.changes.append({"key": f"bankdelay:{b}", "field": "delay", "value": self.delay_b,
-                                     "why": f"Case B delay on bank {b}"})
+                                     "why": f"SDI route delay on bank {b}"})
         group_ids = [self._dst(k)["own_id"] for k in bank_keys]
-        self._plan_emb(field, group_ids, f"Case B: delay group {g}")
+        self._plan_emb(field, group_ids, f"SDI route: delay group {g}")
         side["group_ids"] = group_ids
 
     def _plan_emb(self, field, want_ids, why):
@@ -271,10 +271,10 @@ class ChannelAnalysis:
             wrong = sum(1 for k, sid in zip(keys, want) if self._dst(k)[f] != sid)
             self.findings.append(_f(OK if not wrong else WARN,
                                     f"IP Out {M} {f}: " + (f"matches delay group {side['group']}" if not wrong else
-                                    f"from {self._fmt(self._feeding(keys, f))}, Case B needs delay group {side['group']} "
+                                    f"from {self._fmt(self._feeding(keys, f))}, SDI route needs delay group {side['group']} "
                                     f"({wrong}/16 slots differ)")))
             for k, sid in zip(keys, want):
-                self._want(k, f, sid, f"Case B: delay group {side['group']} -> IP Out {M}")
+                self._want(k, f, sid, f"SDI route: delay group {side['group']} -> IP Out {M}")
         if len(b_sides) == 2 and b_sides[0]["group"] != b_sides[1]["group"]:
             self.findings.append(_f(INFO, "Main and Backup are SDI from different ports - IP Out main/backup follow them"))
 

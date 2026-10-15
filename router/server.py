@@ -43,6 +43,7 @@ from live_check import run_check                       # noqa: E402
 from live_model import LiveModel                       # noqa: E402
 from route_lists import parse_list, stream_names, normalize_device, device_index  # noqa: E402
 import walk as acp2_walk                               # noqa: E402
+import take as take_mod                                # noqa: E402  (the only writer, gated by devices.json "write")
 
 # ---------------- settings ----------------
 HOST = "0.0.0.0"
@@ -331,6 +332,62 @@ def start_read(name):
     return job
 
 
+_take_lock = threading.Lock()   # one Take/Undo at a time, ever
+
+
+def _take_paths(d):
+    key = normalize_device(d["name"])
+    return LIVE_DIR / f"{key}.undo.json", LIVE_DIR / f"{key}.takes.jsonl"
+
+
+def _after_write(d, m, result):
+    written = {}
+    for e in result.get("items", []):
+        if "after" in e:
+            try:
+                written[m.target({"key": e["key"], "field": e["field"]}).oid] = e["after"]
+            except Exception:
+                pass
+    if written:
+        take_mod.update_snapshot(snapshot_path(d["name"]), written)
+
+
+def do_take(d, changes):
+    """Preset -> Active over ACP2 (take.py: validate, fresh read, undo state, write + read-back)."""
+    if not _take_lock.acquire(blocking=False):
+        raise take_mod.TakeError("another Take/Undo is running")
+    try:
+        m = get_live_model(d["name"])
+        undo_path, log_path = _take_paths(d)
+        log.warning("TAKE %s: %d change(s) requested", d["name"], len(changes))
+        # no red/blue failover for writes: a retry on blue after a partial take would overwrite the undo state
+        link = "red"
+        result = take_mod.take(m, d["ip"], changes, undo_path, log_path, m.snapshot_info["slot"])
+        _after_write(d, m, result)
+        log.warning("TAKE %s via %s: %d written, ok=%s %s", d["name"], link, result["written"], result["ok"],
+                    result.get("error") or "")
+        return {**result, "link": link}
+    finally:
+        _take_lock.release()
+
+
+def do_undo(d):
+    if not _take_lock.acquire(blocking=False):
+        raise take_mod.TakeError("another Take/Undo is running")
+    try:
+        m = get_live_model(d["name"])
+        undo_path, log_path = _take_paths(d)
+        log.warning("UNDO %s requested", d["name"])
+        link = "red"
+        result = take_mod.undo(m, d["ip"], undo_path, log_path, m.snapshot_info["slot"])
+        _after_write(d, m, result)
+        log.warning("UNDO %s via %s: %d restored, ok=%s %s", d["name"], link, result["written"], result["ok"],
+                    result.get("error") or "")
+        return {**result, "link": link}
+    finally:
+        _take_lock.release()
+
+
 def check_channel(name, n):
     d = find_device(name)
     if not 1 <= n <= 32:
@@ -358,6 +415,7 @@ def state_payload():
                      "in_lists": normalize_device(d["name"]) in idx,
                      "snapshot": datetime.fromtimestamp(sp.stat().st_mtime).isoformat(timespec="seconds")
                      if sp.exists() else None,
+                     "undo_available": _take_paths(d)[0].exists(),
                      "job": _jobs.get(d["name"])})
     return {"devices": devs, "paused": POLLING_PAUSED.is_set(), "last_sweep": st["last_sweep"],
             "sweep_seconds": st["sweep_seconds"], "started": st["started"], "now": now_iso(),
@@ -484,9 +542,18 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(check_channel(req.get("device", ""), int(req.get("channel", 0))))
             elif u.path in ("/api/take", "/api/undo"):
                 d = find_device(req.get("device", ""), need_access=False)
-                why = ("writing to this device is disabled (devices.json write=false)" if not d.get("write")
-                       else "Take/Undo over ACP2 set-property is not implemented yet")
-                self._json({"error": f"{u.path[5:].capitalize()} refused: {why}. Nothing was sent."}, 403)
+                if not d.get("write") or not d.get("poll"):
+                    self._json({"error": f"{u.path[5:].capitalize()} refused: writing to {d['name']} is disabled "
+                                         f"(devices.json \"write\": false). Nothing was sent."}, 403)
+                    return
+                try:
+                    if u.path == "/api/take":
+                        self._json(do_take(d, req.get("changes") or []))
+                    else:
+                        self._json(do_undo(d))
+                except take_mod.TakeError as e:
+                    log.warning("%s %s refused/stopped: %s", u.path, d["name"], e)
+                    self._json({"error": str(e), "result": e.result}, 409)
             elif u.path == "/api/upload-list":
                 name = safe_name(self.headers.get("X-File-Name", ""), SAFE_LIST_RE, "route list")
                 data = self._body()

@@ -48,6 +48,7 @@ class Obj:
     minimum: str = ""
     maximum: str = ""
     oid: int = 0  # ACP2 object id when the model comes from a live device
+    ntype: int = -1  # ACP2 number type (6 = u32, 8 = float) for live objects
 
 
 @dataclass

@@ -226,5 +226,75 @@ class ServiceTests(FakeDeviceCase):
         self.assertIn("NMOS check skipped", r["nmos_error"])
 
 
+class TakeTests(unittest.TestCase):
+    """The write path, against a simulated device that accepts writes (allow_write=True)."""
+
+    def setUp(self):
+        import take
+        self.take = take
+        self.fake = FakeNeuron(allow_write=True)
+        self._port = acp2client.AN2_PORT
+        acp2client.AN2_PORT = self.fake.port
+        self.tmp = Path(tempfile.mkdtemp())
+        acp2walk.walk("127.0.0.1", self.tmp / "T.json", pace=0)
+        self.model = LiveModel(self.tmp / "T.json", "IPGT1")
+        self.undo, self.log = self.tmp / "T.undo.json", self.tmp / "T.takes.jsonl"
+
+    def tearDown(self):
+        acp2client.AN2_PORT = self._port
+        self.fake.close()
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def dev_value(self, key, field="main"):
+        oid = self.model.target({"key": key, "field": field}).oid
+        return self.fake.slots[1].objs[oid]["value"]
+
+    def do_take(self, changes):
+        return self.take.take(self.model, "127.0.0.1", changes, self.undo, self.log, 1)
+
+    def test_take_and_undo_roundtrip(self):
+        r = self.do_take([{"key": "emb:A1:1", "field": "main", "value": 2},
+                          {"key": "bankdelay:1", "field": "delay", "value": 18.0}])
+        self.assertTrue(r["ok"], r)
+        self.assertEqual(r["written"], 2)
+        self.assertEqual(self.dev_value("emb:A1:1"), 2)
+        self.assertAlmostEqual(self.dev_value("bankdelay:1", "delay"), 18.0, places=3)
+        self.assertTrue(self.undo.exists())
+        self.assertEqual(self.model.destinations["emb:A1:1"]["main"], 2)   # model = new Active
+        u = self.take.undo(self.model, "127.0.0.1", self.undo, self.log, 1)
+        self.assertTrue(u["ok"], u)
+        self.assertEqual(self.dev_value("emb:A1:1"), 1)
+        self.assertAlmostEqual(self.dev_value("bankdelay:1", "delay"), 16.8, places=3)
+        self.assertFalse(self.undo.exists())
+        self.assertEqual(len(self.log.read_text().splitlines()), 2)
+
+    def test_validation_writes_nothing(self):
+        bad = [[{"key": "emb:A1:1", "field": "main", "value": 999999}],          # unknown source
+               [{"key": "bankdelay:1", "field": "delay", "value": 5000}],        # above MAX 3000
+               [{"key": "nope:1:1", "field": "main", "value": 2}],               # unknown target
+               [{"key": "emb:A1:1", "field": "main", "value": 2}] * 2,           # same object twice
+               []]
+        for changes in bad:
+            with self.assertRaises(self.take.TakeError):
+                self.do_take(changes)
+        self.assertEqual(self.fake.set_attempts, [])
+        self.assertFalse(self.undo.exists())
+
+    def test_stale_active_is_refused(self):
+        oid = self.model.target({"key": "emb:A1:1", "field": "main"}).oid
+        self.fake.slots[1].objs[oid]["value"] = 5          # someone changed the device after the read
+        with self.assertRaises(self.take.TakeError) as cm:
+            self.do_take([{"key": "emb:A1:1", "field": "main", "value": 2}])
+        self.assertIn("Nothing was written", str(cm.exception))
+        self.assertEqual(self.fake.set_attempts, [])
+
+    def test_writer_refuses_other_types(self):
+        import writer
+        with writer.Acp2Writer("127.0.0.1") as w:
+            with self.assertRaises(acp2client.Acp2Error):
+                w.set_value(1, 1, 1, 2)                     # s32 not allowed
+        self.assertEqual(self.fake.set_attempts, [])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

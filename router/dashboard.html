@@ -212,7 +212,7 @@
 <header>
     <span class="title">Neuron Audio Router</span>
     <span id="summaryBar"></span>
-    <span class="badge light" title="acp2/client.py has no set-property code path. Take/Undo are refused by the service until writing is implemented and enabled per device.">ACP2 read-only</span>
+    <span class="badge light" id="writeBadge" title="Take/Undo only write to devices with &quot;write&quot;: true in devices.json">ACP2 read-only</span>
     <button class="btn" id="pauseBtn" style="margin-left:auto">…</button>
     <span class="muted small" id="lastUpdate"></span>
 </header>
@@ -271,7 +271,7 @@
             <span style="margin-left:auto" class="small muted" id="namesInfo"></span>
             <select id="cbfSelect" title="Data source: the live ACP2 read, or an offline .cbf export"></select>
         </div>
-        <h3 class="step" id="stepPaths" title="Case per side Main/Backup: A = IP, B = SDI, - = unused. Colour = check status, orange dot = preset staged.">Video paths</h3>
+        <h3 class="step" id="stepPaths" title="Per side Main/Backup: IP = from an IP input, SDI = from an SDI input via delay bank, P = Pattern (unused). Colour = check status, orange dot = preset staged.">Video paths</h3>
         <div class="chgrid" id="chGrid"></div>
     </div>
 
@@ -377,6 +377,9 @@ function renderFleet() {
     $("summaryBar").innerHTML = [["online", "success"], ["offline", "danger"], ["noaccess", "secondary", "not released"]]
         .map(([k, cls, lab]) => `<span class="badge ${cls} click ${F.filter === k ? "active" : ""}" data-f="${k}" title="Filter">${cnt[k]} ${lab || k}</span>`).join(" ")
         + ` <span class="badge light click ${!F.filter ? "active" : ""}" data-f="">${devs.length} total</span>`;
+    const writers = devs.filter(d => d.write && d.poll).map(d => d.name);
+    $("writeBadge").className = "badge " + (writers.length ? "danger" : "light");
+    $("writeBadge").textContent = writers.length ? `WRITE ON: ${writers.join(", ")}` : "ACP2 read-only";
     $("pauseBtn").textContent = st.paused ? "▶ Resume polling" : "⏸ Pause polling";
     $("pauseBtn").classList.toggle("danger", st.paused);
     $("lastUpdate").textContent = st.paused ? "polling paused" : `last sweep ${ago(st.last_sweep)} (${st.sweep_seconds ?? "–"} s), every ${st.settings.health_sec} s`;
@@ -663,20 +666,22 @@ function renderMode() {
 
 }
 function caseCls(c) { return c === "A" ? "case-A" : c === "B" ? "case-B" : "case--"; }
+// shown names: Case A = IP, Case B = SDI, unused (Pattern) = P   (internal codes stay A / B)
+function caseLabel(c) { return c === "A" ? "IP" : c === "B" ? "SDI" : "P"; }
 function renderChGrid() {
     $("chGrid").innerHTML = R.channels.map(c => {
         const a = R.analysis[c.n] || {}; const [m, b] = (a.case || "-/-").split("/");
         const nm = chName(c.n);
         const hasPreset = [...R.pending.keys()].some(pk => pk.startsWith(`emb:${c.letter}:`) || ((a.changes || []).some(x => pk === `${x.key}|${x.field}`)));
         return `<div class="chtile st-${a.status || "info"} ${R.selCh === c.n ? "sel" : ""}" data-n="${c.n}" title="${esc(`${c.letter} (${c.n}) · video ${c.main} / ${c.backup}\n${nm.long}\nstatus ${a.status || "?"}`)}">
-            ${hasPreset ? '<span class="pdot" title="preset changes staged"></span>' : ""}<b>${c.letter}</b> <span class="case ${caseCls(m)}">${m}</span><span class="case ${caseCls(b)}">${b}</span><span class="sub">${esc(nm.short || c.main)}</span></div>`;
+            ${hasPreset ? '<span class="pdot" title="preset changes staged"></span>' : ""}<b>${c.letter}</b> <span class="case ${caseCls(m)}">${caseLabel(m)}</span><span class="case ${caseCls(b)}">${caseLabel(b)}</span><span class="sub">${esc(nm.short || c.main)}</span></div>`;
     }).join("");
 }
 function catBlocks(cats, catId, blocks) { const c = cats.find(c => c.id === catId); return [...blocks.values()].filter(b => b.kind === c.kind && (!c.test || c.test(b.block))).sort((a, b) => typeof a.block === "number" ? a.block - b.block : String(a.block).localeCompare(String(b.block), undefined, { numeric: true })); }
 function visibleSrcCats() { return R.mode === "assisted" ? SRC_CATS.filter(c => c.assisted) : SRC_CATS; }
 function renderCats() {
     const vc = visibleSrcCats(); if (!vc.some(c => c.id === R.srcCat)) R.srcCat = vc[0].id;
-    $("srcCats").innerHTML = vc.map(c => { const n = catBlocks(SRC_CATS, c.id, R.srcBlocks).length; return n ? `<button class="chip ${c.id === R.srcCat ? "active" : ""}" data-cat="${c.id}">${c.label}${R.mode === "assisted" ? ` <span class="case ${caseCls(c.assisted)}">Case ${c.assisted}</span>` : ""}<span class="n">${n}</span></button>` : ""; }).join("");
+    $("srcCats").innerHTML = vc.map(c => { const n = catBlocks(SRC_CATS, c.id, R.srcBlocks).length; return n ? `<button class="chip ${c.id === R.srcCat ? "active" : ""}" data-cat="${c.id}">${c.label}${R.mode === "assisted" ? ` <span class="case ${caseCls(c.assisted)}">${caseLabel(c.assisted)}</span>` : ""}<span class="n">${n}</span></button>` : ""; }).join("");
     const pendKinds = {}; for (const pk of R.pending.keys()) { const d = R.dst.get(pk.split("|")[0]); const k = d ? d.kind : "bank"; pendKinds[k] = (pendKinds[k] || 0) + 1; }
     $("dstCats").innerHTML = DST_CATS.map(c => { const n = catBlocks(DST_CATS, c.id, R.dstBlocks).length; return n ? `<button class="chip ${c.id === R.dstCat ? "active" : ""}" data-cat="${c.id}">${c.label}<span class="n">${n}</span>${pendKinds[c.kind] ? `<span class="pend">${pendKinds[c.kind]}</span>` : ""}</button>` : ""; }).join("");
 }
@@ -725,7 +730,7 @@ function renderProposal() {
     if (!R.selCh) { box.innerHTML = `<div class="emptyhint">Pick a video path in <b>1</b> above.</div>`; return; }
     const c = R.byN[R.selCh];
     box.innerHTML = proposalFor(R.selCh).map(p => {
-        const head = `<div class="pc-h">${p.field === "main" ? "Main" : "Backup"} <span class="case ${caseCls(p.case)}">${p.case ? "Case " + p.case : "-"}</span></div>`;
+        const head = `<div class="pc-h">${p.field === "main" ? "Main" : "Backup"} <span class="case ${caseCls(p.case)}">${caseLabel(p.case)}</span></div>`;
         if (!p.case) return `<div class="pcard idle">${head}<div class="pc-src">not used</div><div class="pc-sub">video input is Pattern – nothing to route</div></div>`;
         const sub = p.case === "A" ? `${esc(p.name)}` : `De-Emb ${esc(p.bk.split(":")[1])}${p.name ? " · " + esc(p.name) : ""}`;
         const st = p.match ? `<div class="pc-st st-ok">✓ routed</div>` : `<div class="pc-st st-wn">⚠ now ${esc(p.current)}</div>`;
@@ -808,14 +813,14 @@ function plannedFor(n, withDelay) {
         if (s.case === "A" && s.stream != null) {
             const want = delayTarget(s), key = `streamdelay:${s.stream}`;
             const cur = currentDelay(s)[0];
-            if (!seen.has(key) && (cur == null || Math.abs(cur - want) > 1e-6)) out.push({ key, field: "delay", value: want, why: `Case A: Stream Delay IP In ${s.stream}` });
+            if (!seen.has(key) && (cur == null || Math.abs(cur - want) > 1e-6)) out.push({ key, field: "delay", value: want, why: `IP route: Stream Delay IP In ${s.stream}` });
             seen.add(key);
         }
         if (s.case === "B" && s.group) {
             const want = delayTarget(s);
             for (const s2 of R.src.values()) if (s2.kind === "bank" && s2.block === s.group && s2.slot === 1) {
                 const key = `bankdelay:${s2.bank}`;
-                if (!seen.has(key) && Math.abs((s2.delay ?? -1) - want) > 1e-6) out.push({ key, field: "delay", value: want, why: `Case B: delay group ${s.group}` });
+                if (!seen.has(key) && Math.abs((s2.delay ?? -1) - want) > 1e-6) out.push({ key, field: "delay", value: want, why: `SDI route: delay group ${s.group}` });
                 seen.add(key);
             }
         }
@@ -873,7 +878,7 @@ function sideFlow(n, field, side, a, both) {
     const c = R.byN[n], L = c.letter;
     const F = both ? "Main + Backup" : field === "main" ? "Main" : "Backup";
     const fields = both ? ["main", "backup"] : [field];
-    const head = `<h4>${F} <span class="case ${caseCls(side.case)}">${side.case || "-"}</span> <span class="sub">video ${esc(side.label || "")}</span></h4>`;
+    const head = `<h4>${F} <span class="case ${caseCls(side.case)}">${caseLabel(side.case)}</span> <span class="sub">video ${esc(side.label || "")}</span></h4>`;
     const embKeys = Array.from({ length: 16 }, (_, i) => `emb:${L}:${i + 1}`);
     if (!side.case) return `<div class="sidecol">${head}<div class="node idle">not used (Pattern) – not routed</div></div>`;
     const down = `<div class="down">↓</div>`;
@@ -1003,8 +1008,11 @@ function renderPending() {
     $("discardBtn").disabled = !items.length; $("undoEditBtn").disabled = !R.history.length;
     $("exportBtn").disabled = !items.length;
     const live = R.info?.source === "live", dev = (F.state?.devices || []).find(d => d.name === R.device);
-    $("takeBtn").disabled = !items.length || !(dev && dev.write);
-    $("takeInfo").textContent = !dev ? "" : !dev.write ? "Take is disabled for this device (devices.json write = false). Writing over ACP2 is not implemented yet." : "Writing over ACP2 is not implemented yet.";
+    const canWrite = !!(live && dev && dev.write && dev.poll);
+    $("takeBtn").disabled = !items.length || !canWrite;
+    $("undoTakeBtn").disabled = !canWrite || !dev.undo_available;
+    $("takeInfo").textContent = !dev ? "" : !canWrite ? `Writing to ${dev.name} is off (devices.json "write": false).`
+        : dev.undo_available ? "Writing is ON for this device. Undo restores the last Take." : "Writing is ON for this device.";
     let nWarn = 0;
     $("pendBody").innerHTML = items.map(([pk, v]) => { const [key, field] = pk.split("|"); const w = warningsFor(pk, v); if (w.length) nWarn++;
         return `<tr><td title="${esc(dstLabel(key))}">${esc(dstLabel(key))}</td><td class="muted">${field === "main" ? "M" : field === "backup" ? "B" : "Δ"}</td>
@@ -1077,13 +1085,36 @@ $("discardBtn").onclick = () => { if (confirm(`Discard all ${R.pending.size} pen
 $("pendBody").onclick = e => { const x = e.target.closest("[data-pk]"); if (!x) return; R.history.push([[x.dataset.pk, R.pending.get(x.dataset.pk)]]); R.pending.delete(x.dataset.pk); persist(); renderAll(); };
 document.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key === "z" && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); undoEdit(); } if (e.key === "Escape") { R.selSlot = null; renderAll(); } });
 const changeList = () => [...R.pending.entries()].map(([pk, v]) => { const [key, field] = pk.split("|"); return { key, field, value: v }; });
+async function writeCall(path, body) {
+    // like post(), but keeps the take/undo result on errors (409 = refused or stopped)
+    const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+    return { ok: r.ok, status: r.status, ...j };
+}
+function writeResultHtml(kind, r) {
+    const res = r.result || r, items = res.items || [];
+    const head = r.ok && res.ok ? `<div class="ok"><b>${kind} done</b>: ${res.written} value(s) written and read back in ${res.seconds} s${res.skipped?.length ? `, ${res.skipped.length} already at target` : ""}.</div>`
+        : `<div class="alert"><b>${kind} ${res.written ? "stopped" : "refused"}</b>: ${esc(r.error || res.error || "")}${res.written ? `\n${res.written} value(s) were written before it stopped – use “Undo last Take”.` : "\nNothing was written."}</div>`;
+    const rows = items.slice(0, 40).map(e => `<tr><td>${esc(dstLabel(e.key))}</td><td class="muted">${e.field === "main" ? "M" : e.field === "backup" ? "B" : "Δ"}</td>
+        <td>${esc(String(e.before))} → ${esc(String(e.after ?? "?"))}</td><td>${e.ok ? '<span class="st-ok">✓</span>' : `<span class="warn" title="${esc(e.error || "")}">✗</span>`}</td></tr>`).join("");
+    return head + (rows ? `<details class="more"><summary>${items.length} value(s)</summary><table class="mini">${rows}</table></details>` : "");
+}
 $("takeBtn").onclick = async () => {
-    if (!confirm(`TAKE: write ${R.pending.size} change(s) into ${R.device} (LIVE) over ACP2?`)) return;
-    try { await post("/api/take", { device: R.device, changes: changeList() }); } catch (e) { $("applyResult").innerHTML = `<div class="alert">${esc(e.message)}</div>`; }
+    const n = R.pending.size;
+    if (!confirm(`TAKE on ${R.device} – LIVE DEVICE\n\nWrite ${n} change(s) over ACP2?\nThe current values are read first and saved for “Undo last Take”; every value is read back after writing.`)) return;
+    $("takeBtn").disabled = true; $("applyResult").innerHTML = '<div class="note">Taking …</div>';
+    const r = await writeCall("/api/take", { device: R.device, changes: changeList() });
+    $("applyResult").innerHTML = writeResultHtml("TAKE", r);
+    // what was written is now Active: drop it from the preset
+    for (const e of (r.result || r).items || []) if (e.ok) R.pending.delete(`${e.key}|${e.field}`);
+    persist(); await reloadModel(); pollState();
 };
 $("undoTakeBtn").onclick = async () => {
-    if (!confirm(`Undo the last Take on ${R.device} (LIVE)?`)) return;
-    try { await post("/api/undo", { device: R.device }); } catch (e) { $("applyResult").innerHTML = `<div class="alert">${esc(e.message)}</div>`; }
+    if (!confirm(`UNDO on ${R.device} – LIVE DEVICE\n\nRestore the values from before the last Take?`)) return;
+    $("undoTakeBtn").disabled = true; $("applyResult").innerHTML = '<div class="note">Undoing …</div>';
+    const r = await writeCall("/api/undo", { device: R.device });
+    $("applyResult").innerHTML = writeResultHtml("UNDO", r);
+    await reloadModel(); pollState();
 };
 $("exportBtn").onclick = async () => {
     if (!confirm(`Write ${R.pending.size} change(s) into a NEW copy of ${R.file}? The original is not modified.`)) return;
