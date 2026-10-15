@@ -50,7 +50,7 @@ Don't repeat that class of mistake.
   fresh TX/RX lookups from the route-master CSVs — never trust a pickled/
   cached lookup across sessions, see lessons-learned)
 - `router/` — **Neuron Audio Router**, a local web app (`python3 router/server.py`,
-  port 8091) for graphical audio routing on `.cbf` files: load, drag/fill/shuffle,
+  port 8101) for graphical audio routing on `.cbf` files: load, drag/fill/shuffle,
   export a verified patched copy. Offline only. See `router/README.md`.
 - `acp2/` — skeleton for a live-configuration client over EVS's ACP2 protocol,
   meant to eventually replace the "patch file → manual re-import" workflow.

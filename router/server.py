@@ -16,7 +16,7 @@ Safety rules built in:
 
 Standard library only - nothing to pip install.
 
-    python server.py                 # http://localhost:8091/
+    python server.py                 # http://localhost:8101/
     python server.py --port 9000
 """
 import argparse
@@ -37,7 +37,7 @@ DASHBOARD_FILE = BASE_DIR / "dashboard.html"
 CBF_DIR = BASE_DIR / "cbf"          # drop .cbf exports here (or upload in the browser)
 EXPORT_DIR = BASE_DIR / "exports"
 HOST = "127.0.0.1"
-PORT = 8091
+PORT = 8101
 MAX_UPLOAD = 64 * 1024 * 1024
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")

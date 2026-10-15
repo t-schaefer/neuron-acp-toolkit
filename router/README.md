@@ -9,8 +9,8 @@ TCP 2072, for which there is no documentation; see `../acp2/README.md`).
 ## Run
 
 ```
-python3 server.py            # then open http://localhost:8091/
-python3 server.py --host 0.0.0.0 --port 8091   # share on the network
+python3 server.py            # then open http://localhost:8101/
+python3 server.py --host 0.0.0.0 --port 8101   # share on the network
 ```
 
 Python 3.8+, standard library only. Put `.cbf` exports into `cbf/` or upload
