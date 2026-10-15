@@ -330,7 +330,7 @@
             <div class="route-cols">
                 <div id="routeLeft"></div>
                 <div>
-                    <h3 style="margin-top:0">Preset – what TAKE will write <span class="badge primary" id="pendCount" title="single values">0</span>
+                    <h3 style="margin-top:0" class="step"><span id="presetHead">Preset – what TAKE will write</span> <span class="badge primary" id="pendCount" title="single values">0</span>
                         <button class="btn" id="undoEditBtn" disabled title="Undo the last edit (Ctrl/Cmd+Z)">Undo edit</button>
                         <button class="btn danger" id="discardBtn" style="margin-left:auto" disabled>Discard all</button></h3>
                     <div id="pendWarn"></div>
@@ -676,7 +676,8 @@ function renderMode() {
     document.body.classList.toggle("mode-manual", R.mode === "manual");
     const A = R.mode === "assisted", num = k => A ? `<span class="num">${k}</span>` : "";
     $("stepPaths").innerHTML = `${num(1)}Video path${A ? "" : "s"}`;
-    $("activateHead").innerHTML = `${num(5)}Activate`;
+    $("presetHead").innerHTML = `${num(5)}Preset – review what TAKE will write`;
+    $("activateHead").innerHTML = `${num(6)}TAKE – activate`;
     $("srcHead").innerHTML = `${num(2)}${A ? "Source" : "Sources"}`;
     $("dstHeadText").innerHTML = `${num(3)}${A ? "Signal flow" : "Destinations"}`;
     if (!A) $("srcBrowse").open = true; else if (R.browseOpen !== undefined) $("srcBrowse").open = R.browseOpen; else $("srcBrowse").open = false;
@@ -1143,7 +1144,7 @@ function renderWriteToggle() {
 $("writeToggle").onclick = async () => {
     const dev = (F.state?.devices || []).find(d => d.name === R.device); if (!dev) return;
     const on = !dev.write;
-    if (on && !confirm(`Enable WRITING to ${dev.name} (${dev.ip}) – LIVE DEVICE?\n\nTAKE and Undo will then write routing and delay values over ACP2.`)) return;
+    if (on && !confirm(`Enable WRITING to ${dev.name} (${dev.ip}) – LIVE DEVICE?\n\nTAKE and Undo will then write routing and delay values over ACP2.`)) { msg("Writing stays off (cancelled).", "note"); return; }
     try { await post("/api/devices/write", { device: dev.name, write: on }); await pollState(); renderAll(); }
     catch (e) { msg(e.message); }
 };
@@ -1238,7 +1239,11 @@ async function takeChanges(changes, what) {
     // one code path for: whole preset, one change group, one video path
     if (!changes.length) return;
     const lines = groupChanges(changes).map(g => `• ${g.target}${g.what !== "delay" ? " · " + g.what : ""}: ${g.from} → ${g.to} (${g.count} ${g.unit === "ch" ? "ch" : g.unit + (g.count > 1 ? "s" : "")})`);
-    if (!confirm(`TAKE ${what} on ${R.device} – LIVE DEVICE\n\n${lines.join("\n")}\n\n${changes.length} value(s). The current values are read first and saved for “Undo last Take”; every value is read back after writing.`)) return;
+    if (!confirm(`TAKE ${what} on ${R.device} – LIVE DEVICE\n\n${lines.join("\n")}\n\n${changes.length} value(s). The current values are read first and saved for “Undo last Take”; every value is read back after writing.`)) {
+        $("applyResult").innerHTML = `<div class="note">TAKE ${esc(what)} cancelled – nothing was written.</div>`;
+        $("applyResult").scrollIntoView({ block: "nearest" });
+        return;
+    }
     $("takeBtn").disabled = true; $("applyResult").innerHTML = `<div class="note">Taking ${esc(what)} …</div>`;
     $("applyResult").scrollIntoView({ block: "nearest" });
     const r = await writeCall("/api/take", { device: R.device, changes });
@@ -1256,7 +1261,10 @@ $("pendSummary").onclick = e => {
         R.history.push(undo); persist(); renderAll(); }
 };
 $("undoTakeBtn").onclick = async () => {
-    if (!confirm(`UNDO on ${R.device} – LIVE DEVICE\n\nRestore the values from before the last Take?`)) return;
+    if (!confirm(`UNDO on ${R.device} – LIVE DEVICE\n\nRestore the values from before the last Take?`)) {
+        $("applyResult").innerHTML = `<div class="note">Undo cancelled – nothing was written.</div>`;
+        return;
+    }
     $("undoTakeBtn").disabled = true; $("applyResult").innerHTML = '<div class="note">Undoing …</div>';
     const r = await writeCall("/api/undo", { device: R.device });
     $("applyResult").innerHTML = writeResultHtml("UNDO", r);
