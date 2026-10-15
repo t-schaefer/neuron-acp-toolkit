@@ -1,0 +1,7 @@
+# working data -- .cbf files and decoded scratch text contain live device
+# config and should not be committed to the repo
+*.cbf
+*.cbf.txt
+__pycache__/
+*.pyc
+*.pkl
