@@ -1,3 +1,8 @@
 cbf/
 exports/
+lists/
+live/
 __pycache__/
+devices.json
+devices.seeded.json
+service.log*

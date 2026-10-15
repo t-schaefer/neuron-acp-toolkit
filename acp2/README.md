@@ -1,4 +1,34 @@
-# ACP2 live-configuration client — skeleton, not functional
+# ACP2 client — read-only, working
+
+**Status 2026-10-15:** `client.py` speaks AN2 + ACP2 and reads a live Neuron.
+Spec: Axon "Axonnet2 protocol" v1.1 and "ACP2 protocol" v1.0, published in
+[by-openclaw/go-acp](https://github.com/by-openclaw/go-acp) (`internal/acp2/assets`).
+The client is read-only by construction: it refuses every AN2/ACP2 function
+except get version / device info / slot info / get object / get property.
+There is no set-property code path.
+
+Verified read-only against IPG03A (10.12.80.20, FW 7.0.3):
+- AN2 v1, 2 slots: slot 0 = frame/board (BOARD, PSU, QSFP …), protocols [2,3,4];
+  slot 1 = the BRIDGE card (IDENTITY, GENERAL, INPUT, PROCESSING VIDEO/AUDIO,
+  OUTPUT …), protocols [2,3]. ACP2 v2. Root object id = 1 (`ROOT_NODE_V2`).
+- The slot-1 tree is the same GROUP/OBJECT tree as the `.cbf` export. Sample
+  routing values (bank 1/17, embedder A1, IP Out 13) are identical live and in
+  the 2026-10-14 export. Enums come back as option text instead of index.
+- Object ids are contiguous in tree order: BANK n node = 163242 + (n-1)*17
+  (BANK 1 / AUDIO CHANNEL 1 = 163243, its Identifier..Phase = 163244..163249).
+- Enum options on the wire are variable-length (u32 index + 0-terminated text,
+  padded to 4), not the 72 bytes in the spec — same as go-acp handles it.
+- The device sends nothing until a client sends a request (checked by listening
+  passively for 45 s). Announces need AN2 "enable protocol events".
+
+Writes (`set property`, needed for Take/Undo in the router) are deliberately not
+implemented yet. They come only after a full read verification and an explicit
+go, preferably tested on a unit that is not on air first.
+
+---
+
+# (History) ACP2 skeleton notes from before the spec was found
+
 
 ## What this is for
 

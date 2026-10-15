@@ -49,13 +49,14 @@ Don't repeat that class of mistake.
   (tree navigation + the ID formulas as code), `csv_lookup.py` (building
   fresh TX/RX lookups from the route-master CSVs — never trust a pickled/
   cached lookup across sessions, see lessons-learned)
-- `router/` — **Neuron Audio Router**, a local web app (`python3 router/server.py`,
-  port 8101) for graphical audio routing on `.cbf` files: load, drag/fill/shuffle,
-  export a verified patched copy. Offline only. See `router/README.md`.
-- `acp2/` — skeleton for a live-configuration client over EVS's ACP2 protocol,
-  meant to eventually replace the "patch file → manual re-import" workflow.
-  Not functional yet — needs the EVS ACP2 SDK/protocol spec, which this
-  session doesn't have. See `acp2/README.md`.
+- `router/` — **Neuron Audio Router**, an unattended fleet service + web app
+  (`python3 router/server.py`, port 8101, structure of the PLS Fusion Dashboard):
+  reads Neuron routing live over ACP2 (read-only), assisted Case A/B routing,
+  Active/Preset, channel checks. Only devices with `"poll": true` in
+  `router/devices.json` are ever contacted. See `router/README.txt`.
+- `acp2/` — working **read-only** AN2/ACP2 client (`client.py`) and routing walk
+  (`walk.py`). Spec from github.com/by-openclaw/go-acp. No set-property code
+  path on purpose. Verified live against IPG03A. See `acp2/README.md`.
 
 ## Working method (so far)
 
