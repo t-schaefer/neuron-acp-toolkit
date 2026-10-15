@@ -21,9 +21,17 @@ Verified read-only against IPG03A (10.12.80.20, FW 7.0.3):
 - The device sends nothing until a client sends a request (checked by listening
   passively for 45 s). Announces need AN2 "enable protocol events".
 
-Writes (`set property`, needed for Take/Undo in the router) are deliberately not
-implemented yet. They come only after a full read verification and an explicit
-go, preferably tested on a unit that is not on air first.
+Writes live in a separate module, `writer.py` (ACP2 set property on the value
+of u32 / float objects only), used by `router/take.py` for Take/Undo.
+
+**First live write, 2026-10-15, IPG03A** (approved by the user, on a path that
+was not in use: H4 / channel 32, VRX-32 and ARX-125..128 disabled):
+- object 81668 = PROCESSING VIDEO/PATH H/CHANNEL 04/EMBEDDER/AUDIO CHANNEL 1/Input Backup (u32)
+- Take: 3569 (De-Emb H4.1) -> 1985 (IP In 125.1); device reply 1985, read-back 1985, 0.07 s
+- independent read with the read-only client: Backup 1985, Main and Current unchanged (1985)
+- Undo: 1985 -> 3569; reply 3569, read-back 3569, 0.06 s. Device back to its original state.
+- set property request = AN2 data frame, ACP2 `0 | mtid | 3 | 8 | obj-id | idx 0 | pid 8, vtype 6, plen 8, u32`;
+  the reply carries the new value as a pid-8 property, exactly as the spec describes.
 
 ---
 
