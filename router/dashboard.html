@@ -139,6 +139,13 @@
     .plan td.act { color: #146c43; } .plan td.pre { background: #fff3e0; color: #8a3c00; font-weight: 600; } .plan td.eq { color: #adb5bd; text-align: center; }
     .plan td.tpl { color: #6f42c1; font-style: italic; opacity: 0.8; }
     .plan th.grp { text-align: center; border-bottom: 1px solid #dee2e6; }
+    .proposal { border: 1px solid #9ec5fe; background: #f3f8ff; border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; font-size: 0.8rem; }
+    .proposal .prow { display: flex; gap: 6px; align-items: baseline; padding: 3px 4px; border-radius: 4px; cursor: pointer; flex-wrap: wrap; }
+    .proposal .prow:hover { background: #e7f1ff; } .proposal .prow.sel { background: #cfe2ff; }
+    .proposal .why { color: #6c757d; font-size: 0.72rem; width: 100%; padding-left: 62px; }
+    .ptag { display: inline-block; min-width: 54px; font-weight: 700; font-size: 0.72rem; }
+    .blk .mb { position: absolute; top: 1px; left: 2px; font-size: 0.58rem; font-weight: 800; color: #0d6efd; }
+    .blk.sel .mb { color: #fff; } .blk.prop { border: 2px solid #0d6efd; }
     .hidden { display: none !important; }
     .drop-hint { position: fixed; inset: 0; background: rgba(13,110,253,0.12); border: 3px dashed #0d6efd; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 600; color: #0d6efd; z-index: 50; }
     body.filedrag .drop-hint { display: flex; }
@@ -217,6 +224,7 @@
         <section class="card area-src">
             <h2>Sources <span class="muted small">(Identifier)</span>
                 <input type="text" id="srcFilter" placeholder="Filter: number, CC1, TX04 …" style="margin-left:auto; width:200px"></h2>
+            <div id="srcProposal"></div>
             <div class="chips" id="srcCats"></div>
             <div class="grid" id="srcGrid"></div>
             <h3 id="srcChTitle">Channels</h3>
@@ -408,7 +416,7 @@ document.addEventListener("dragleave", e => { if (!e.relatedTarget) document.bod
 // ================= ROUTER =================
 const SRC_CATS = [
     { id: "ipin16", label: "IP In 16ch", kind: "ipin", test: b => b <= 128, assisted: "A" },
-    { id: "ipin64", label: "IP In 64ch", kind: "ipin", test: b => b > 128 },
+    { id: "ipin64", label: "IP In 64ch", kind: "ipin", test: b => b > 128, assisted: "A" },
     { id: "deemb", label: "SDI / De-Embedder", kind: "deemb", assisted: "B" },
     { id: "bank", label: "Delay 16ch", kind: "bank" },
     { id: "madiin", label: "MADI In", kind: "madiin" },
@@ -577,7 +585,7 @@ function assign(key, srcId) { setValues(fields().map(f => [key, f, srcId])); }
 function undoEdit() { const u = R.history.pop(); if (!u) return; for (const [pk, prev] of u.reverse()) prev === undefined ? R.pending.delete(pk) : R.pending.set(pk, prev); persist(); renderAll(); }
 
 // ----- rendering -----
-function renderAll() { renderMode(); renderChGrid(); renderCats(); renderSrcGrid(); renderSrcChs(); if (R.mode === "manual") { renderDstGrid(); renderSlots(); } else renderAssisted(); renderRouteLeft(); renderPending(); }
+function renderAll() { renderMode(); renderChGrid(); renderProposal(); renderCats(); renderSrcGrid(); renderSrcChs(); if (R.mode === "manual") { renderDstGrid(); renderSlots(); } else renderAssisted(); renderRouteLeft(); renderPending(); }
 function renderMode() {
     for (const b of $("modeToggle").children) b.classList.toggle("active", b.dataset.m === R.mode);
     $("dstManual").classList.toggle("hidden", R.mode !== "manual"); $("dstAssisted").classList.toggle("hidden", R.mode === "manual");
@@ -621,14 +629,53 @@ function assistedSourceBlocks() {
     }
     return want;
 }
+// ----- assisted: correct source per side for the selected video path -----
+function proposalFor(n) {
+    const a = R.analysis[n] || {}, out = [];
+    for (const field of ["main", "backup"]) {
+        const s = (a.sides || {})[field] || {};
+        const L = R.byN[n].letter, embKeys = Array.from({ length: 16 }, (_, i) => `emb:${L}:${i + 1}`);
+        const current = describeFeed(embKeys, field, activeOf);
+        if (s.case === "A" && s.stream != null) {
+            const rx = nameOf("rx", n);
+            out.push({ field, case: "A", bk: blockKey("ipin", s.stream), cat: s.stream <= 128 ? "ipin16" : "ipin64",
+                       label: `IP In ${s.stream}`, name: streamName("in", s.stream)?.short || "",
+                       why: `video ${s.label} → ${rx ? `${tail(rx.mnemonic)} "${rx.alt}" → ARX-${s.stream}` : "RX row"} (the dropdown number is not the stream)`,
+                       current, match: current === `IP In ${s.stream}` });
+        } else if (s.case === "B" && s.deemb) {
+            const want = `Delay group ${s.group} (B${firstBank(s.group)})`;
+            out.push({ field, case: "B", bk: blockKey("deemb", s.deemb), cat: "deemb",
+                       label: `SDI ${s.sdi} · De-Emb ${s.deemb}`, name: chName(R.byLetter[s.deemb]?.n)?.short || "",
+                       why: `video ${s.label} → De-Emb ${s.deemb} (${3072 + (s.sdi - 1) * 16 + 1}–${3072 + s.sdi * 16}) → delay group ${s.group} (B${firstBank(s.group)})`,
+                       current, match: current === want });
+        } else {
+            out.push({ field, case: null, label: `no source – video ${s.label || "Pattern"} unused`, current });
+        }
+    }
+    return out;
+}
+function selectProposed(p) { if (!p || !p.bk) return; R.srcCat = p.cat; R.selSrcBlock = p.bk; R.selSrcId = null; }
+function renderProposal() {
+    const box = $("srcProposal");
+    if (R.mode !== "assisted" || !R.selCh) { box.innerHTML = ""; return; }
+    const c = R.byN[R.selCh];
+    box.innerHTML = `<div class="proposal"><b>Proposed sources for ${c.letter}</b> <span class="muted">(channel ${c.n})</span>` +
+        proposalFor(R.selCh).map(p => `<div class="prow ${p.bk && p.bk === R.selSrcBlock ? "sel" : ""}" ${p.bk ? `data-pbk="${esc(p.bk)}" data-pcat="${p.cat}"` : ""}>
+            <span class="ptag">${p.field === "main" ? "Main" : "Backup"} <span class="case ${caseCls(p.case)}">${p.case || "-"}</span></span>
+            <b>${esc(p.label)}</b>${p.name ? ` <span class="muted">${esc(p.name)}</span>` : ""}
+            ${p.case ? (p.match ? ' <span class="lv-ok small">✓ routed</span>' : ` <span class="warn small">now: ${esc(p.current)}</span>`) : ` <span class="muted small">embedder ${p.field} now: ${esc(p.current)}</span>`}
+            ${p.why ? `<span class="why">${esc(p.why)}</span>` : ""}</div>`).join("") + `</div>`;
+}
 function renderSrcGrid() {
     const hit = new Set(); const db = R.dstBlocks.get(R.selDstBlock);
     if (db) for (const k of db.keys) for (const f of ["main", "backup"]) { const s = R.src.get(value(k, f)); if (s) hit.add(blockKey(s.kind, s.block)); }
     const f = $("srcFilter").value.trim();
     const used = R.mode === "assisted" ? assistedSourceBlocks() : null;
     const list = catBlocks(SRC_CATS, R.srcCat, R.srcBlocks).filter(b => matches(b, f) && (!used || used.has(blockKey(b.kind, b.block))));
+    const marks = {};
+    if (R.mode === "assisted" && R.selCh) for (const p of proposalFor(R.selCh)) if (p.bk) marks[p.bk] = (marks[p.bk] || "") + (p.field === "main" ? "M" : "B");
     $("srcGrid").innerHTML = list.map(b => { const bk = blockKey(b.kind, b.block);
-        return `<div class="blk ${bk === R.selSrcBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""}" draggable="true" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}">${esc(b.kind === "deemb" ? `SDI ${R.byLetter[b.block]?.n ?? b.block}` : b.block)}<span class="sub">${esc(b.kind === "deemb" ? b.block + " " + (b.nm?.short || "") : blockSub(b))}</span></div>`;
+        return `<div class="blk ${bk === R.selSrcBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""} ${marks[bk] ? "prop" : ""}" draggable="true" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}${marks[bk] ? `\nproposed for ${R.byN[R.selCh].letter} ${marks[bk]}` : ""}">${marks[bk] ? `<span class="mb">${marks[bk]}</span>` : ""}${esc(b.kind === "deemb" ? `SDI ${R.byLetter[b.block]?.n ?? b.block}` : b.block)}<span class="sub">${esc(b.kind === "deemb" ? b.block + " " + (b.nm?.short || "") : blockSub(b))}</span></div>`;
     }).join("") || `<span class="small muted">${R.mode === "assisted" ? "No source is assigned to a channel (needs SRC/DST lists)." : "no match"}</span>`;
 }
 function usedIds() { const u = new Set(); for (const k of R.dst.keys()) { u.add(value(k, "main")); u.add(value(k, "backup")); } return u; }
@@ -923,7 +970,9 @@ $("viewToggle").onclick = e => { const b = e.target.closest("[data-v]"); if (b) 
 $("modeToggle").onclick = e => { const b = e.target.closest("[data-m]"); if (b) { R.mode = b.dataset.m; store("nar.mode", R.mode); renderAll(); } };
 $("chGrid").onclick = e => { const t = e.target.closest("[data-n]"); if (!t) return; R.selCh = +t.dataset.n;
     if (R.mode === "manual") { const c = R.byN[R.selCh]; R.dstCat = "emb"; R.selDstBlock = blockKey("emb", c.letter); }
+    else { const pr = proposalFor(R.selCh); selectProposed(pr.find(p => p.field === "main" && p.bk) || pr.find(p => p.bk)); }
     renderAll(); };
+$("srcProposal").onclick = e => { const r = e.target.closest("[data-pbk]"); if (!r) return; selectProposed({ bk: r.dataset.pbk, cat: r.dataset.pcat }); renderAll(); };
 $("srcCats").onclick = e => { const c = e.target.closest("[data-cat]"); if (c) { R.srcCat = c.dataset.cat; renderAll(); } };
 $("dstCats").onclick = e => { const c = e.target.closest("[data-cat]"); if (c) { R.dstCat = c.dataset.cat; renderAll(); } };
 $("srcFilter").oninput = renderSrcGrid; $("dstFilter").oninput = renderDstGrid;
