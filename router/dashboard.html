@@ -97,7 +97,7 @@
     .pending { max-height: 340px; overflow-y: auto; } .pending td { font-size: 0.75rem; }
     .x { border: none; background: none; color: #adb5bd; cursor: pointer; font-size: 0.95rem; padding: 0 2px; } .x:hover { color: #dc3545; }
     .help { font-size: 0.78rem; color: #6c757d; line-height: 1.45; margin: 0; padding-left: 16px; }
-    .find { font-size: 0.8rem; margin: 2px 0; } .find .lv { display: inline-block; width: 42px; font-weight: 700; font-size: 0.7rem; }
+    .find { font-size: 0.8rem; margin: 2px 0; } .find .lv { display: inline-block; min-width: 42px; margin-right: 8px; font-weight: 700; font-size: 0.7rem; }
     .lv-ok { color: #198754; } .lv-info { color: #6c757d; } .lv-warn { color: #997404; } .lv-fail { color: #dc3545; }
     .sinkcard { border: 1px solid #dee2e6; border-radius: 6px; padding: 8px; margin-bottom: 8px; }
     .sinkcard h4 { margin: 0 0 6px 0; font-size: 0.85rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -147,7 +147,7 @@
     .blk .mb { position: absolute; top: 1px; left: 2px; font-size: 0.58rem; font-weight: 800; color: #0d6efd; }
     .blk.sel .mb { color: #fff; } .blk.prop { border: 2px solid #0d6efd; }
     .cflow { display: flex; flex-direction: column; gap: 0; }
-    .node { display: flex; align-items: center; gap: 8px; border: 1px solid #dee2e6; border-radius: 6px; padding: 6px 10px; font-size: 0.86rem; background: #fff; }
+    .node { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; border: 1px solid #dee2e6; border-radius: 6px; padding: 6px 10px; font-size: 0.86rem; background: #fff; }
     .node.src { background: #e7f1ff; border-color: #9ec5fe; } .node.dly { background: #fffaeb; border-color: #f5d06f; }
     .node.idle { background: #f8f9fa; color: #6c757d; } .node.pre { box-shadow: inset 4px 0 0 #fd7e14; }
     .node .sub { color: #6c757d; } .node .st { margin-left: auto; white-space: nowrap; font-weight: 600; }
@@ -203,6 +203,15 @@
     .pcard .pc-st { margin-top: 8px; font-size: 0.85rem; font-weight: 600; }
     .pcard.idle { cursor: default; background: #f8f9fa; } .pcard.idle .pc-src { color: #adb5bd; font-size: 1rem; }
     .emptyhint { color: #6c757d; padding: 14px 4px; }
+    table.chsum { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    table.chsum td { padding: 8px 6px; border-bottom: 1px solid #e9ecef; vertical-align: top; white-space: normal; }
+    table.chsum .from { color: #6c757d; } table.chsum .to { color: #c2410c; font-weight: 700; }
+    table.chsum .muted { font-size: 0.78rem; }
+    .btn.take-one { background: #fff; border-color: #dc3545; color: #dc3545; font-weight: 700; padding: 2px 10px; }
+    .btn.take-one:hover { background: #dc3545; color: #fff; }
+    .legend2 { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.8rem; color: #495057; margin: 2px 0 10px 0; align-items: center; }
+    .legend2 .bar { display: inline-block; width: 4px; height: 14px; border-radius: 2px; vertical-align: -2px; margin-right: 5px; }
+    .node .st { font-weight: 600; font-size: 0.8rem; }
     .hidden { display: none !important; }
     .drop-hint { position: fixed; inset: 0; background: rgba(13,110,253,0.12); border: 3px dashed #0d6efd; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 600; color: #0d6efd; z-index: 50; }
     body.filedrag .drop-hint { display: flex; }
@@ -272,6 +281,15 @@
             <select id="cbfSelect" title="Data source: the live ACP2 read, or an offline .cbf export"></select>
         </div>
         <h3 class="step" id="stepPaths" title="Per side Main/Backup: IP = from an IP input, SDI = from an SDI input via delay bank, P = Pattern (unused). Colour = check status, orange dot = preset staged.">Video paths</h3>
+        <div class="legend2">
+            <span><b>Left bar = check:</b></span>
+            <span><span class="bar" style="background:#198754"></span>OK</span>
+            <span><span class="bar" style="background:#ffc107"></span>warning</span>
+            <span><span class="bar" style="background:#dc3545"></span>problem</span>
+            <span><span class="bar" style="background:#adb5bd"></span>info</span>
+            <span><b>Badges = source of Main | Backup:</b> <span class="case case-A">IP</span> IP input · <span class="case case-B">SDI</span> SDI input via delay bank · <span class="case case--">P</span> Pattern (not used)</span>
+            <span><span class="dot" style="background:#fd7e14; width:8px; height:8px"></span> change staged in the Preset</span>
+        </div>
         <div class="chgrid" id="chGrid"></div>
     </div>
 
@@ -308,11 +326,12 @@
             <div class="route-cols">
                 <div id="routeLeft"></div>
                 <div>
-                    <h3 style="margin-top:0">Preset <span class="muted small">(staged, activated by TAKE)</span> <span class="badge primary" id="pendCount">0</span>
+                    <h3 style="margin-top:0">Preset – what TAKE will write <span class="badge primary" id="pendCount" title="single values">0</span>
                         <button class="btn" id="undoEditBtn" disabled title="Undo the last edit (Ctrl/Cmd+Z)">Undo edit</button>
                         <button class="btn danger" id="discardBtn" style="margin-left:auto" disabled>Discard all</button></h3>
                     <div id="pendWarn"></div>
-                    <div class="pending"><table><tbody id="pendBody"></tbody></table></div>
+                    <div class="pending" id="pendSummary"></div>
+                    <details class="more"><summary>All single values</summary><table><tbody id="pendBody"></tbody></table></details>
                 </div>
                 <div>
                     <h3 style="margin-top:0" class="step" id="activateHead">Activate</h3>
@@ -870,9 +889,9 @@ function nodeStatus(keys, fields, expected) {
         if (prs !== act) pre.push(`${fields.length > 1 ? f + ": " : ""}${prs}`);
         else if (expected && act !== expected) bad.push(`${fields.length > 1 ? f + ": " : ""}now ${act}`);
     }
-    if (pre.length) return { cls: "pre", html: `<span class="st st-pre" title="Preset (staged, active on TAKE): ${esc(pre.join(" · "))}">→ ${esc(pre[0].replace(/^(main|backup): /, ""))}</span>` };
-    if (bad.length) return { cls: "", html: `<span class="st st-wn" title="${esc(bad.join(" · ") + " – template: " + expected)}">⚠</span>` };
-    return { cls: "", html: `<span class="st st-ok" title="matches">✓</span>` };
+    if (pre.length) return { cls: "pre", html: `<span class="st st-pre" title="staged in the Preset, written on TAKE">→ Preset: ${esc(pre.join(" · "))}</span>` };
+    if (bad.length) return { cls: "", html: `<span class="st st-wn" title="the template wants: ${esc(expected)}">⚠ ${esc(bad.join(" · "))}</span>` };
+    return { cls: "", html: `<span class="st st-ok">✓ correct</span>` };
 }
 function sideFlow(n, field, side, a, both) {
     const c = R.byN[n], L = c.letter;
@@ -887,7 +906,7 @@ function sideFlow(n, field, side, a, both) {
     const atTarget = cur.length === 1 && Math.abs(cur[0] - want) < 1e-6;
     const dly = (what) => `<div class="node dly ${pd.length ? "pre" : ""}" title="${esc(what)} – Active ${curTxt} ms${pd.length ? ", Preset " + pd.join("/") + " ms" : ""}">
         ⏱ <b>Delay</b> <span class="sub">${curTxt} →</span><input type="number" step="0.1" min="0" max="${DELAY_MAX[side.case]}" value="${want}" data-delay="${delayId(side)}"> ms
-        ${pd.length ? `<span class="st st-pre">→ ${esc(pd.join("/"))}</span>` : atTarget ? '<span class="st st-ok">✓</span>' : '<span class="st st-wn" title="template sets it">⚠</span>'}</div>`;
+        ${pd.length ? `<span class="st st-pre">→ Preset: ${esc(pd.join("/"))} ms</span>` : atTarget ? '<span class="st st-ok">✓ at target</span>' : `<span class="st st-wn">⚠ template sets ${want} ms</span>`}</div>`;
     if (side.case === "A") {
         const sn = streamName("in", side.stream);
         const es = nodeStatus(embKeys, fields, `IP In ${side.stream}`);
@@ -965,18 +984,30 @@ function renderRouteLeft() {
     const a = R.analysis[n] || {}, c = R.byN[n];
     const ch = plannedFor(n, R.withDelay);
     const routes = ch.filter(x => x.field !== "delay").length, delays = ch.filter(x => x.field === "delay").length;
-    const ck = channelKeys(n), chPreset = [...R.pending.keys()].filter(k => ck.has(k)).length;
-    const cnt = { ok: 0, warn: 0, fail: 0 }; (a.findings || []).forEach(f => { if (cnt[f.level] !== undefined) cnt[f.level]++; });
+    const ck = channelKeys(n), chPending = [...R.pending.entries()].filter(([k]) => ck.has(k)).map(([pk, v]) => { const [key, field] = pk.split("|"); return { key, field, value: v }; });
+    const devW = (F.state?.devices || []).find(d => d.name === R.device);
+    R.canWrite = !!(R.info?.source === "live" && devW && devW.write && devW.poll);
+    const finds = a.findings || [], probs = finds.filter(f => f.level === "warn" || f.level === "fail"), oks = finds.filter(f => f.level === "ok" || f.level === "info");
+    // template changes that are not in the preset yet
+    const notStaged = ch.filter(c => R.pending.get(`${c.key}|${c.field}`) !== c.value);
+    R.chPending = chPending;
     $("routeLeft").innerHTML = `<h2><span class="num">4</span>Add to Preset · ${c.letter}</h2>
-        <div class="sumchips"><span class="sumchip ok">✓ ${cnt.ok}</span>${cnt.warn ? `<span class="sumchip warn">⚠ ${cnt.warn}</span>` : ""}${cnt.fail ? `<span class="sumchip fail">✗ ${cnt.fail}</span>` : ""}
-            <span class="presetbar ${chPreset ? "on" : "off"}">Preset ${chPreset}${chPreset ? ' <button class="btn" id="clearChPreset" style="padding:0 6px">clear</button>' : ""}</span></div>
-        <details class="more" ${cnt.fail || cnt.warn ? "" : ""}><summary>Check details</summary>${(a.findings || []).map(f => `<div class="find"><span class="lv lv-${f.level}">${f.level.toUpperCase()}</span>${esc(f.text)}</div>`).join("")}</details>
+        <div class="find"><b>Checks:</b> ${oks.length} OK${probs.length ? `, <span class="lv-warn">${probs.length} to look at</span>` : ""}</div>
+        ${probs.map(f => `<div class="find"><span class="lv lv-${f.level}">${f.level === "fail" ? "PROBLEM" : "WARNING"}</span>${esc(f.text)}</div>`).join("")}
+        <details class="more"><summary>${oks.length} OK checks</summary>${oks.map(f => `<div class="find"><span class="lv lv-${f.level}">${f.level.toUpperCase()}</span>${esc(f.text)}</div>`).join("")}</details>
+        <h3>The template for ${c.letter} would change</h3>
+        ${summaryHtml(groupChanges(notStaged), { empty: chPending.length ? "Everything of the template is already in the Preset." : "Nothing – the routing already matches the template." })}
         <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
-            <button class="btn primary" id="planBtn" ${ch.length ? "" : "disabled"}>Add to Preset (${routes} routes${R.withDelay ? `, ${delays} delays` : ""})</button>
-            <label><input type="checkbox" id="withDelay" ${R.withDelay ? "checked" : ""}> delays</label>
+            <button class="btn primary" id="planBtn" ${notStaged.length ? "" : "disabled"}>Add to Preset (${notStaged.length} value${notStaged.length === 1 ? "" : "s"})</button>
+            <label title="include the delay targets from the delay boxes"><input type="checkbox" id="withDelay" ${R.withDelay ? "checked" : ""}> include delays</label>
             <button class="btn" id="delayResetBtn" title="Delay targets back to 19.5 / 18.0 ms">reset delays</button>
             ${R.info?.source === "live" ? `<button class="btn" id="checkBtn" title="Fresh read-only ACP2 + NMOS check of this channel">Check live</button>` : ""}
-        </div><div id="checkResult" style="margin-top:8px">${R.checks[n] || ""}</div>`;
+        </div>
+        ${chPending.length ? `<h3>Staged in the Preset for ${c.letter}</h3>${summaryHtml(groupChanges(chPending))}
+            <div style="margin-top:8px; display:flex; gap:8px">
+                ${R.canWrite ? `<button class="btn take-one" id="takeChBtn">TAKE only ${c.letter} (${chPending.length})</button>` : ""}
+                <button class="btn" id="clearChPreset">Remove ${c.letter} from the Preset</button></div>` : ""}
+        <div id="checkResult" style="margin-top:8px">${R.checks[n] || ""}</div>`;
 }
 function fillPlan() {
     const db = R.dstBlocks.get(R.selDstBlock), sb = R.srcBlocks.get(R.selSrcBlock);
@@ -993,6 +1024,56 @@ function renderFill() {
     $("fillDst").textContent = db ? `${db.label}${db.nm ? " · " + db.nm.short : ""}` : "select a destination block";
     $("fillSrc").textContent = sb ? `${sb.label} (${sb.range})${sb.nm ? " · " + sb.nm.short : ""}` : "select a source block";
     const fp = fillPlan(); $("fillMax").textContent = fp ? `max ${fp.max}` : ""; $("fillBtn").disabled = !fp || !fp.plan.length;
+}
+// ----- plain-text change summary: "IP Out 25 · Main + Backup: IP In 25 → Delay group 1 (B1), 16 ch" -----
+function srcBlockDesc(id) {
+    const s = R.src.get(id);
+    if (!s) return id === 0 || id == null ? "nothing" : `#${id}`;
+    if (s.kind === "ipin") return `IP In ${s.block}`;
+    if (s.kind === "deemb") return `SDI ${R.byLetter[s.block]?.n ?? s.block} (De-Emb ${s.block})`;
+    if (s.kind === "bank") return `Delay group ${s.block} (B${firstBank(s.block)})`;
+    if (s.kind === "madiin") return `MADI In ${s.block}`;
+    return s.block_label;
+}
+function dstBlockDesc(d) {
+    if (d.kind === "emb") return `Embedder ${d.block} → SDI out`;
+    if (d.kind === "ipout") { const sn = streamName("out", d.block); return `IP Out ${d.block}${sn ? " " + sn.short : ""}`; }
+    if (d.kind === "bank") return `Delay group ${d.block} (banks ${firstBank(d.block)}–${firstBank(d.block) + 7}) input`;
+    return d.block_label;
+}
+function groupChanges(changes) {
+    // changes: [{key, field, value}] -> rows that say in words what changes
+    const groups = new Map();
+    for (const c of changes) {
+        const pk = `${c.key}|${c.field}`;
+        if (c.field === "delay") {
+            const [k, num] = c.key.split(":");
+            const isBank = k === "bankdelay", gnum = isBank ? Math.floor((+num - 1) / 8) + 1 : +num;
+            const gk = `${k}:${gnum}:${(+oldValue(pk)).toFixed(1)}:${(+c.value).toFixed(1)}`;
+            if (!groups.has(gk)) groups.set(gk, { target: isBank ? `Delay group ${gnum} (banks ${firstBank(gnum)}–${firstBank(gnum) + 7})` : `IP In ${gnum} Stream Delay`,
+                what: "delay", from: `${(+oldValue(pk)).toFixed(1)} ms`, to: `${(+c.value).toFixed(1)} ms`, n: 0, unit: isBank ? "bank" : "stream", changes: [] });
+            const g = groups.get(gk); g.n++; g.changes.push(c);
+            continue;
+        }
+        const d = R.dst.get(c.key); if (!d) continue;
+        const from = srcBlockDesc(activeOf(c.key, c.field)), to = srcBlockDesc(c.value);
+        const gk = `${d.kind}:${d.block}:${from}:${to}`;
+        if (!groups.has(gk)) groups.set(gk, { target: dstBlockDesc(d), fields: new Set(), from, to, n: 0, unit: "ch", changes: [], slots: new Set() });
+        const g = groups.get(gk); g.fields.add(c.field); g.slots.add(d.ch); g.changes.push(c); g.n++;
+    }
+    return [...groups.values()].map(g => {
+        if (g.fields) { g.what = g.fields.size === 2 ? "Main + Backup" : [...g.fields][0] === "main" ? "Main" : "Backup"; g.count = g.slots.size; }
+        else g.count = g.n;
+        return g;
+    });
+}
+function summaryHtml(groups, opts = {}) {
+    if (!groups.length) return `<div class="muted">${opts.empty || "Nothing to change."}</div>`;
+    return `<table class="chsum">${groups.map((g, i) => `<tr>
+        <td><b>${esc(g.target)}</b><div class="muted">${g.what === "delay" ? "delay" : g.what}</div></td>
+        <td><span class="from">${esc(g.from)}</span> → <span class="to">${esc(g.to)}</span><div class="muted">${g.count} ${g.unit === "ch" ? "ch" : g.unit + (g.count > 1 ? "s" : "")}</div></td>
+        ${opts.take ? `<td style="text-align:right; white-space:nowrap">${opts.canWrite ? `<button class="btn take-one" data-g="${i}" title="Write only this change to the device">TAKE</button>` : ""}
+            <button class="x" data-g-drop="${i}" title="Remove from the preset">×</button></td>` : ""}</tr>`).join("")}</table>`;
 }
 function warningsFor(pk, v) {
     const [key, field] = pk.split("|"); if (field === "delay") return [];
@@ -1013,6 +1094,9 @@ function renderPending() {
     $("undoTakeBtn").disabled = !canWrite || !dev.undo_available;
     $("takeInfo").textContent = !dev ? "" : !canWrite ? `Writing to ${dev.name} is off (devices.json "write": false).`
         : dev.undo_available ? "Writing is ON for this device. Undo restores the last Take." : "Writing is ON for this device.";
+    R.canWrite = canWrite;
+    R.presetGroups = groupChanges(changeList());
+    $("pendSummary").innerHTML = summaryHtml(R.presetGroups, { take: true, canWrite, empty: "Nothing staged. Use “Add to Preset” (4) or edit in Manual mode." });
     let nWarn = 0;
     $("pendBody").innerHTML = items.map(([pk, v]) => { const [key, field] = pk.split("|"); const w = warningsFor(pk, v); if (w.length) nWarn++;
         return `<tr><td title="${esc(dstLabel(key))}">${esc(dstLabel(key))}</td><td class="muted">${field === "main" ? "M" : field === "backup" ? "B" : "Δ"}</td>
@@ -1056,6 +1140,7 @@ $("routeLeft").addEventListener("click", async e => {
         if (undo.length) R.history.push(undo); persist(); renderAll(); return; }
     if (t.id === "delayResetBtn") { for (const s of Object.values((R.analysis[R.selCh] || {}).sides || {})) if (s.case) store(delayKey(delayId(s)), null); renderAll(); return; }
     if (t.id === "planBtn") { const ch = plannedFor(R.selCh, R.withDelay); setValues(ch.map(c => [c.key, c.field, c.value])); renderAll(); return; }
+    if (t.id === "takeChBtn") { takeChanges(R.chPending || [], `video path ${R.byN[R.selCh].letter}`); return; }
     if (t.id === "checkBtn") {
         const n = R.selCh;
         t.disabled = true; $("checkResult").innerHTML = '<span class="small muted">Reading this channel over ACP2 (get property only) and NMOS …</span>';
@@ -1099,15 +1184,26 @@ function writeResultHtml(kind, r) {
         <td>${esc(String(e.before))} → ${esc(String(e.after ?? "?"))}</td><td>${e.ok ? '<span class="st-ok">✓</span>' : `<span class="warn" title="${esc(e.error || "")}">✗</span>`}</td></tr>`).join("");
     return head + (rows ? `<details class="more"><summary>${items.length} value(s)</summary><table class="mini">${rows}</table></details>` : "");
 }
-$("takeBtn").onclick = async () => {
-    const n = R.pending.size;
-    if (!confirm(`TAKE on ${R.device} – LIVE DEVICE\n\nWrite ${n} change(s) over ACP2?\nThe current values are read first and saved for “Undo last Take”; every value is read back after writing.`)) return;
-    $("takeBtn").disabled = true; $("applyResult").innerHTML = '<div class="note">Taking …</div>';
-    const r = await writeCall("/api/take", { device: R.device, changes: changeList() });
-    $("applyResult").innerHTML = writeResultHtml("TAKE", r);
+async function takeChanges(changes, what) {
+    // one code path for: whole preset, one change group, one video path
+    if (!changes.length) return;
+    const lines = groupChanges(changes).map(g => `• ${g.target}${g.what !== "delay" ? " · " + g.what : ""}: ${g.from} → ${g.to} (${g.count} ${g.unit === "ch" ? "ch" : g.unit + (g.count > 1 ? "s" : "")})`);
+    if (!confirm(`TAKE ${what} on ${R.device} – LIVE DEVICE\n\n${lines.join("\n")}\n\n${changes.length} value(s). The current values are read first and saved for “Undo last Take”; every value is read back after writing.`)) return;
+    $("takeBtn").disabled = true; $("applyResult").innerHTML = `<div class="note">Taking ${esc(what)} …</div>`;
+    $("applyResult").scrollIntoView({ block: "nearest" });
+    const r = await writeCall("/api/take", { device: R.device, changes });
+    $("applyResult").innerHTML = `<div class="small muted">TAKE ${esc(what)} · ${new Date().toLocaleTimeString()}</div>` + writeResultHtml("TAKE", r);
     // what was written is now Active: drop it from the preset
     for (const e of (r.result || r).items || []) if (e.ok) R.pending.delete(`${e.key}|${e.field}`);
     persist(); await reloadModel(); pollState();
+}
+$("takeBtn").onclick = () => takeChanges(changeList(), "whole preset");
+$("pendSummary").onclick = e => {
+    const t = e.target.closest("[data-g]"), x = e.target.closest("[data-g-drop]");
+    if (t) { const g = R.presetGroups[+t.dataset.g]; if (g) takeChanges(g.changes, `“${g.target}${g.what !== "delay" ? " · " + g.what : ""}”`); }
+    if (x) { const g = R.presetGroups[+x.dataset.gDrop]; if (!g) return; const undo = [];
+        for (const c of g.changes) { const pk = `${c.key}|${c.field}`; undo.push([pk, R.pending.get(pk)]); R.pending.delete(pk); }
+        R.history.push(undo); persist(); renderAll(); }
 };
 $("undoTakeBtn").onclick = async () => {
     if (!confirm(`UNDO on ${R.device} – LIVE DEVICE\n\nRestore the values from before the last Take?`)) return;
