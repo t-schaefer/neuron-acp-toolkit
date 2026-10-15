@@ -9,200 +9,270 @@
     body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 16px 20px; background: #f8f9fa; color: #212529; font-size: 14px; }
     header { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid #dee2e6; }
     header .title { font-size: 1.3rem; font-weight: 600; margin-right: 6px; }
-    .muted { color: #6c757d; }
-    .small { font-size: 0.8rem; }
-    .mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+    .muted { color: #6c757d; } .small { font-size: 0.8rem; } .mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
     select, input[type=text], input[type=number] { padding: 4px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.85rem; background: #fff; }
-    input[type=number] { width: 64px; }
-    .btn { padding: 4px 10px; border: 1px solid #ced4da; border-radius: 4px; background: #fff; cursor: pointer; font-size: 0.82rem; color: #212529; }
+    input[type=number] { width: 70px; }
+    .btn { padding: 4px 10px; border: 1px solid #ced4da; border-radius: 4px; background: #fff; cursor: pointer; font-size: 0.82rem; color: #212529; white-space: nowrap; }
     .btn:hover { border-color: #0d6efd; background: #e7f1ff; }
     .btn.primary { background: #0d6efd; border-color: #0d6efd; color: #fff; font-weight: 600; }
     .btn.primary:hover { background: #0b5ed7; }
     .btn.danger { color: #dc3545; border-color: #dc3545; }
-    .btn:disabled { opacity: 0.45; cursor: default; background: #fff; border-color: #ced4da; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; color: #fff; font-weight: 600; }
-    .badge.success { background: #198754; } .badge.warning { background: #ffc107; color: #212529; }
-    .badge.danger { background: #dc3545; } .badge.secondary { background: #6c757d; } .badge.primary { background: #0d6efd; }
+    .btn.take { background: #dc3545; border-color: #dc3545; color: #fff; font-weight: 700; }
+    .btn:disabled { opacity: 0.45; cursor: default; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; color: #fff; font-weight: 600; white-space: nowrap; }
+    .badge.success { background: #198754; } .badge.warning { background: #ffc107; color: #212529; } .badge.danger { background: #dc3545; }
+    .badge.secondary { background: #6c757d; } .badge.primary { background: #0d6efd; } .badge.purple { background: #6f42c1; } .badge.light { background: #e9ecef; color: #495057; }
+    .badge.click { cursor: pointer; } .badge.click.active { outline: 2px solid #212529; outline-offset: 1px; }
+    .badge.red { background: #fff; color: #dc3545; border: 1px solid #dc3545; } .badge.blue { background: #fff; color: #0d6efd; border: 1px solid #0d6efd; }
+    .badge.red.inuse { background: #dc3545; color: #fff; } .badge.blue.inuse { background: #0d6efd; color: #fff; }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+    .dot.success { background: #198754; } .dot.danger { background: #dc3545; } .dot.secondary { background: #adb5bd; }
     .alert { background: #f8d7da; color: #842029; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; white-space: pre-wrap; }
     .note { background: #fff3cd; color: #664d03; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .ok { background: #d1e7dd; color: #0f5132; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
-
-    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px minmax(0, 1fr); gap: 12px; align-items: start; }
-    @media (max-width: 1200px) { .layout { grid-template-columns: 1fr; } }
-    .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; min-width: 0; }
-    .card h2 { font-size: 1rem; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px; }
+    .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; min-width: 0; margin-bottom: 12px; }
+    .card h2 { font-size: 1rem; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .card h3 { font-size: 0.85rem; margin: 12px 0 6px 0; color: #495057; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .toolbar form { display: flex; gap: 6px; margin-left: auto; }
     .chip { padding: 4px 12px; border: 1px solid #adb5bd; border-radius: 999px; background: #fff; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: #212529; }
     .chip:hover { border-color: #0d6efd; background: #e7f1ff; }
     .chip.active { background: #0d6efd; border-color: #0d6efd; color: #fff; }
     .chip .n { font-weight: 400; opacity: 0.75; margin-left: 4px; }
+    .chip .off { margin-left: 6px; padding: 0 6px; border-radius: 8px; background: #dc3545; color: #fff; font-size: 0.7rem; }
     .chip .pend { margin-left: 6px; padding: 0 6px; border-radius: 8px; background: #fd7e14; color: #fff; font-size: 0.7rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; align-items: center; }
+    .hint { color: #6c757d; font-size: 0.8rem; margin: 0 0 8px 2px; }
+    .table-wrap { overflow-x: auto; background: #fff; border-radius: 6px; border: 1px solid #dee2e6; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { padding: 4px 8px; text-align: left; border-bottom: 1px solid #e9ecef; white-space: nowrap; }
+    thead th { position: sticky; top: 0; background: #fff; border-bottom: 2px solid #dee2e6; z-index: 1; }
+    th.sortable { cursor: pointer; user-select: none; } th.sortable:hover { background: #f1f3f5; }
+    tr.datarow { cursor: pointer; } tr.datarow:hover td { background: #e7f1ff; }
+    tr.datarow.sel td { background: #cfe2ff; }
+    tr.datarow.offline td { color: #adb5bd; }
+    tr.detail td { background: #f8f9fa; white-space: normal; }
+    .chev { display: inline-block; width: 1em; color: #0d6efd; transition: transform 0.12s; } tr.open .chev { transform: rotate(90deg); }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 3px; max-height: 260px; overflow-y: auto; padding: 2px; }
-    .grid.wide { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); }
-    .blk { position: relative; border: 1px solid #ced4da; border-radius: 4px; background: #fff; padding: 3px 2px; font-size: 0.76rem; text-align: center; cursor: pointer; user-select: none; line-height: 1.15; }
-    .blk:hover { border-color: #0d6efd; }
-    .blk.on { background: #e8f5ee; border-color: #8fd1ae; }
-    .blk.off { background: #f1f3f5; color: #adb5bd; }
-    .blk.sel { background: #0d6efd; border-color: #0d6efd; color: #fff; }
-    .blk.hit { box-shadow: inset 0 0 0 2px #6f42c1; }
+    /* router */
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "src dst" "route route"; gap: 12px; align-items: start; }
+    .area-src { grid-area: src; } .area-dst { grid-area: dst; } .area-route { grid-area: route; }
+    @media (max-width: 760px) { .layout { grid-template-columns: 1fr; grid-template-areas: "src" "dst" "route"; } }
+    .route-cols { display: grid; grid-template-columns: minmax(260px, 1.2fr) minmax(260px, 1.2fr) minmax(220px, 0.8fr); gap: 16px; }
+    @media (max-width: 1000px) { .route-cols { grid-template-columns: 1fr; } }
+    .chgrid { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; }
+    @media (max-width: 1100px) { .chgrid { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+    .chtile { border: 1px solid #ced4da; border-radius: 4px; padding: 3px 2px; text-align: center; cursor: pointer; font-size: 0.72rem; line-height: 1.2; background: #fff; position: relative; overflow: hidden; }
+    .chtile b { font-size: 0.8rem; } .chtile .sub { display: block; font-size: 0.6rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chtile.st-ok { border-left: 4px solid #198754; } .chtile.st-info { border-left: 4px solid #adb5bd; }
+    .chtile.st-warn { border-left: 4px solid #ffc107; } .chtile.st-fail { border-left: 4px solid #dc3545; }
+    .chtile.sel { background: #0d6efd; color: #fff; border-color: #0d6efd; }
+    .case { display: inline-block; padding: 0 4px; border-radius: 3px; font-size: 0.62rem; font-weight: 700; }
+    .case-A { background: #cfe2ff; color: #084298; } .case-B { background: #e0cffc; color: #3d0a91; } .case-M { background: #ffe5d0; color: #842029; } .case-- { background: #e9ecef; color: #6c757d; }
+    .chtile.sel .case { background: #fff; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 3px; max-height: 250px; overflow-y: auto; padding: 2px; }
+    .blk { position: relative; border: 1px solid #ced4da; border-radius: 4px; background: #fff; padding: 3px 2px; font-size: 0.74rem; text-align: center; cursor: pointer; user-select: none; line-height: 1.15; }
+    .blk:hover { border-color: #0d6efd; } .blk.on { background: #e8f5ee; border-color: #8fd1ae; } .blk.off { background: #f1f3f5; color: #adb5bd; }
+    .blk.sel { background: #0d6efd; border-color: #0d6efd; color: #fff; } .blk.hit { box-shadow: inset 0 0 0 2px #6f42c1; }
     .blk.dragover { background: #cfe2ff; border-color: #0d6efd; }
-    .blk .dot { position: absolute; top: 2px; right: 2px; width: 6px; height: 6px; border-radius: 50%; background: #fd7e14; }
-    .blk .sub { display: block; font-size: 0.62rem; opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.74rem; color: #6c757d; margin: 6px 0 0 2px; }
-    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; border: 1px solid #ced4da; vertical-align: -1px; margin-right: 4px; }
-
-    .chs { display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 3px; }
-    .ch { border: 1px solid #ced4da; border-radius: 4px; background: #fff; text-align: center; padding: 4px 0; font-size: 0.78rem; cursor: grab; user-select: none; }
-    .ch:hover { border-color: #0d6efd; background: #e7f1ff; }
-    .ch.sel { background: #6f42c1; border-color: #6f42c1; color: #fff; }
+    .blk .dot2 { position: absolute; top: 2px; right: 2px; width: 6px; height: 6px; border-radius: 50%; background: #fd7e14; }
+    .blk .sub { display: block; font-size: 0.6rem; opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chs { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 3px; }
+    .ch { border: 1px solid #ced4da; border-radius: 4px; background: #fff; text-align: center; padding: 2px 0; font-size: 0.78rem; cursor: grab; user-select: none; line-height: 1.15; }
+    .ch .id { display: block; font-size: 0.6rem; color: #6c757d; }
+    .ch:hover { border-color: #0d6efd; background: #e7f1ff; } .ch.sel { background: #6f42c1; border-color: #6f42c1; color: #fff; } .ch.sel .id { color: #e2d9f3; }
     .ch.used { border-bottom: 3px solid #198754; }
     .chs > span, .grid > span { grid-column: 1 / -1; }
-
-    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-    th, td { padding: 3px 6px; text-align: left; border-bottom: 1px solid #e9ecef; white-space: nowrap; }
-    thead th { position: sticky; top: 0; background: #fff; border-bottom: 2px solid #dee2e6; z-index: 1; }
-    .slots { max-height: 520px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: 6px; }
-    .slots tr { cursor: pointer; }
-    .slots tr:hover td { background: #f1f6ff; }
-    .slots tr.sel td { background: #cfe2ff; }
-    .slots tr.dragover td { background: #cfe2ff; }
-    .slots td.chg { background: #fff0e0; }
-    .slots tr.hit td.v { color: #6f42c1; font-weight: 600; }
-    .slots td.v { max-width: 210px; overflow: hidden; text-overflow: ellipsis; }
+    .slots { max-height: 460px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: 6px; }
+    .slots tr { cursor: pointer; } .slots tr:hover td { background: #f1f6ff; } .slots tr.sel td { background: #cfe2ff; } .slots tr.dragover td { background: #cfe2ff; }
+    .slots td.chg { background: #fff0e0; } .slots tr.hit td.v { color: #6f42c1; font-weight: 600; }
+    .slots td.v { max-width: 230px; overflow: hidden; text-overflow: ellipsis; }
     .old { text-decoration: line-through; color: #adb5bd; margin-right: 4px; }
     .warn { color: #b02a37; }
-
     .field-toggle { display: inline-flex; border: 1px solid #ced4da; border-radius: 6px; overflow: hidden; }
     .field-toggle button { border: none; background: #fff; padding: 4px 10px; font-size: 0.8rem; cursor: pointer; border-right: 1px solid #ced4da; }
-    .field-toggle button:last-child { border-right: none; }
-    .field-toggle button.active { background: #0d6efd; color: #fff; font-weight: 600; }
-
+    .field-toggle button:last-child { border-right: none; } .field-toggle button.active { background: #0d6efd; color: #fff; font-weight: 600; }
     .fill { display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: center; font-size: 0.82rem; }
     .fill .what { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .pending { max-height: 360px; overflow-y: auto; }
-    .pending td { font-size: 0.76rem; }
-    .x { border: none; background: none; color: #adb5bd; cursor: pointer; font-size: 0.95rem; padding: 0 2px; }
-    .x:hover { color: #dc3545; }
+    .pending { max-height: 340px; overflow-y: auto; } .pending td { font-size: 0.75rem; }
+    .x { border: none; background: none; color: #adb5bd; cursor: pointer; font-size: 0.95rem; padding: 0 2px; } .x:hover { color: #dc3545; }
     .help { font-size: 0.78rem; color: #6c757d; line-height: 1.45; margin: 0; padding-left: 16px; }
+    .find { font-size: 0.8rem; margin: 2px 0; } .find .lv { display: inline-block; width: 42px; font-weight: 700; font-size: 0.7rem; }
+    .lv-ok { color: #198754; } .lv-info { color: #6c757d; } .lv-warn { color: #997404; } .lv-fail { color: #dc3545; }
+    .sinkcard { border: 1px solid #dee2e6; border-radius: 6px; padding: 8px; margin-bottom: 8px; }
+    .sinkcard h4 { margin: 0 0 6px 0; font-size: 0.85rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .plan td.new { color: #0d6efd; font-weight: 600; } .plan td.same { color: #6c757d; }
+    .sidebox { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+    .side { border: 1px solid #dee2e6; border-radius: 6px; padding: 6px 8px; font-size: 0.8rem; }
+    .flow { display: flex; flex-direction: column; align-items: flex-start; margin: 4px 0 6px 0; }
+    .fbox { border: 1px solid #ced4da; border-radius: 6px; padding: 5px 8px; font-size: 0.76rem; background: #fff; min-width: 92px; line-height: 1.35; }
+    .fbox b { font-size: 0.8rem; } .fbox.delay { background: #fff8e1; border-color: #ffc107; } .fbox.delay input { width: 70px; padding: 2px 4px; font-weight: 700; }
+    .fbox.delay.changed { border-width: 2px; } .fbox.src { background: #e7f1ff; border-color: #9ec5fe; } .fbox.out { background: #f1f3f5; }
+    .farrow { display: flex; align-items: center; gap: 6px; padding: 1px 0 1px 18px; font-size: 0.66rem; color: #6c757d; }
+    .farrow .a { font-size: 1.1rem; color: #495057; line-height: 1; }
+    .farrow.auto .tag { background: #6f42c1; color: #fff; border-radius: 3px; padding: 0 4px; font-weight: 700; }
+    .flowbox { border: 1px solid #dee2e6; border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; min-width: 0; }
+    .flows2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: start; }
+    .flows2 > .span { grid-column: 1 / -1; }
+    @media (max-width: 600px) { .flows2 { grid-template-columns: 1fr; } }
+    .flows2 .fbox { min-width: 0; width: 100%; } .flows2 .flowbranch { width: 100%; } .flows2 .flow { align-items: stretch; }
+    .flowbox.both .hd { color: #0d6efd; }
+    .layout.assisted { grid-template-columns: minmax(230px, 0.55fr) minmax(0, 1.45fr); }
+    @media (max-width: 760px) { .layout.assisted { grid-template-columns: 1fr; } }
+    .flowbox .hd { font-size: 0.8rem; margin-bottom: 4px; }
+    .flowbranch { margin: 2px 0 6px 0; padding-left: 10px; border-left: 2px dashed #6f42c1; display: flex; flex-direction: column; align-items: flex-start; }
+    .fbox { min-width: 200px; }
+    .fleet-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; cursor: pointer; user-select: none; }
+    .fleet-head h2 { margin: 0; } .fleet-head .chev2 { color: #0d6efd; transition: transform 0.12s; display: inline-block; }
+    #fleetCard.collapsed .chev2 { transform: rotate(-90deg); } #fleetCard.collapsed #fleetFull { display: none; }
+    #fleetCard:not(.collapsed) #fleetQuick { display: none; }
+    .qdev { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border: 1px solid #ced4da; border-radius: 999px; background: #fff; font-size: 0.78rem; cursor: pointer; }
+    .qdev:hover { border-color: #0d6efd; background: #e7f1ff; } .qdev.sel { background: #0d6efd; border-color: #0d6efd; color: #fff; font-weight: 600; }
+    .qdev.na { color: #adb5bd; } .qdev .dot { width: 8px; height: 8px; }
+    .viewtog button[data-v="active"].active { background: #198754; } .viewtog button[data-v="preset"].active { background: #fd7e14; }
+    .presetbar { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; }
+    .presetbar.on { background: #fff3e0; border: 1px solid #fd7e14; color: #8a3c00; } .presetbar.off { background: #e8f5ee; border: 1px solid #8fd1ae; color: #0f5132; }
+    .chtile .pdot { position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%; background: #fd7e14; }
+    body.view-active .slots td.chg { background: transparent; }
+    .ap { font-size: 0.72rem; line-height: 1.35; margin-top: 2px; }
+    .ap .act { color: #146c43; } .ap .pre { color: #b45309; font-weight: 600; } .ap .eq { color: #6c757d; }
+    .plan td.act { color: #146c43; } .plan td.pre { background: #fff3e0; color: #8a3c00; font-weight: 600; } .plan td.eq { color: #adb5bd; text-align: center; }
+    .plan td.tpl { color: #6f42c1; font-style: italic; opacity: 0.8; }
+    .plan th.grp { text-align: center; border-bottom: 1px solid #dee2e6; }
+    .hidden { display: none !important; }
     .drop-hint { position: fixed; inset: 0; background: rgba(13,110,253,0.12); border: 3px dashed #0d6efd; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 600; color: #0d6efd; z-index: 50; }
     body.filedrag .drop-hint { display: flex; }
-    .hidden { display: none !important; }
 </style>
 </head>
 <body>
 <header>
     <span class="title">Neuron Audio Router</span>
-    <select id="fileSelect" title="Exports in the cbf/ folder next to server.py"></select>
-    <label class="btn" title="Upload a .cbf export (or drop it anywhere on the page)">Upload .cbf<input type="file" id="fileInput" accept=".cbf" class="hidden"></label>
-    <span id="deviceInfo" class="small muted"></span>
-    <span style="margin-left:auto" class="badge secondary" title="Live access needs ACP2 (TCP 2072). There is no protocol documentation, so this tool only edits .cbf files.">Offline · .cbf only</span>
+    <span id="summaryBar"></span>
+    <span class="badge light" title="acp2/client.py has no set-property code path. Take/Undo are refused by the service until writing is implemented and enabled per device.">ACP2 read-only</span>
+    <button class="btn" id="pauseBtn" style="margin-left:auto">…</button>
+    <span class="muted small" id="lastUpdate"></span>
 </header>
 
 <div id="msg"></div>
 
-<div class="layout" id="app">
-    <!-- SOURCES -->
-    <section class="card">
-        <h2>Sources <span class="muted small">(Identifier)</span>
-            <input type="text" id="srcFilter" placeholder="Filter: number or stream name" style="margin-left:auto; width:200px"></h2>
-        <div class="chips" id="srcCats"></div>
-        <div class="grid" id="srcGrid"></div>
-        <div class="legend"><span><i style="background:#e8f5ee;border-color:#8fd1ae"></i>enabled</span><span><i style="background:#f1f3f5"></i>disabled / off</span><span><i style="box-shadow:inset 0 0 0 2px #6f42c1"></i>feeds selected destination</span></div>
-        <h3 id="srcChTitle">Channels</h3>
-        <div class="chs" id="srcChs"></div>
-        <div id="usedBy" class="small muted" style="margin-top:8px"></div>
-    </section>
+<!-- ================= FLEET ================= -->
+<section class="card" id="fleetCard">
+    <div class="fleet-head" id="fleetToggle" title="Show / hide the device list">
+        <span class="chev2">▾</span><h2>Devices <span class="muted small" id="fleetCount"></span></h2>
+        <span class="small muted" id="fleetSel"></span>
+    </div>
+    <div id="fleetQuick" class="chips" style="margin:8px 0 0 0"></div>
+    <div id="fleetFull" style="margin-top:10px">
+    <div class="toolbar">
+        <input type="text" id="fleetFilter" placeholder="Filter: name, IP, tag" style="width:200px">
+        <label class="small"><input type="checkbox" id="onlyProblems"> show only problems</label>
+        <span class="small muted" id="listsInfo"></span>
+        <label class="btn" title="Cerebrum SRC or DST route list (.rtf/.csv/.tsv/.txt)">Upload SRC/DST list<input type="file" id="listInput" accept=".rtf,.csv,.tsv,.txt" class="hidden" multiple></label>
+        <form id="addDeviceForm">
+            <input type="text" id="newIp" placeholder="Device IP" required style="width:120px">
+            <input type="text" id="newName" placeholder="Name (e.g. IPG05A)" required style="width:140px">
+            <input type="text" id="newTag" placeholder="Tag (DCR/DCB)" style="width:90px">
+            <button type="submit" class="btn">+ Device</button>
+        </form>
+    </div>
+    <div class="chips" id="groupBar"></div>
+    <p class="hint">&#9656; Click a device row for details. Only devices with <b>poll = yes</b> (devices.json) are ever contacted. The routing read and channel checks run only on a button click.</p>
+    <div class="table-wrap"><table>
+        <thead><tr id="fleetHead">
+            <th></th>
+            <th class="sortable" data-key="name">Device</th>
+            <th class="sortable" data-key="ip">IP</th>
+            <th class="sortable" data-key="tag">Tag</th>
+            <th class="sortable" data-key="type">Type</th>
+            <th class="sortable" data-key="status">Status</th>
+            <th class="sortable" data-key="fw">FW</th>
+            <th class="sortable" data-key="snapshot">Routing read</th>
+            <th class="sortable" data-key="poll" title="Released for device access (devices.json poll)">Access</th>
+            <th class="sortable" data-key="write" title="Writing (Take) allowed (devices.json write)">Write</th>
+        </tr></thead>
+        <tbody id="fleetBody"></tbody>
+    </table></div>
+    </div>
+</section>
 
-    <!-- ROUTE / PENDING -->
-    <section class="card">
-        <h2>Route</h2>
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span class="small">Write to</span>
-            <div class="field-toggle" id="fieldToggle">
-                <button data-f="main">Main</button><button data-f="backup">Backup</button><button data-f="both">Both</button>
+<!-- ================= ROUTER ================= -->
+<section id="routerSection" class="hidden">
+    <div class="card">
+        <h2 id="routerTitle">Router</h2>
+        <div class="toolbar">
+            <span class="small"><b>Mode</b></span>
+            <div class="field-toggle" id="modeToggle"><button data-m="assisted">Assisted</button><button data-m="manual">Manual</button></div>
+            <span class="small"><b>View</b></span>
+            <div class="field-toggle viewtog" id="viewToggle" title="ACTIVE = what the device runs now · PRESET = active + your staged changes (what TAKE will activate)"><button data-v="active">Active</button><button data-v="preset">Preset</button></div>
+            <span id="presetBar" class="presetbar off"></span>
+            <span class="small muted" id="namesInfo"></span>
+            <span style="margin-left:auto" class="small muted">Offline file:</span>
+            <select id="cbfSelect" title=".cbf export as data source instead of the live read (illustration/offline)"></select>
+        </div>
+        <h3 style="margin-top:4px">Video paths / channels <span class="muted small">case per side Main/Backup · A = IP · B = SDI · colour = check status</span></h3>
+        <div class="chgrid" id="chGrid"></div>
+    </div>
+
+    <div class="layout">
+        <section class="card area-src">
+            <h2>Sources <span class="muted small">(Identifier)</span>
+                <input type="text" id="srcFilter" placeholder="Filter: number, CC1, TX04 …" style="margin-left:auto; width:200px"></h2>
+            <div class="chips" id="srcCats"></div>
+            <div class="grid" id="srcGrid"></div>
+            <h3 id="srcChTitle">Channels</h3>
+            <div class="chs" id="srcChs"></div>
+            <div id="usedBy" class="small muted" style="margin-top:8px"></div>
+        </section>
+
+        <section class="card area-dst">
+            <h2 id="dstHead">Destinations <span class="muted small">(Input Main / Backup)</span>
+                <input type="text" id="dstFilter" placeholder="Filter: number, CC1, TX04 …" style="margin-left:auto; width:200px"></h2>
+            <div id="dstManual">
+                <div class="chips" id="dstCats"></div>
+                <div class="grid" id="dstGrid"></div>
+                <h3 id="dstTitle">Slots</h3>
+                <div class="slots"><table>
+                    <thead><tr><th>Ch</th><th>Main</th><th>Backup</th><th></th></tr></thead>
+                    <tbody id="slotBody"></tbody>
+                </table></div>
             </div>
-        </div>
-        <div class="fill">
-            <span class="muted">Fill</span><span class="what" id="fillDst">select a destination block</span>
-            <span class="muted">from ch</span><span><input type="number" id="fillDstStart" min="1" value="1"></span>
-            <span class="muted">with</span><span class="what" id="fillSrc">select a source block</span>
-            <span class="muted">from ch</span><span><input type="number" id="fillSrcStart" min="1" value="1"></span>
-            <span class="muted">count</span><span><input type="number" id="fillCount" min="1" value="16"> <span class="small muted" id="fillMax"></span></span>
-        </div>
-        <div style="margin-top:10px; display:flex; gap:6px;">
-            <button class="btn primary" id="fillBtn" disabled>Fill &rarr;</button>
-            <button class="btn" id="undoBtn" disabled title="Undo the last action (Ctrl/Cmd+Z)">Undo</button>
-        </div>
-        <ul class="help" style="margin-top:10px">
-            <li>Drag a <b>source block</b> onto a <b>destination block</b> to fill 1:1.</li>
-            <li>Drag a <b>source channel</b> onto a <b>slot</b>, or click a slot and then click source channels. The slot cursor moves down after each click, so you can shuffle quickly.</li>
-            <li>Nothing touches a device. Export writes a new .cbf to <span class="mono">exports/</span>.</li>
-        </ul>
+            <div id="dstAssisted"></div>
+        </section>
 
-        <h3>Pending changes <span class="badge primary" id="pendCount">0</span>
-            <button class="btn danger" id="discardBtn" style="margin-left:auto" disabled>Discard all</button></h3>
-        <div id="pendWarn"></div>
-        <div class="pending"><table><tbody id="pendBody"></tbody></table></div>
-        <div style="margin-top:10px">
-            <input type="text" id="exportNote" placeholder="Note for the change log (optional)" style="width:100%; margin-bottom:6px">
-            <button class="btn primary" id="exportBtn" style="width:100%" disabled>Export patched .cbf</button>
-        </div>
-        <div id="exportResult" style="margin-top:8px"></div>
-    </section>
-
-    <!-- DESTINATIONS -->
-    <section class="card">
-        <h2>Destinations <span class="muted small">(Input Main / Backup)</span>
-            <input type="text" id="dstFilter" placeholder="Filter: number or stream name" style="margin-left:auto; width:200px"></h2>
-        <div class="chips" id="dstCats"></div>
-        <div class="grid" id="dstGrid"></div>
-        <div class="legend"><span><i style="background:#e8f5ee;border-color:#8fd1ae"></i>enabled</span><span><i style="background:#f1f3f5"></i>disabled / off</span><span><i style="background:#fd7e14;border-radius:50%;border:none;width:7px;height:7px"></i>pending change</span><span><i style="box-shadow:inset 0 0 0 2px #6f42c1"></i>uses selected source</span></div>
-        <h3 id="dstTitle">Slots</h3>
-        <div class="slots"><table>
-            <thead><tr><th>Ch</th><th>Main</th><th>Backup</th><th></th></tr></thead>
-            <tbody id="slotBody"></tbody>
-        </table></div>
-    </section>
-</div>
-<div class="drop-hint">Drop .cbf to upload</div>
+        <section class="card area-route">
+            <div class="route-cols">
+                <div id="routeLeft"></div>
+                <div>
+                    <h3 style="margin-top:0">Preset <span class="muted small">(staged, activated by TAKE)</span> <span class="badge primary" id="pendCount">0</span>
+                        <button class="btn" id="undoEditBtn" disabled title="Undo the last edit (Ctrl/Cmd+Z)">Undo edit</button>
+                        <button class="btn danger" id="discardBtn" style="margin-left:auto" disabled>Discard all</button></h3>
+                    <div id="pendWarn"></div>
+                    <div class="pending"><table><tbody id="pendBody"></tbody></table></div>
+                </div>
+                <div>
+                    <h3 style="margin-top:0">Activate</h3>
+                    <div id="applyLive">
+                        <button class="btn take" id="takeBtn" style="width:100%" disabled title="Activate the preset: write it into the device over ACP2">TAKE (Preset → Active)</button>
+                        <button class="btn" id="undoTakeBtn" style="width:100%; margin-top:6px" title="Restore the active values from before the last Take">Undo last Take (restore previous Active)</button>
+                        <p class="small muted" id="takeInfo" style="margin:6px 0 0 0"></p>
+                    </div>
+                    <div id="applyCbf" class="hidden">
+                        <input type="text" id="exportNote" placeholder="Note for the change log (optional)" style="width:100%; margin-bottom:6px">
+                        <button class="btn primary" id="exportBtn" style="width:100%" disabled>Export patched .cbf</button>
+                    </div>
+                    <div id="applyResult" style="margin-top:8px"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+</section>
+<div class="drop-hint">Drop SRC/DST list to upload</div>
 
 <script>
 "use strict";
-const SRC_CATS = [
-    { id: "ipin16", label: "IP In 16ch", kind: "ipin", test: b => b <= 128 },
-    { id: "ipin64", label: "IP In 64ch", kind: "ipin", test: b => b > 128 },
-    { id: "deemb", label: "De-Embedder", kind: "deemb" },
-    { id: "bank", label: "Delay Banks", kind: "bank" },
-    { id: "madiin", label: "MADI In", kind: "madiin" },
-];
-const DST_CATS = [
-    { id: "emb", label: "Embedder", kind: "emb" },
-    { id: "ipout", label: "IP Out", kind: "ipout" },
-    { id: "bank", label: "Delay Banks", kind: "bank" },
-    { id: "madiout", label: "MADI Out", kind: "madiout" },
-];
-const SHORT = { ipin: "IP", deemb: "DE", bank: "BK", madiin: "MA" };
-
-const S = {
-    file: null, info: null,
-    src: new Map(), srcIdx: new Map(), srcBlocks: new Map(), // blockKey -> {kind, block, label, name, enabled, ids:[]}
-    dst: new Map(), dstBlocks: new Map(),
-    pending: new Map(),   // "key|field" -> value
-    history: [],          // stack of [ [pkey, prevValueOrUndefined], ... ]
-    field: "main",
-    srcCat: "ipin16", dstCat: "emb",
-    selSrcBlock: null, selDstBlock: null, selSrcId: null, selSlot: null,
-    exported: null,
-};
-
-// ---------- helpers ----------
+// ================= helpers =================
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const blockKey = (kind, block) => `${kind}:${block}`;
 function msg(text, cls = "alert") { $("msg").innerHTML = text ? `<div class="${cls}">${esc(text)}</div>` : ""; }
 function store(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 function recall(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
@@ -212,353 +282,744 @@ async function api(path, opts) {
     if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
     return j;
 }
+const post = (path, body) => api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+const norm = n => String(n || "").toUpperCase().replace(/^(DC[RB])\./, "").replace(/[^A-Z0-9]/g, "").replace(/(?<=[A-Z])0+(?=\d)/g, "");
 function rows(table) { return table.rows.map(r => Object.fromEntries(table.cols.map((c, i) => [c, r[i]]))); }
-function blockSort(a, b) { return typeof a.block === "number" ? a.block - b.block : String(a.block).localeCompare(String(b.block), undefined, { numeric: true }); }
+const blockKey = (kind, block) => `${kind}:${block}`;
+const ago = iso => { if (!iso) return "never"; const s = (Date.now() - new Date(iso)) / 1000; return s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : s < 129600 ? `${Math.round(s / 3600)} h ago` : iso.replace("T", " ").slice(0, 16); };
 
-function srcShort(id) {
-    if (id === 0 || id == null) return "—";
-    const s = S.src.get(id);
-    if (!s) return `#${id}?`;
-    return `${SHORT[s.kind]} ${s.block}.${s.ch}`;
+// ================= FLEET =================
+const F = { state: null, open: null, group: recall("nar.group") || "all", sort: recall("nar.sort") || { key: "name", dir: 1 }, filter: null };
+function devStatus(d) {
+    if (!d.poll) return { key: "noaccess", label: "not released", cls: "secondary", rank: 3 };
+    if (!d.health) return { key: "pending", label: "…", cls: "secondary", rank: 2 };
+    if (!d.health.online) return { key: "offline", label: "offline", cls: "danger", rank: 0 };
+    return { key: "online", label: `online · ${d.health.rtt_ms} ms`, cls: "success", rank: 4 };
 }
-function srcLong(id) {
-    const s = S.src.get(id);
-    if (!s) return id === 0 ? "nothing (0)" : `unknown id ${id}`;
-    let t = `${s.block_label} ch ${s.ch}`;
-    if (s.name) t += ` · ${s.name}`;
-    if (s.kind === "bank" && s.delay != null) t += ` · ${s.delay.toFixed(1)} ms`;
-    return `${t}  [id ${id}]`;
-}
-function dstLabel(key) { const d = S.dst.get(key); return d ? `${d.block_label} ch ${d.ch}` : key; }
-const value = (key, field) => { const p = S.pending.get(`${key}|${field}`); return p !== undefined ? p : S.dst.get(key)[field]; };
-const isChanged = (key, field) => S.pending.has(`${key}|${field}`);
-
-// ---------- loading ----------
-async function loadFiles(select) {
-    const j = await api("/api/files");
-    const sel = $("fileSelect");
-    sel.innerHTML = `<option value="">— choose a .cbf (${j.files.length}) —</option>` +
-        j.files.map(f => `<option value="${esc(f.name)}">${esc(f.name)}  ·  ${f.modified.replace("T", " ")}</option>`).join("");
-    const want = select || recall("nar.file");
-    if (want && j.files.some(f => f.name === want)) { sel.value = want; await loadModel(want); }
-    else if (!j.files.length) msg(`No .cbf files yet. Upload one, or copy exports into ${j.cbf_dir}`, "note");
-}
-
-async function loadModel(name) {
-    if (!name) return;
-    msg("Loading " + name + " …", "note");
-    const j = await api("/api/model?file=" + encodeURIComponent(name));
-    S.file = name; S.info = j.info; store("nar.file", name);
-    S.src.clear(); S.srcIdx.clear(); S.srcBlocks.clear(); S.dst.clear(); S.dstBlocks.clear();
-    for (const s of rows(j.sources)) {
-        S.src.set(s.id, s);
-        S.srcIdx.set(`${s.kind}:${s.block}:${s.ch}`, s.id);
-        const bk = blockKey(s.kind, s.block);
-        if (!S.srcBlocks.has(bk)) S.srcBlocks.set(bk, { kind: s.kind, block: s.block, label: s.block_label, name: s.name, enabled: s.enabled, delay: s.delay, ids: [] });
-        S.srcBlocks.get(bk).ids.push(s.id);
-    }
-    for (const d of rows(j.destinations)) {
-        S.dst.set(d.key, d);
-        const bk = blockKey(d.kind, d.block);
-        if (!S.dstBlocks.has(bk)) S.dstBlocks.set(bk, { kind: d.kind, block: d.block, label: d.block_label, name: d.name, enabled: d.enabled, delay: d.delay, keys: [] });
-        S.dstBlocks.get(bk).keys.push(d.key);
-    }
-    for (const b of S.srcBlocks.values()) b.ids.sort((a, c) => S.src.get(a).ch - S.src.get(c).ch);
-    for (const b of S.dstBlocks.values()) b.keys.sort((a, c) => S.dst.get(a).ch - S.dst.get(c).ch);
-    // restore unsent work for this exact file
-    S.pending = new Map((recall("nar.pending." + name) || []).filter(([k]) => S.dst.has(k.split("|")[0])));
-    S.history = []; S.exported = null;
-    S.selSrcBlock = S.selDstBlock = S.selSrcId = S.selSlot = null;
-    const i = j.info;
-    $("deviceInfo").innerHTML = `<b>${esc(i.device)}</b> · <span class="mono">${esc(i.ip)}</span> · FW ${esc(i.version)} · ${i.sources} sources · ${i.destinations} destinations`;
-    msg(S.pending.size ? `Restored ${S.pending.size} unsent change(s) for this file from your last session.` : "", "note");
-    renderAll();
-}
-
-async function upload(file) {
-    if (!file) return;
-    if (!/\.cbf$/i.test(file.name)) { msg("Only .cbf files can be uploaded."); return; }
+function groupOf(d) { return d.tag || "other"; }
+async function pollState() {
     try {
-        const j = await api("/api/upload", { method: "POST", headers: { "X-File-Name": encodeURIComponent(file.name) }, body: file });
-        await loadFiles(j.name);
-    } catch (e) { msg("Upload failed: " + e.message); }
+        F.state = await api("/api/state");
+        renderFleet();
+        if (R.device) refreshJob();
+    } catch (e) { $("lastUpdate").textContent = "service not reachable: " + e.message; }
 }
-
-// ---------- editing ----------
-function setValues(list) { // list of [key, field("main"|"backup"), value]
-    const undo = [];
-    for (const [key, field, v] of list) {
-        const pk = `${key}|${field}`;
-        undo.push([pk, S.pending.get(pk)]);
-        if (S.dst.get(key)[field] === v) S.pending.delete(pk); else S.pending.set(pk, v);
+function renderFleet() {
+    const st = F.state; if (!st) return;
+    const devs = st.devices;
+    const cnt = { online: 0, offline: 0, noaccess: 0 };
+    devs.forEach(d => { const s = devStatus(d).key; if (cnt[s] !== undefined) cnt[s]++; });
+    $("summaryBar").innerHTML = [["online", "success"], ["offline", "danger"], ["noaccess", "secondary", "not released"]]
+        .map(([k, cls, lab]) => `<span class="badge ${cls} click ${F.filter === k ? "active" : ""}" data-f="${k}" title="Filter">${cnt[k]} ${lab || k}</span>`).join(" ")
+        + ` <span class="badge light click ${!F.filter ? "active" : ""}" data-f="">${devs.length} total</span>`;
+    $("pauseBtn").textContent = st.paused ? "▶ Resume polling" : "⏸ Pause polling";
+    $("pauseBtn").classList.toggle("danger", st.paused);
+    $("lastUpdate").textContent = st.paused ? "polling paused" : `last sweep ${ago(st.last_sweep)} (${st.sweep_seconds ?? "–"} s), every ${st.settings.health_sec} s`;
+    $("listsInfo").textContent = st.lists.length ? `Lists: ${st.lists.join(", ")}` : "No SRC/DST list loaded";
+    $("fleetCount").textContent = `(${devs.length})`;
+    $("fleetSel").innerHTML = R.device ? `router: <b>${esc(R.device)}</b>` : "";
+    $("fleetQuick").innerHTML = devs.map(d => { const s = devStatus(d);
+        return `<span class="qdev ${R.device === d.name ? "sel" : ""} ${d.snapshot ? "" : "na"}" data-q="${esc(d.name)}" title="${esc(`${d.name} ${d.ip} · ${s.label}${d.snapshot ? "" : " · not read yet"}`)}"><span class="dot ${s.cls}"></span>${esc(d.name)}</span>`; }).join("");
+    // groups
+    const groups = {};
+    devs.forEach(d => { const g = groupOf(d); groups[g] = groups[g] || { n: 0, off: 0 }; groups[g].n++; if (devStatus(d).key === "offline") groups[g].off++; });
+    $("groupBar").innerHTML = `<span class="small"><b>Group</b></span> ` + [["all", { n: devs.length, off: cnt.offline }], ...Object.entries(groups).sort()]
+        .map(([g, v]) => `<button class="chip ${F.group === g ? "active" : ""}" data-g="${esc(g)}">${g === "all" ? "All" : esc(g)}<span class="n">${v.n}</span>${v.off ? `<span class="off">${v.off} off</span>` : ""}</button>`).join("");
+    // table
+    const f = $("fleetFilter").value.trim().toLowerCase(), only = $("onlyProblems").checked;
+    let list = devs.filter(d => (F.group === "all" || groupOf(d) === F.group)
+        && (!F.filter || devStatus(d).key === F.filter)
+        && (!f || [d.name, d.ip, d.tag, d.type].some(x => String(x || "").toLowerCase().includes(f)))
+        && (!only || devStatus(d).key === "offline" || (d.poll && !d.snapshot)));
+    const key = F.sort.key, dir = F.sort.dir;
+    const val = d => key === "status" ? devStatus(d).rank : key === "fw" ? (d.config?.firmware || "") : key === "ip" ? d.ip.split(".").map(x => x.padStart(3, "0")).join(".") : key === "snapshot" ? (d.snapshot || "") : String(d[key] ?? "");
+    list.sort((a, b) => (val(a) > val(b) ? 1 : val(a) < val(b) ? -1 : 0) * dir);
+    $("fleetBody").innerHTML = list.map(d => {
+        const s = devStatus(d), open = F.open === d.name, h = d.health || {};
+        const red = `<span class="badge red ${h.link === "red" ? "inuse" : ""}" title="red (primary) ${esc(d.ip)}">R</span>`;
+        const blue = d.blue ? `<span class="badge blue ${h.link === "blue" ? "inuse" : ""}" title="blue (backup) ${esc(d.blue)}">B</span>` : `<span class="badge light" title="no blue address known">–</span>`;
+        const job = d.job && d.job.state === "running" ? ` <span class="badge primary">reading ${d.job.progress}</span>` : "";
+        return `<tr class="datarow ${open ? "open" : ""} ${R.device === d.name ? "sel" : ""} ${s.key === "offline" ? "offline" : ""}" data-dev="${esc(d.name)}">
+            <td><span class="chev">▸</span></td><td><b>${esc(d.name)}</b></td><td class="mono">${esc(d.ip)} ${red} ${blue}</td>
+            <td>${esc(d.tag)}</td><td>${esc(d.type)}</td><td><span class="badge ${s.cls}">${esc(s.label)}</span>${job}</td>
+            <td>${s.key === "offline" ? "offline" : esc(d.config?.firmware || "–")}</td>
+            <td>${d.snapshot ? esc(ago(d.snapshot)) : '<span class="muted">not read</span>'}</td>
+            <td>${d.poll ? '<span class="badge success">yes</span>' : '<span class="badge light">no</span>'}</td>
+            <td>${d.write ? '<span class="badge danger">yes</span>' : '<span class="badge light">no</span>'}</td></tr>`
+            + (open ? `<tr class="detail"><td></td><td colspan="9">${fleetDetail(d)}</td></tr>` : "");
+    }).join("") || `<tr><td colspan="10" class="muted">No device matches.</td></tr>`;
+}
+function fleetDetail(d) {
+    const h = d.health || {}, c = d.config || {}, j = d.job;
+    const slots = (c.slots || []).map(s => `slot ${s.slot}: ${s.status} [${s.protocols.join(",")}]`).join(" · ");
+    return `<div style="display:flex; gap:24px; flex-wrap:wrap">
+        <div class="small"><b>Health</b>: ${h.online ? `AN2 v${h.an2_version}, ${h.rtt_ms} ms via ${h.link}` : esc(h.error || "–")}<br>
+        <b>Card</b>: ${esc(c.card || "–")} · FW ${esc(c.firmware || "–")} · NMOS label ${esc(c.nmos_label || "–")}<br>
+        <b>Slots</b>: ${esc(slots || "–")}<br>
+        <b>In SRC/DST lists</b>: ${d.in_lists ? "yes" : '<span class="warn">no</span>'}</div>
+        <div style="display:flex; gap:6px; align-items:flex-start; flex-wrap:wrap">
+            <button class="btn primary" data-act="open" data-dev="${esc(d.name)}" ${d.snapshot ? "" : "disabled"}>Open router</button>
+            <button class="btn" data-act="read" data-dev="${esc(d.name)}" ${d.poll && !(j && j.state === "running") ? "" : "disabled"}
+                title="Read the routing tree over ACP2 (read-only, about 41,000 requests, ~5 min)">Read from device</button>
+            ${j ? `<span class="small">${j.state === "running" ? `reading… ${j.progress} objects` : j.state === "done" ? `last read: ${j.progress} objects in ${j.seconds} s` : `<span class="warn">read failed: ${esc(j.error)}</span>`}</span>` : ""}
+            ${!d.poll ? '<span class="small muted">Not released: set "poll": true in devices.json to allow access.</span>' : ""}
+        </div></div>`;
+}
+$("summaryBar").onclick = e => { const b = e.target.closest("[data-f]"); if (b) { F.filter = b.dataset.f || null; renderFleet(); } };
+$("groupBar").onclick = e => { const b = e.target.closest("[data-g]"); if (b) { F.group = b.dataset.g; store("nar.group", F.group); renderFleet(); } };
+$("fleetHead").onclick = e => { const th = e.target.closest("[data-key]"); if (!th) return; F.sort = { key: th.dataset.key, dir: F.sort.key === th.dataset.key ? -F.sort.dir : 1 }; store("nar.sort", F.sort); renderFleet(); };
+$("fleetFilter").oninput = renderFleet; $("onlyProblems").onchange = renderFleet;
+$("fleetBody").onclick = async e => {
+    const act = e.target.closest("[data-act]");
+    if (act) {
+        const dev = act.dataset.dev;
+        if (act.dataset.act === "open") return openDevice(dev);
+        if (act.dataset.act === "read") {
+            if (!confirm(`Read the routing tree of ${dev} over ACP2?\n\nRead-only (get object only), about 41,000 requests one at a time, ~5 minutes.`)) return;
+            try { await post("/api/read", { device: dev }); msg(`Reading ${dev} …`, "note"); pollState(); } catch (err) { msg(err.message); }
+        }
+        return;
     }
-    if (undo.length) S.history.push(undo);
-    persist();
+    const tr = e.target.closest("tr.datarow"); if (!tr) return;
+    F.open = F.open === tr.dataset.dev ? null : tr.dataset.dev; renderFleet();
+};
+$("fleetToggle").onclick = () => setFleetCollapsed(!$("fleetCard").classList.contains("collapsed"));
+$("fleetQuick").onclick = e => { const q = e.target.closest("[data-q]"); if (!q) return;
+    const d = (F.state?.devices || []).find(x => x.name === q.dataset.q);
+    if (d && d.snapshot) openDevice(d.name); else { F.open = q.dataset.q; setFleetCollapsed(false); renderFleet(); } };
+if (recall("nar.fleetCollapsed")) $("fleetCard").classList.add("collapsed");
+$("pauseBtn").onclick = async () => { const p = !F.state?.paused; if (p || confirm("Resume polling the released devices?")) { await post("/api/polling", { paused: p }); pollState(); } };
+$("addDeviceForm").onsubmit = async e => {
+    e.preventDefault();
+    try { await post("/api/devices", { ip: $("newIp").value, name: $("newName").value, tag: $("newTag").value }); e.target.reset(); msg("Device added (poll = no, write = no). Release it in devices.json.", "ok"); pollState(); }
+    catch (err) { msg(err.message); }
+};
+async function uploadLists(files) {
+    try {
+        const done = [];
+        for (const f of files) { const j = await api("/api/upload-list", { method: "POST", headers: { "X-File-Name": encodeURIComponent(f.name) }, body: f }); done.push(`${j.name} (${j.kind}, ${j.devices} devices)`); }
+        msg("Loaded " + done.join(", "), "ok"); pollState(); if (R.device || R.file) reloadModel();
+    } catch (err) { msg("List upload failed: " + err.message); }
 }
-function fields() { return S.field === "both" ? ["main", "backup"] : [S.field]; }
-function assign(key, srcId) { setValues(fields().map(f => [key, f, srcId])); }
-function undo() {
-    const u = S.history.pop(); if (!u) return;
-    for (const [pk, prev] of u.reverse()) prev === undefined ? S.pending.delete(pk) : S.pending.set(pk, prev);
-    persist(); renderAll();
-}
-function persist() { S.exported = null; store("nar.pending." + S.file, S.pending.size ? [...S.pending] : null); }
+$("listInput").onchange = e => { uploadLists([...e.target.files]); e.target.value = ""; };
+document.addEventListener("dragover", e => { if (!R.drag && e.dataTransfer.types.includes("Files")) { e.preventDefault(); document.body.classList.add("filedrag"); } });
+document.addEventListener("dragleave", e => { if (!e.relatedTarget) document.body.classList.remove("filedrag"); });
 
-function fillPlan() {
-    const db = S.dstBlocks.get(S.selDstBlock), sb = S.srcBlocks.get(S.selSrcBlock);
-    if (!db || !sb) return null;
-    const ds = +$("fillDstStart").value || 1, ss = +$("fillSrcStart").value || 1;
-    const max = Math.max(0, Math.min(db.keys.length - ds + 1, sb.ids.length - ss + 1));
-    const n = Math.min(+$("fillCount").value || 0, max);
-    const plan = [];
-    for (let i = 0; i < n; i++) plan.push([db.keys[ds - 1 + i], sb.ids[ss - 1 + i]]);
-    return { plan, max };
+// ================= ROUTER =================
+const SRC_CATS = [
+    { id: "ipin16", label: "IP In 16ch", kind: "ipin", test: b => b <= 128, assisted: "A" },
+    { id: "ipin64", label: "IP In 64ch", kind: "ipin", test: b => b > 128 },
+    { id: "deemb", label: "SDI / De-Embedder", kind: "deemb", assisted: "B" },
+    { id: "bank", label: "Delay 16ch", kind: "bank" },
+    { id: "madiin", label: "MADI In", kind: "madiin" },
+];
+const DST_CATS = [
+    { id: "emb", label: "Embedder", kind: "emb" }, { id: "ipout", label: "IP Out", kind: "ipout" },
+    { id: "bank", label: "Delay 16ch", kind: "bank" }, { id: "madiout", label: "MADI Out", kind: "madiout" },
+];
+const SHORT = { ipin: "IP", deemb: "DE", bank: "DL", madiin: "MA" };
+const R = {
+    device: null, file: null, info: null, names: {}, channels: [], analysis: {}, byLetter: {}, byN: {},
+    src: new Map(), srcBlocks: new Map(), dst: new Map(), dstBlocks: new Map(),
+    pending: new Map(), history: [], field: "main", mode: recall("nar.mode") || "assisted",
+    srcCat: "ipin16", dstCat: "emb", selSrcBlock: null, selDstBlock: null, selSrcId: null, selSlot: null, selCh: null,
+    drag: null, withDelay: true, checks: {},   // channel n -> last live check result html
+    view: recall("nar.view") || "preset",                   // "active" = device as it runs, "preset" = active + staged changes
+};
+// Delay targets (docs/device-status.md): Case A = Stream Delay on the IP input, Case B = Delay on the 8 banks.
+const DELAY_DEFAULT = { A: 19.5, B: 18.0 };
+const DELAY_MAX = { A: 5000, B: 3000 };   // device limits (MAX of "Stream Delay" / bank "Delay")
+// a target belongs to the thing that carries the delay: IP In stream (A) or delay group (B),
+// so Main and Backup on the same stream/group always share one value
+const delayId = side => side.case === "A" ? `A${side.stream}` : `B${side.group}`;
+function delayKey(id) { return `nar.delay.${R.device || R.file}.${id}`; }
+function delayTarget(side) { const v = recall(delayKey(delayId(side))); return v == null ? DELAY_DEFAULT[side.case] : v; }
+function currentDelay(side) {
+    if (side.case === "A") { for (const s of R.src.values()) if (s.kind === "ipin" && s.block === side.stream) return [s.stream_delay]; return []; }
+    const out = new Set(); for (const s of R.src.values()) if (s.kind === "bank" && s.block === side.group && s.delay != null) out.add(+s.delay.toFixed(3));
+    return [...out];
 }
-function doFill(dstBk, srcBk) {
-    if (dstBk) S.selDstBlock = dstBk;
-    if (srcBk) S.selSrcBlock = srcBk;
-    const fp = fillPlan(); if (!fp || !fp.plan.length) return;
-    setValues(fp.plan.flatMap(([k, id]) => fields().map(f => [k, f, id])));
-    renderAll();
+const nameOf = (dir, n) => (R.names[dir] || {})[String(n)];
+function chName(n) {
+    const tx = nameOf("tx", n), rx = nameOf("rx", n);
+    const t = tx?.alt || "", r = rx?.alt || "";
+    return { short: t || r, long: [tx ? `${tail(tx.mnemonic)} "${tx.alt}"` : "", rx ? `${tail(rx.mnemonic)} "${rx.alt}"` : ""].filter(Boolean).join(" / ") };
 }
-
-// ---------- rendering ----------
-function renderAll() { renderCats(); renderSrcGrid(); renderSrcChs(); renderDstGrid(); renderSlots(); renderFill(); renderPending(); renderField(); }
-
-function renderField() {
-    for (const b of $("fieldToggle").children) b.classList.toggle("active", b.dataset.f === S.field);
+function tail(m) { const i = String(m).search(/(\.A)?-[TR]X\d+$/); return i >= 0 ? m.slice(i + 1) : m; }
+function streamName(dir, S) {
+    const list = (R.names[dir === "in" ? "ipin" : "ipout"] || {})[String(S)];
+    if (!list || !list.length) return null;
+    const e = list[0];
+    return { short: (e.alt || tail(e.mnemonic)) + (e.pos > 1 ? ` #${e.pos}` : ""),
+             long: list.map(x => `${x.alt || tail(x.mnemonic)} (${tail(x.mnemonic)}${x.pos > 1 ? " #" + x.pos : ""})`).join(" / "),
+             tip: list.map(x => `${x.mnemonic}${x.alt ? ` "${x.alt}"` : ""} · audio ref ${x.pos} of row ${x.row}`).join("\n") };
 }
-
-function catBlocks(cats, catId, blocks) {
-    const c = cats.find(c => c.id === catId);
-    return [...blocks.values()].filter(b => b.kind === c.kind && (!c.test || c.test(b.block))).sort(blockSort);
-}
-function renderCats() {
-    const pendBlocks = new Map();
-    for (const pk of S.pending.keys()) { const d = S.dst.get(pk.split("|")[0]); pendBlocks.set(d.kind, (pendBlocks.get(d.kind) || 0) + 1); }
-    $("srcCats").innerHTML = SRC_CATS.map(c => {
-        const n = catBlocks(SRC_CATS, c.id, S.srcBlocks).length;
-        return n ? `<button class="chip ${c.id === S.srcCat ? "active" : ""}" data-cat="${c.id}">${c.label}<span class="n">${n}</span></button>` : "";
-    }).join("");
-    $("dstCats").innerHTML = DST_CATS.map(c => {
-        const n = catBlocks(DST_CATS, c.id, S.dstBlocks).length, p = pendBlocks.get(c.kind);
-        return n ? `<button class="chip ${c.id === S.dstCat ? "active" : ""}" data-cat="${c.id}">${c.label}<span class="n">${n}</span>${p ? `<span class="pend">${p}</span>` : ""}</button>` : "";
-    }).join("");
-}
-function matches(b, f) {
-    if (!f) return true;
-    f = f.toLowerCase();
-    return String(b.block).toLowerCase() === f || (b.name || "").toLowerCase().includes(f) || b.label.toLowerCase().includes(f);
-}
-function blockTitle(b) {
-    let t = b.label + (b.name ? `\n${b.name}` : "") + (b.enabled ? "" : "\n(disabled / off)");
-    if (b.kind === "bank" && b.delay != null) t += `\nDelay ${b.delay.toFixed(3)} ms`;
-    return t;
-}
-function blockSub(b) {
-    if (b.kind === "bank") return b.delay ? b.delay.toFixed(1) : "";
-    if (b.kind === "emb") return (b.name || "").split(" / ")[0];
-    return b.name || "";
-}
-function renderSrcGrid() {
-    // source blocks that feed the selected destination block get a purple ring
-    const hit = new Set();
-    const db = S.dstBlocks.get(S.selDstBlock);
-    if (db) for (const k of db.keys) for (const f of ["main", "backup"]) { const s = S.src.get(value(k, f)); if (s) hit.add(blockKey(s.kind, s.block)); }
-    const f = $("srcFilter").value.trim();
-    const list = catBlocks(SRC_CATS, S.srcCat, S.srcBlocks).filter(b => matches(b, f));
-    $("srcGrid").className = "grid" + (S.srcCat === "deemb" ? "" : "");
-    $("srcGrid").innerHTML = list.map(b => {
-        const bk = blockKey(b.kind, b.block);
-        return `<div class="blk ${bk === S.selSrcBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""}" draggable="true" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}">${esc(b.block)}<span class="sub">${esc(blockSub(b))}</span></div>`;
-    }).join("") || `<span class="small muted">no match</span>`;
-}
-function renderSrcChs() {
-    const b = S.srcBlocks.get(S.selSrcBlock);
-    if (!b) { $("srcChTitle").textContent = "Channels"; $("srcChs").innerHTML = `<span class="small muted">Select a source block.</span>`; $("usedBy").innerHTML = ""; return; }
-    const used = usedIds();
-    $("srcChTitle").innerHTML = `${esc(b.label)} ${b.name ? `<span class="muted">· ${esc(b.name)}</span>` : ""} ${b.enabled ? "" : `<span class="badge secondary">disabled</span>`}`;
-    $("srcChs").innerHTML = b.ids.map(id => {
-        const s = S.src.get(id);
-        return `<div class="ch ${id === S.selSrcId ? "sel" : ""} ${used.has(id) ? "used" : ""}" draggable="true" data-id="${id}" title="${esc(srcLong(id))}${used.has(id) ? "\nrouted somewhere" : ""}">${s.ch}</div>`;
-    }).join("");
-    renderUsedBy();
-}
-function usedIds() {
-    const u = new Set();
-    for (const k of S.dst.keys()) { u.add(value(k, "main")); u.add(value(k, "backup")); }
+function groupUsers(g) {
+    const u = [];
+    for (const [n, a] of Object.entries(R.analysis)) for (const s of Object.values(a.sides || {})) if (s.case === "B" && s.group === g) u.push(`${R.byN[n]?.letter} ${s.field}`);
     return u;
 }
-function renderUsedBy() {
-    const id = S.selSrcId;
+function blockName(kind, block) {
+    if (kind === "ipin") return streamName("in", block);
+    if (kind === "ipout") return streamName("out", block);
+    if (kind === "deemb" || kind === "emb") { const c = R.byLetter[block]; if (!c) return null; const nm = chName(c.n); return { short: nm.short, long: nm.long, tip: `channel ${c.n} (${block}): ${nm.long}\nvideo ${c.main} / ${c.backup}` }; }
+    if (kind === "bank") { const u = groupUsers(block); if (!u.length) return null; const c = R.byLetter[u[0].split(" ")[0]]; const nm = c ? chName(c.n) : { short: "", long: "" }; return { short: nm.short, long: `used by ${u.join(", ")}${nm.long ? " · " + nm.long : ""}`, tip: `used by ${u.join(", ")}` }; }
+    return null;
+}
+function srcShort(id, withName = true) {
+    if (id === 0 || id == null) return "—";
+    const s = R.src.get(id); if (!s) return `#${id}?`;
+    const b = R.srcBlocks.get(blockKey(s.kind, s.block));
+    return `${SHORT[s.kind]} ${s.block}.${s.ch} (${id})` + (withName && b?.nm?.short ? ` · ${b.nm.short}` : "");
+}
+function srcLong(id) {
+    const s = R.src.get(id); if (!s) return id === 0 ? "nothing (0)" : `unknown id ${id}`;
+    const b = R.srcBlocks.get(blockKey(s.kind, s.block));
+    let t = `${s.block_label} ch ${s.ch} (${id})`;
+    if (s.kind === "bank") t += ` · Bank ${s.bank}.${s.slot}${s.delay != null ? `, ${s.delay.toFixed(1)} ms` : ""}`;
+    if (b?.nm) t += ` · ${b.nm.long}`; else if (s.name) t += ` · ${s.name}`;
+    return t;
+}
+function dstLabel(key) {
+    if (key.startsWith("bankdelay:")) return `Bank ${key.split(":")[1]} delay`;
+    if (key.startsWith("streamdelay:")) return `IP In ${key.split(":")[1]} Stream Delay`;
+    const d = R.dst.get(key); if (!d) return key;
+    const b = R.dstBlocks.get(blockKey(d.kind, d.block));
+    const t = d.kind === "bank" ? `Delay ${d.block} ch ${d.ch} (B${d.bank}.${d.slot} = ${d.own_id})` : `${d.block_label} ch ${d.ch}`;
+    return b?.nm?.short ? `${t} · ${b.nm.short}` : t;
+}
+function oldValue(pk) {
+    const [key, field] = pk.split("|");
+    if (field === "delay") {
+        const [k, n] = key.split(":");
+        for (const s of R.src.values()) {
+            if (k === "bankdelay" && s.kind === "bank" && s.bank === +n) return s.delay;
+            if (k === "streamdelay" && s.kind === "ipin" && s.block === +n) return s.stream_delay;
+        }
+        return null;
+    }
+    return R.dst.get(key)?.[field];
+}
+const value = (key, field) => { const p = R.view === "preset" ? R.pending.get(`${key}|${field}`) : undefined; return p !== undefined ? p : R.dst.get(key)?.[field]; };
+const isChanged = (key, field) => R.view === "preset" && R.pending.has(`${key}|${field}`);
+const fmtVal = (pk, v) => pk.endsWith("|delay") ? (v == null ? "?" : `${(+v).toFixed(1)} ms`) : srcShort(v);
+
+// ----- loading -----
+function setFleetCollapsed(c) { $("fleetCard").classList.toggle("collapsed", c); store("nar.fleetCollapsed", c); }
+async function openDevice(name) { R.device = name; R.file = null; $("cbfSelect").value = ""; setFleetCollapsed(true); await reloadModel(); renderFleet(); }
+async function reloadModel() {
+    try {
+        msg("Loading model …", "note");
+        const url = R.device ? "/api/model?device=" + encodeURIComponent(R.device) : "/api/model?file=" + encodeURIComponent(R.file);
+        loadModel(await api(url)); msg("");
+    } catch (e) { msg(e.message); }
+}
+function loadModel(j) {
+    R.info = j.info; R.names = j.names || {}; R.channels = j.channels || []; R.analysis = j.analysis || {};
+    R.byLetter = Object.fromEntries(R.channels.map(c => [c.letter, c])); R.byN = Object.fromEntries(R.channels.map(c => [c.n, c]));
+    R.src.clear(); R.srcBlocks.clear(); R.dst.clear(); R.dstBlocks.clear();
+    for (const s of rows(j.sources)) {
+        R.src.set(s.id, s); const bk = blockKey(s.kind, s.block);
+        if (!R.srcBlocks.has(bk)) R.srcBlocks.set(bk, { kind: s.kind, block: s.block, label: s.block_label, name: s.name, enabled: s.enabled, ids: [] });
+        R.srcBlocks.get(bk).ids.push(s.id);
+    }
+    for (const d of rows(j.destinations)) {
+        R.dst.set(d.key, d); const bk = blockKey(d.kind, d.block);
+        if (!R.dstBlocks.has(bk)) R.dstBlocks.set(bk, { kind: d.kind, block: d.block, label: d.block_label, name: d.name, enabled: d.enabled, keys: [] });
+        R.dstBlocks.get(bk).keys.push(d.key);
+    }
+    for (const [blocks, get, list] of [[R.srcBlocks, x => R.src.get(x), "ids"], [R.dstBlocks, x => R.dst.get(x), "keys"]]) {
+        for (const b of blocks.values()) {
+            b[list].sort((a, c) => get(a).ch - get(c).ch);
+            if (list === "ids") b.range = `${b.ids[0]}–${b.ids[b.ids.length - 1]}`;
+            if (b.kind === "bank") {
+                const ds = [...new Set(b[list].map(x => get(x).delay).filter(v => v != null).map(v => v.toFixed(1)))];
+                b.delayText = ds.length === 1 ? ds[0] + " ms" : ds.length ? "mixed" : "";
+                if (list === "keys") b.range = `${get(b.keys[0]).own_id}–${get(b.keys[b.keys.length - 1]).own_id}`;
+            }
+            b.nm = blockName(b.kind, b.block);
+        }
+    }
+    const pk = "nar.pending." + (R.device ? "dev:" + R.device : "cbf:" + R.file);
+    R.pending = new Map((recall(pk) || []).filter(([k]) => k.split("|")[1] === "delay" || R.dst.has(k.split("|")[0])));
+    R.history = []; R.selSrcBlock = R.selDstBlock = R.selSrcId = R.selSlot = null;
+    if (!R.selCh || !R.byN[R.selCh]) R.selCh = null;
+    const i = R.info;
+    $("routerTitle").innerHTML = `Router · <b>${esc(R.device || i.file)}</b> <span class="muted small">${esc(i.device)} · ${esc(i.ip)} · FW ${esc(i.version)} · ${i.source === "live" ? `live ACP2 read ${esc(ago(i.read_at))}` : "offline .cbf"}</span>`
+        + (i.source === "live" ? ` <button class="btn" id="checkAllBtn" title="Fresh read-only check of the selected channel">Check selected channel live</button>` : "");
+    const n = R.names;
+    $("namesInfo").innerHTML = !(n.lists || []).length ? "no SRC/DST list – names missing" : n.device ? `names: ${esc(n.lists.join(", "))} → <b>${esc(n.device)}</b>` : `<span class="warn">device not found in ${esc(n.lists.join(", "))}</span>`;
+    $("applyLive").classList.toggle("hidden", i.source !== "live"); $("applyCbf").classList.toggle("hidden", i.source === "live");
+    $("routerSection").classList.remove("hidden");
+    renderAll();
+}
+async function loadCbfList() {
+    const j = await api("/api/files");
+    $("cbfSelect").innerHTML = `<option value="">— live device —</option>` + j.files.map(f => `<option>${esc(f)}</option>`).join("");
+}
+$("cbfSelect").onchange = e => { if (e.target.value) { R.file = e.target.value; R.device = null; reloadModel(); } else if (F.open) openDevice(F.open); };
+
+// ----- editing -----
+function persist() { store("nar.pending." + (R.device ? "dev:" + R.device : "cbf:" + R.file), R.pending.size ? [...R.pending] : null); }
+function setValues(list) {
+    if (R.view !== "preset") { R.view = "preset"; store("nar.view", "preset"); }   // editing always happens in the preset
+    const undo = [];
+    for (const [key, field, v] of list) {
+        const pk = `${key}|${field}`; undo.push([pk, R.pending.get(pk)]);
+        const old = oldValue(pk);
+        if (field === "delay" ? Math.abs((old ?? -1) - v) < 1e-6 : old === v) R.pending.delete(pk); else R.pending.set(pk, v);
+    }
+    if (undo.length) R.history.push(undo);
+    persist();
+}
+function fields() { return R.field === "both" ? ["main", "backup"] : [R.field]; }
+function assign(key, srcId) { setValues(fields().map(f => [key, f, srcId])); }
+function undoEdit() { const u = R.history.pop(); if (!u) return; for (const [pk, prev] of u.reverse()) prev === undefined ? R.pending.delete(pk) : R.pending.set(pk, prev); persist(); renderAll(); }
+
+// ----- rendering -----
+function renderAll() { renderMode(); renderChGrid(); renderCats(); renderSrcGrid(); renderSrcChs(); if (R.mode === "manual") { renderDstGrid(); renderSlots(); } else renderAssisted(); renderRouteLeft(); renderPending(); }
+function renderMode() {
+    for (const b of $("modeToggle").children) b.classList.toggle("active", b.dataset.m === R.mode);
+    $("dstManual").classList.toggle("hidden", R.mode !== "manual"); $("dstAssisted").classList.toggle("hidden", R.mode === "manual");
+    document.querySelector(".layout").classList.toggle("assisted", R.mode === "assisted");
+    for (const b of $("viewToggle").children) b.classList.toggle("active", b.dataset.v === R.view);
+    document.body.classList.toggle("view-active", R.view === "active");
+    const np = R.pending.size;
+    $("presetBar").className = "presetbar " + (np ? "on" : "off");
+    $("presetBar").innerHTML = np ? `PRESET: <b>${np}</b> change(s) staged – ${R.view === "active" ? "showing ACTIVE (device now)" : "showing PRESET (after TAKE)"}` : "Preset = Active (nothing staged)";
+    $("dstFilter").classList.toggle("hidden", R.mode !== "manual");
+    $("dstHead").firstChild.textContent = R.mode === "manual" ? "Destinations " : "Assigned destinations ";
+}
+function caseCls(c) { return c === "A" ? "case-A" : c === "B" ? "case-B" : "case--"; }
+function renderChGrid() {
+    $("chGrid").innerHTML = R.channels.map(c => {
+        const a = R.analysis[c.n] || {}; const [m, b] = (a.case || "-/-").split("/");
+        const nm = chName(c.n);
+        const hasPreset = [...R.pending.keys()].some(pk => pk.startsWith(`emb:${c.letter}:`) || ((a.changes || []).some(x => pk === `${x.key}|${x.field}`)));
+        return `<div class="chtile st-${a.status || "info"} ${R.selCh === c.n ? "sel" : ""}" data-n="${c.n}" title="${esc(`${c.letter} (${c.n}) · video ${c.main} / ${c.backup}\n${nm.long}\nstatus ${a.status || "?"}`)}">
+            ${hasPreset ? '<span class="pdot" title="preset changes staged"></span>' : ""}<b>${c.letter}</b> <span class="case ${caseCls(m)}">${m}</span><span class="case ${caseCls(b)}">${b}</span><span class="sub">${esc(nm.short || c.main)}</span></div>`;
+    }).join("");
+}
+function catBlocks(cats, catId, blocks) { const c = cats.find(c => c.id === catId); return [...blocks.values()].filter(b => b.kind === c.kind && (!c.test || c.test(b.block))).sort((a, b) => typeof a.block === "number" ? a.block - b.block : String(a.block).localeCompare(String(b.block), undefined, { numeric: true })); }
+function visibleSrcCats() { return R.mode === "assisted" ? SRC_CATS.filter(c => c.assisted) : SRC_CATS; }
+function renderCats() {
+    const vc = visibleSrcCats(); if (!vc.some(c => c.id === R.srcCat)) R.srcCat = vc[0].id;
+    $("srcCats").innerHTML = vc.map(c => { const n = catBlocks(SRC_CATS, c.id, R.srcBlocks).length; return n ? `<button class="chip ${c.id === R.srcCat ? "active" : ""}" data-cat="${c.id}">${c.label}${R.mode === "assisted" ? ` <span class="case ${caseCls(c.assisted)}">Case ${c.assisted}</span>` : ""}<span class="n">${n}</span></button>` : ""; }).join("");
+    const pendKinds = {}; for (const pk of R.pending.keys()) { const d = R.dst.get(pk.split("|")[0]); const k = d ? d.kind : "bank"; pendKinds[k] = (pendKinds[k] || 0) + 1; }
+    $("dstCats").innerHTML = DST_CATS.map(c => { const n = catBlocks(DST_CATS, c.id, R.dstBlocks).length; return n ? `<button class="chip ${c.id === R.dstCat ? "active" : ""}" data-cat="${c.id}">${c.label}<span class="n">${n}</span>${pendKinds[c.kind] ? `<span class="pend">${pendKinds[c.kind]}</span>` : ""}</button>` : ""; }).join("");
+}
+function matches(b, f) { if (!f) return true; f = f.toLowerCase(); return String(b.block).toLowerCase() === f || [b.name, b.label, b.nm?.long, b.nm?.tip, b.range].some(x => String(x || "").toLowerCase().includes(f)); }
+function blockTitle(b) { let t = `${b.label} (${b.range || ""})`; if (b.nm?.tip) t += `\n${b.nm.tip}`; if (b.name) t += `\nSDP: ${b.name}`; if (!b.enabled) t += "\n(disabled / off)"; if (b.delayText) t += `\nDelay ${b.delayText}`; return t; }
+const firstBank = g => (g - 1) * 8 + 1;   // 16ch delay group g = banks firstBank(g) .. firstBank(g)+7
+function blockSub(b) { if (b.kind === "bank") return [`B${firstBank(b.block)}`, b.delayText.replace(" ms", ""), b.nm?.short].filter(Boolean).join(" "); return b.nm?.short || b.name || ""; }
+function assistedSourceBlocks() {
+    // assisted: only sources a channel actually uses per its RX row (Case A) or SDI input (Case B)
+    const want = new Set();
+    for (const a of Object.values(R.analysis)) for (const s of Object.values(a.sides || {})) {
+        if (s.case === "A" && s.stream) want.add(blockKey("ipin", s.stream));
+        if (s.case === "B" && s.deemb) want.add(blockKey("deemb", s.deemb));
+    }
+    return want;
+}
+function renderSrcGrid() {
+    const hit = new Set(); const db = R.dstBlocks.get(R.selDstBlock);
+    if (db) for (const k of db.keys) for (const f of ["main", "backup"]) { const s = R.src.get(value(k, f)); if (s) hit.add(blockKey(s.kind, s.block)); }
+    const f = $("srcFilter").value.trim();
+    const used = R.mode === "assisted" ? assistedSourceBlocks() : null;
+    const list = catBlocks(SRC_CATS, R.srcCat, R.srcBlocks).filter(b => matches(b, f) && (!used || used.has(blockKey(b.kind, b.block))));
+    $("srcGrid").innerHTML = list.map(b => { const bk = blockKey(b.kind, b.block);
+        return `<div class="blk ${bk === R.selSrcBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""}" draggable="true" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}">${esc(b.kind === "deemb" ? `SDI ${R.byLetter[b.block]?.n ?? b.block}` : b.block)}<span class="sub">${esc(b.kind === "deemb" ? b.block + " " + (b.nm?.short || "") : blockSub(b))}</span></div>`;
+    }).join("") || `<span class="small muted">${R.mode === "assisted" ? "No source is assigned to a channel (needs SRC/DST lists)." : "no match"}</span>`;
+}
+function usedIds() { const u = new Set(); for (const k of R.dst.keys()) { u.add(value(k, "main")); u.add(value(k, "backup")); } return u; }
+function renderSrcChs() {
+    const b = R.srcBlocks.get(R.selSrcBlock);
+    if (!b) { $("srcChTitle").textContent = "Channels"; $("srcChs").innerHTML = `<span class="small muted">Select a source.</span>`; $("usedBy").innerHTML = ""; return; }
+    const used = usedIds();
+    $("srcChTitle").innerHTML = `${esc(b.label)} <span class="muted">(${esc(b.range)})</span> ${b.nm ? `<span class="muted">· ${esc(b.nm.long)}</span>` : b.name ? `<span class="muted">· ${esc(b.name)}</span>` : ""} ${b.enabled ? "" : '<span class="badge secondary">disabled</span>'}`;
+    $("srcChs").innerHTML = b.ids.map(id => `<div class="ch ${id === R.selSrcId ? "sel" : ""} ${used.has(id) ? "used" : ""}" draggable="true" data-id="${id}" title="${esc(srcLong(id))}">${R.src.get(id).ch}<span class="id">(${id})</span></div>`).join("");
+    const id = R.selSrcId;
     if (id == null) { $("usedBy").innerHTML = "Click a channel to see where it is routed."; return; }
     const hits = [];
-    for (const k of S.dst.keys()) {
-        const m = value(k, "main") === id, bk = value(k, "backup") === id;
-        if (m || bk) hits.push(`${dstLabel(k)} (${m && bk ? "main+backup" : m ? "main" : "backup"})`);
-    }
+    for (const k of R.dst.keys()) { const m = value(k, "main") === id, bk = value(k, "backup") === id; if (m || bk) hits.push(`${dstLabel(k)} (${m && bk ? "main+backup" : m ? "main" : "backup"})`); }
     $("usedBy").innerHTML = `<b>${esc(srcLong(id))}</b><br>` + (hits.length ? "→ " + hits.map(esc).join(", ") : "not routed anywhere");
 }
 function renderDstGrid() {
-    const hit = new Set();
-    const sb = S.srcBlocks.get(S.selSrcBlock);
-    if (sb) { const ids = new Set(sb.ids); for (const k of S.dst.keys()) if (ids.has(value(k, "main")) || ids.has(value(k, "backup"))) { const d = S.dst.get(k); hit.add(blockKey(d.kind, d.block)); } }
-    const pend = new Set([...S.pending.keys()].map(pk => { const d = S.dst.get(pk.split("|")[0]); return blockKey(d.kind, d.block); }));
+    const hit = new Set(); const sb = R.srcBlocks.get(R.selSrcBlock);
+    if (sb) { const ids = new Set(sb.ids); for (const k of R.dst.keys()) if (ids.has(value(k, "main")) || ids.has(value(k, "backup"))) { const d = R.dst.get(k); hit.add(blockKey(d.kind, d.block)); } }
+    const pend = new Set([...R.pending.keys()].map(pk => { const d = R.dst.get(pk.split("|")[0]); return d ? blockKey(d.kind, d.block) : null; }));
     const f = $("dstFilter").value.trim();
-    const list = catBlocks(DST_CATS, S.dstCat, S.dstBlocks).filter(b => matches(b, f));
-    $("dstGrid").className = "grid" + (S.dstCat === "emb" ? " wide" : "");
-    $("dstGrid").innerHTML = list.map(b => {
-        const bk = blockKey(b.kind, b.block);
-        return `<div class="blk ${bk === S.selDstBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""}" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}">${pend.has(bk) ? `<span class="dot"></span>` : ""}${esc(b.block)}<span class="sub">${esc(blockSub(b))}</span></div>`;
+    $("dstGrid").innerHTML = catBlocks(DST_CATS, R.dstCat, R.dstBlocks).filter(b => matches(b, f)).map(b => { const bk = blockKey(b.kind, b.block);
+        return `<div class="blk ${bk === R.selDstBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""}" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}">${pend.has(bk) ? '<span class="dot2"></span>' : ""}${esc(b.block)}<span class="sub">${esc(blockSub(b))}</span></div>`;
     }).join("") || `<span class="small muted">no match</span>`;
 }
-function renderSlots() {
-    const b = S.dstBlocks.get(S.selDstBlock);
-    if (!b) { $("dstTitle").textContent = "Slots"; $("slotBody").innerHTML = `<tr><td colspan="4" class="muted small">Select a destination block.</td></tr>`; return; }
-    let extra = b.kind === "ipout" && S.dst.get(b.keys[0]).channels ? ` · ${S.dst.get(b.keys[0]).channels} ch configured` : "";
-    if (b.kind === "bank" && b.delay != null) extra = ` · Delay ${b.delay.toFixed(3)} ms`;
-    $("dstTitle").innerHTML = `${esc(b.label)} ${b.name ? `<span class="muted">· ${esc(b.name)}</span>` : ""}<span class="muted small">${esc(extra)}</span> ${b.enabled ? "" : `<span class="badge danger" title="Routing into a disabled stream is usually a wrong target (see docs/lessons-learned.md)">disabled</span>`}`;
-    const selIds = new Set(S.srcBlocks.get(S.selSrcBlock)?.ids || []);
-    $("slotBody").innerHTML = b.keys.map(k => {
-        const d = S.dst.get(k);
-        const cell = f => {
-            const v = value(k, f), ch = isChanged(k, f);
-            return `<td class="v ${ch ? "chg" : ""}" title="${esc(srcLong(v))}${ch ? "\nwas: " + esc(srcLong(d[f])) : ""}">${ch ? `<span class="old">${esc(srcShort(d[f]))}</span>` : ""}${esc(srcShort(v))}</td>`;
-        };
+function slotRows(keys, opts = {}) {
+    const selIds = new Set(R.srcBlocks.get(R.selSrcBlock)?.ids || []);
+    return keys.map(k => {
+        const d = R.dst.get(k);
+        const cell = f => { const v = value(k, f), ch = isChanged(k, f);
+            return `<td class="v ${ch ? "chg" : ""}" title="${esc(srcLong(v))}${ch ? "\nwas: " + esc(srcLong(d[f])) : ""}">${ch ? `<span class="old">${esc(srcShort(d[f], false))}</span>` : ""}${esc(srcShort(v))}</td>`; };
         const hit = selIds.has(value(k, "main")) || selIds.has(value(k, "backup"));
         const diff = value(k, "main") !== value(k, "backup");
-        return `<tr data-key="${esc(k)}" class="${k === S.selSlot ? "sel" : ""} ${hit ? "hit" : ""}"><td>${d.ch}</td>${cell("main")}${cell("backup")}<td class="small ${diff ? "warn" : "muted"}" title="${diff ? "Main and Backup point at different sources" : ""}">${diff ? "M≠B" : ""}</td></tr>`;
+        return `<tr data-key="${esc(k)}" class="${k === R.selSlot ? "sel" : ""} ${hit ? "hit" : ""}"><td>${d.ch}${d.kind === "bank" ? ` <span class="muted small">B${d.bank}.${d.slot} (${d.own_id})</span>` : ""}</td>${cell("main")}${cell("backup")}<td class="small ${diff ? "warn" : "muted"}" title="${diff ? "Main and Backup point at different sources" : ""}">${diff ? "M≠B" : ""}${opts.cur && d.current != null && d.current !== value(k, "main") ? ` <span class="muted" title="Input Current (on air)">cur ${d.current}</span>` : ""}</td></tr>`;
     }).join("");
 }
-function renderFill() {
-    const db = S.dstBlocks.get(S.selDstBlock), sb = S.srcBlocks.get(S.selSrcBlock);
-    $("fillDst").textContent = db ? db.label + (db.name ? ` · ${db.name}` : "") : "select a destination block";
-    $("fillSrc").textContent = sb ? sb.label + (sb.name ? ` · ${sb.name}` : "") : "select a source block";
-    const fp = fillPlan();
-    $("fillMax").textContent = fp ? `max ${fp.max}` : "";
-    $("fillBtn").disabled = !fp || !fp.plan.length;
-    $("undoBtn").disabled = !S.history.length;
+function renderSlots() {
+    const b = R.dstBlocks.get(R.selDstBlock);
+    if (!b) { $("dstTitle").textContent = "Slots"; $("slotBody").innerHTML = `<tr><td colspan="4" class="muted small">Select a destination block.</td></tr>`; return; }
+    $("dstTitle").innerHTML = `${esc(b.label)} ${b.range ? `<span class="muted">(${esc(b.range)})</span>` : ""} ${b.nm ? `<span class="muted">· ${esc(b.nm.long)}</span>` : ""} ${b.delayText ? `<span class="muted small">· ${esc(b.delayText)}</span>` : ""} ${b.enabled ? "" : '<span class="badge danger">disabled</span>'}`;
+    $("slotBody").innerHTML = slotRows(b.keys, { cur: true });
 }
-function warningsFor(key, srcId) {
-    const w = [], d = S.dst.get(key), s = S.src.get(srcId);
-    if (!d.enabled) w.push(d.kind === "emb" ? "embedder off" : "destination stream disabled");
+
+// ----- assisted mode -----
+function channelsForSource(bk) {
+    // which channels (and which side) use this source block per the analysis
+    const out = [];
+    const [kind, block] = bk.split(":");
+    for (const c of R.channels) {
+        const a = R.analysis[c.n]; if (!a || !a.sides) continue;
+        for (const s of Object.values(a.sides)) {
+            if (kind === "ipin" && s.case === "A" && String(s.stream) === block) out.push({ n: c.n, side: s });
+            if (kind === "deemb" && s.case === "B" && s.deemb === block) out.push({ n: c.n, side: s });
+        }
+    }
+    return out;
+}
+function plannedFor(n, withDelay) {
+    // routing comes from the server analysis; delays are built here from the entered targets
+    const out = ((R.analysis[n] || {}).changes || []).filter(c => c.field !== "delay");
+    if (!withDelay) return out;
+    const seen = new Set();
+    for (const [field, s] of Object.entries((R.analysis[n] || {}).sides || {})) {
+        if (s.case === "A" && s.stream != null) {
+            const want = delayTarget(s), key = `streamdelay:${s.stream}`;
+            const cur = currentDelay(s)[0];
+            if (!seen.has(key) && (cur == null || Math.abs(cur - want) > 1e-6)) out.push({ key, field: "delay", value: want, why: `Case A: Stream Delay IP In ${s.stream}` });
+            seen.add(key);
+        }
+        if (s.case === "B" && s.group) {
+            const want = delayTarget(s);
+            for (const s2 of R.src.values()) if (s2.kind === "bank" && s2.block === s.group && s2.slot === 1) {
+                const key = `bankdelay:${s2.bank}`;
+                if (!seen.has(key) && Math.abs((s2.delay ?? -1) - want) > 1e-6) out.push({ key, field: "delay", value: want, why: `Case B: delay group ${s.group}` });
+                seen.add(key);
+            }
+        }
+    }
+    return out;
+}
+const activeOf = (key, field) => R.dst.get(key)?.[field];
+const presetOf = (key, field) => { const p = R.pending.get(`${key}|${field}`); return p !== undefined ? p : activeOf(key, field); };
+function describeFeed(keys, field, get) {
+    const blocks = new Set(keys.map(k => { const s = R.src.get(get(k, field)); return s ? blockKey(s.kind, s.block) : "none"; }));
+    if (blocks.size !== 1) return "mixed sources";
+    const [kind, block] = [...blocks][0].split(":");
+    return { ipin: `IP In ${block}`, deemb: `De-Emb ${block}`, bank: `Delay group ${block} (B${firstBank(+block)})`, madiin: `MADI In ${block}` }[kind] || "nothing";
+}
+function apLines(keys, fields) {
+    // "Active: …" / "Preset: …" for a set of destination slots
+    return fields.map(f => {
+        const act = describeFeed(keys, f, activeOf), pre = describeFeed(keys, f, presetOf);
+        const lab = fields.length > 1 ? `${f[0].toUpperCase() + f.slice(1)} ` : "";
+        return `<div class="ap">${lab}<span class="act">Active: ${esc(act)}</span><br>${lab}${pre === act ? '<span class="eq">Preset = Active</span>' : `<span class="pre">Preset: ${esc(pre)}</span>`}</div>`;
+    }).join("");
+}
+function presetDelay(side) {
+    const keys = side.case === "A" ? [`streamdelay:${side.stream}|delay`]
+        : Array.from({ length: 8 }, (_, i) => `bankdelay:${firstBank(side.group) + i}|delay`);
+    const vals = [...new Set(keys.map(k => R.pending.get(k)).filter(v => v !== undefined).map(v => (+v).toFixed(1)))];
+    return vals;
+}
+function channelKeys(n) {
+    const a = R.analysis[n] || {}, L = R.byN[n].letter, keys = new Set();
+    for (let k = 1; k <= 16; k++) { keys.add(`emb:${L}:${k}|main`); keys.add(`emb:${L}:${k}|backup`); }
+    for (const s of Object.values(a.sides || {})) {
+        if (s.case === "A" && s.stream != null) keys.add(`streamdelay:${s.stream}|delay`);
+        if (s.case === "B" && s.group) for (let i = 0; i < 8; i++) {
+            const b = firstBank(s.group) + i; keys.add(`bankdelay:${b}|delay`);
+            for (const sl of [1, 2]) { keys.add(`bank:${b}:${sl}|main`); keys.add(`bank:${b}:${sl}|backup`); }
+        }
+    }
+    if (a.tx_stream) for (let k = 1; k <= 16; k++) { keys.add(`ipout:${a.tx_stream}:${k}|main`); keys.add(`ipout:${a.tx_stream}:${k}|backup`); }
+    return keys;
+}
+function flowDiagram(n, field, side, a, opts = {}) {
+    const c = R.byN[n], L = c.letter;
+    const F = opts.both ? "Main + Backup" : field === "main" ? "Main" : "Backup";
+    const video = opts.both && opts.backupLabel && opts.backupLabel !== side.label ? `${esc(side.label)} / ${esc(opts.backupLabel)}` : esc(side.label);
+    const head = `<div class="hd"><b>${F}</b> <span class="case ${caseCls(side.case)}">${side.case || "-"}</span> video <b>${video}</b>${opts.note ? ` <span class="small muted">· ${esc(opts.note)}</span>` : ""}</div>`;
+    if (!side.case) return `<div class="flowbox">${head}<div class="small muted">Pattern = this video input is unused. Nothing is routed for this side; the embedder ${field} keeps its value.</div>
+        ${apLines(Array.from({ length: 16 }, (_, i) => `emb:${R.byN[n].letter}:${i + 1}`), [field])}</div>`;
+    const arrow = (txt, auto) => `<div class="farrow ${auto ? "auto" : ""}"><span class="a">↓</span>${auto ? '<span class="tag">auto</span>' : ""}<span>${txt || ""}</span></div>`;
+    const cur = currentDelay(side), want = delayTarget(side);
+    const curTxt = cur.length === 0 ? "?" : cur.length === 1 ? `${(+cur[0]).toFixed(1)} ms` : `mixed ${cur.map(x => x.toFixed(1)).join("/")}`;
+    const changed = cur.length !== 1 || Math.abs(cur[0] - want) > 1e-6;
+    const pd = presetDelay(side);
+    const delayBox = (where) => `<div class="fbox delay ${changed ? "changed" : ""}" title="${esc(where)}"><b>Delay</b> <span class="muted">${esc(where)}</span>
+        <div class="ap"><span class="act">Active: ${esc(curTxt)}</span><br>${pd.length ? `<span class="pre">Preset: ${esc(pd.join("/"))} ms</span>` : '<span class="eq">Preset = Active</span>'}</div>
+        target <input type="number" step="0.1" min="0" max="${DELAY_MAX[side.case]}" value="${want}" data-delay="${delayId(side)}"> ms
+        ${changed ? `<br><span class="warn">template sets it</span>` : `<br><span class="lv-ok">already at target</span>`}</div>`;
+    const embKeys = Array.from({ length: 16 }, (_, i) => `emb:${L}:${i + 1}`);
+    const embFields = opts.both ? ["main", "backup"] : [field];
+    if (side.case === "A") {
+        const sn = streamName("in", side.stream);
+        return `<div class="flowbox ${opts.both ? "both" : ""}">${head}<div class="flow">
+            <div class="fbox src"><b>IP In ${side.stream}</b><br>${esc(sn?.short || "")}<br><span class="muted">(${(side.stream - 1) * 16 + 1}–${side.stream * 16})</span></div>
+            ${delayBox("Stream Delay on the input")}
+            ${arrow("16 ch", true)}
+            <div class="fbox"><b>Embedder ${L}</b> <span class="muted">Input ${F}</span>${apLines(embKeys, embFields)}</div>${arrow("")}<div class="fbox out"><b>SDI out</b><br>${esc(L)}</div></div>
+            <div class="small muted">Case A: no delay bank. The delay sits on the IP input stream, the embedder takes the already delayed audio.</div></div>`;
+    }
+    const g = side.group, tx = a.tx_stream;
+    return `<div class="flowbox ${opts.both ? "both" : ""}">${head}<div class="flow">
+        <div class="fbox src"><b>SDI ${side.sdi}</b><br>De-Emb ${esc(side.deemb)}<br><span class="muted">(${3072 + (side.sdi - 1) * 16 + 1}–${3072 + side.sdi * 16})</span></div>
+        ${arrow("16 ch", true)}
+        <div class="fbox"><b>Delay group ${g}</b> · first bank <b>B${firstBank(g)}</b> <span class="muted">(B${firstBank(g)}–B${firstBank(g) + 7}) Input Main+Backup</span>${apLines(R.dstBlocks.get(blockKey("bank", g))?.keys || [], ["main"])}</div>
+        ${delayBox(`on banks ${firstBank(g)}–${firstBank(g) + 7}`)}
+        ${arrow("16 ch", true)}<div class="fbox"><b>Embedder ${L}</b> <span class="muted">Input ${F}</span>${apLines(embKeys, embFields)}</div>${arrow("")}<div class="fbox out"><b>SDI out</b><br>${esc(L)}</div></div>
+        ${tx ? `<div class="flowbranch"><span class="small muted">↳ same delay group ${g} also feeds</span>${arrow("16 ch", true)}<div class="fbox"><b>IP Out ${tx}</b> ${esc(streamName("out", tx)?.short || "")} <span class="muted">Input Main + Backup</span>${apLines(R.dstBlocks.get(blockKey("ipout", tx))?.keys || [], ["main", "backup"])}</div>${arrow("")}<div class="fbox out"><b>ST 2110-30</b></div></div>` : ""}
+        <div class="small muted">Case B: the 8 banks are the only place the delay is applied. SDI out and IP out both take the same delayed copy.</div></div>`;
+}
+function sinkCard(title, keys, n, note) {
+    // per side: ACTIVE (device now) | PRESET (staged). A template suggestion that is not staged yet shows in purple italics.
+    const plan = new Map(plannedFor(n, true).filter(c => c.field !== "delay").map(c => [`${c.key}|${c.field}`, c.value]));
+    const rowsHtml = keys.map(k => {
+        const d = R.dst.get(k);
+        const cells = f => {
+            const act = activeOf(k, f), pre = presetOf(k, f), tpl = plan.get(`${k}|${f}`);
+            const actTd = `<td class="v act" title="${esc(srcLong(act))}">${esc(srcShort(act))}</td>`;
+            if (pre !== act) return actTd + `<td class="v pre" title="${esc(srcLong(pre))}">${esc(srcShort(pre))}</td>`;
+            if (tpl !== undefined && tpl !== act) return actTd + `<td class="v tpl" title="template suggestion, not staged yet: ${esc(srcLong(tpl))}">→ ${esc(srcShort(tpl))}</td>`;
+            return actTd + `<td class="eq" title="Preset = Active">=</td>`;
+        };
+        return `<tr><td>${d.ch}${d.kind === "bank" ? ` <span class="muted small">B${d.bank}.${d.slot} (${d.own_id})</span>` : ""}</td>${cells("main")}${cells("backup")}</tr>`;
+    }).join("");
+    return `<div class="sinkcard"><h4>${title}</h4>${note ? `<div class="small muted" style="margin-bottom:4px">${note}</div>` : ""}
+        <div class="slots" style="max-height:260px"><table class="plan"><thead>
+            <tr><th></th><th class="grp" colspan="2">Main</th><th class="grp" colspan="2">Backup</th></tr>
+            <tr><th>Ch</th><th class="lv-ok">Active</th><th style="color:#b45309">Preset</th><th class="lv-ok">Active</th><th style="color:#b45309">Preset</th></tr>
+        </thead><tbody>${rowsHtml}</tbody></table></div></div>`;
+}
+function sameSource(m, b) {
+    return m.case && m.case === b.case && (m.case === "A" ? m.stream === b.stream : m.group === b.group);
+}
+function flowsFor(n, sides, a) {
+    const m = sides.main || {}, b = sides.backup || {};
+    if (sameSource(m, b))
+        return `<div class="span">${flowDiagram(n, "main", m, a, { both: true, backupLabel: b.label, note: "Backup uses the same source" })}</div>`;
+    // different sources (mixed IP/SDI, two SDI ports, two streams, or an unused side): side by side
+    return flowDiagram(n, "main", m, a) + flowDiagram(n, "backup", b, a);
+}
+function renderAssisted() {
+    let n = R.selCh;
+    if (!n) { $("dstAssisted").innerHTML = `<p class="small muted">Pick a source on the left (IP In = Case A, SDI = Case B) or a channel tile above. Only the destinations assigned to it are shown here; Main and Backup are resolved per side (IP, SDI or mixed).</p>`; return; }
+    const c = R.byN[n], a = R.analysis[n] || {};
+    if (a.error) { $("dstAssisted").innerHTML = `<div class="alert">${esc(a.error)}</div>`; return; }
+    const sides = a.sides || {};
+    const sideBox = f => { const s = sides[f] || {}; const what = s.case === "A" ? `Case A · IP In ${s.stream ?? "?"}` : s.case === "B" ? `Case B · SDI ${s.sdi} → Delay group ${s.group} (first bank B${firstBank(s.group)})` : "inactive (Pattern) – not routed";
+        return `<div class="side"><b>${f === "main" ? "Main" : "Backup"}</b> <span class="case ${caseCls(s.case)}">${s.case || "-"}</span><br>video <b>${esc(s.label || "")}</b><br>${esc(what)}</div>`; };
+    const nm = chName(n);
+    let html = `<div class="small" style="margin-bottom:6px"><b>${c.letter}</b> (channel ${n}) · ${esc(nm.long || "")}</div>
+        <div class="small" style="margin-bottom:6px; display:flex; gap:14px; flex-wrap:wrap; align-items:center">
+            <span><span class="farrow auto" style="display:inline-flex; padding:0"><span class="tag">auto</span></span> = routed by the template</span>
+            <span>delay boxes: enter the target (nothing is written before Take)</span>
+            <span class="muted">Main and Backup are resolved separately from their own video input</span></div>
+        <div class="flows2">${flowsFor(n, sides, a)}</div>`;
+    const emb = Array.from({ length: 16 }, (_, i) => `emb:${c.letter}:${i + 1}`);
+    const srcTxt = s => s.case === "A" ? "IP In " + s.stream : "Delay group " + s.group + ` (B${firstBank(s.group)})`;
+    const fieldsTxt = sameSource(sides.main || {}, sides.backup || {}) ? `main + backup ← ${srcTxt(sides.main)}`
+        : ["main", "backup"].filter(f => sides[f]?.case).map(f => `${f} ← ${srcTxt(sides[f])}`).join(" · ") || "no active side";
+    html += sinkCard(`Embedder ${c.letter} <span class="muted small">→ SDI out</span>`, emb, n, fieldsTxt);
+    const groups = [...new Set(Object.values(sides).filter(s => s.case === "B").map(s => s.group))];
+    for (const g of groups) {
+        const keys = R.dstBlocks.get(blockKey("bank", g))?.keys || [];
+        const s = Object.values(sides).find(x => x.group === g);
+        const gb = R.dstBlocks.get(blockKey("bank", g));
+        html += sinkCard(`Delay group ${g} · first bank <b>B${firstBank(g)}</b> <span class="muted small">Banks ${firstBank(g)}–${firstBank(g) + 7} · ${esc(gb?.delayText || "")}</span>`, keys, n, `main + backup ← De-Emb ${s.deemb} (SDI ${s.sdi})`);
+    }
+    if (a.tx_stream) {
+        const keys = R.dstBlocks.get(blockKey("ipout", a.tx_stream))?.keys || [];
+        const sn = streamName("out", a.tx_stream);
+        html += sinkCard(`IP Out ${a.tx_stream} <span class="muted small">${esc(sn?.long || "")}</span>`, keys, n,
+            groups.length ? "main + backup ← the delay group (delayed SDI copy, Case B)" : "no SDI side – IP output is shown, not changed");
+    }
+    $("dstAssisted").innerHTML = html;
+}
+function renderRouteLeft() {
+    if (R.mode === "manual") {
+        $("routeLeft").innerHTML = `<h2>Route (manual)</h2>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;"><span class="small">Write to</span>
+            <div class="field-toggle" id="fieldToggle">${["main", "backup", "both"].map(f => `<button data-f="${f}" class="${R.field === f ? "active" : ""}">${f[0].toUpperCase() + f.slice(1)}</button>`).join("")}</div></div>
+            <div class="fill"><span class="muted">Fill</span><span class="what" id="fillDst"></span>
+            <span class="muted">from ch</span><span><input type="number" id="fillDstStart" min="1" value="1"></span>
+            <span class="muted">with</span><span class="what" id="fillSrc"></span>
+            <span class="muted">from ch</span><span><input type="number" id="fillSrcStart" min="1" value="1"></span>
+            <span class="muted">count</span><span><input type="number" id="fillCount" min="1" value="16"> <span class="small muted" id="fillMax"></span></span></div>
+            <div style="margin-top:10px"><button class="btn primary" id="fillBtn">Fill →</button></div>
+            <ul class="help" style="margin-top:10px"><li>Drag a source block onto a destination block (16 ch), or a source channel onto a slot.</li>
+            <li>Click a slot, then click source channels: the cursor moves down after each click.</li></ul>`;
+        renderFill(); return;
+    }
+    const n = R.selCh;
+    if (!n) { $("routeLeft").innerHTML = `<h2>Route (assisted)</h2><p class="small muted">Select a source or a channel.</p>`; return; }
+    const a = R.analysis[n] || {}, c = R.byN[n];
+    const ch = plannedFor(n, R.withDelay);
+    const routes = ch.filter(x => x.field !== "delay").length, delays = ch.filter(x => x.field === "delay").length;
+    const ck = channelKeys(n), chPreset = [...R.pending.keys()].filter(k => ck.has(k)).length;
+    $("routeLeft").innerHTML = `<h2>Route (assisted) · ${c.letter} <span class="case ${caseCls((a.case || "-/-").split("/")[0])}">${esc(a.case || "")}</span></h2>
+        <div class="presetbar ${chPreset ? "on" : "off"}" style="margin-bottom:8px">Preset for ${c.letter}: <b>${chPreset}</b> change(s)
+            ${chPreset ? '<button class="btn" id="clearChPreset" style="padding:1px 8px">Clear channel preset</button>' : "– Preset = Active"}</div>
+        <div>${(a.findings || []).map(f => `<div class="find"><span class="lv lv-${f.level}">${f.level.toUpperCase()}</span>${esc(f.text)}</div>`).join("")}</div>
+        <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+            <label class="small"><input type="checkbox" id="withDelay" ${R.withDelay ? "checked" : ""}> include delays (targets from the delay boxes)</label>
+            <button class="btn" id="delayResetBtn" title="Reset this channel's delay targets to 19.5 / 18.0 ms">Reset delays</button>
+            <button class="btn primary" id="planBtn" ${ch.length ? "" : "disabled"}>Stage template into Preset (${routes} routes${R.withDelay ? `, ${delays} delays` : ""})</button>
+            ${R.info?.source === "live" ? `<button class="btn" id="checkBtn" title="Fresh read-only ACP2 + NMOS check of this channel">Check live</button>` : ""}
+        </div><div id="checkResult" style="margin-top:8px">${R.checks[n] || ""}</div>
+        <p class="small muted" style="margin-top:6px">Templates follow docs/routing-architecture.md. Values come from the routing read; "Check live" re-reads this channel first.</p>`;
+}
+function fillPlan() {
+    const db = R.dstBlocks.get(R.selDstBlock), sb = R.srcBlocks.get(R.selSrcBlock);
+    if (!db || !sb || !$("fillCount")) return null;
+    const ds = +$("fillDstStart").value || 1, ss = +$("fillSrcStart").value || 1;
+    const max = Math.max(0, Math.min(db.keys.length - ds + 1, sb.ids.length - ss + 1));
+    const nn = Math.min(+$("fillCount").value || 0, max), plan = [];
+    for (let i = 0; i < nn; i++) plan.push([db.keys[ds - 1 + i], sb.ids[ss - 1 + i]]);
+    return { plan, max };
+}
+function renderFill() {
+    if (!$("fillDst")) return;
+    const db = R.dstBlocks.get(R.selDstBlock), sb = R.srcBlocks.get(R.selSrcBlock);
+    $("fillDst").textContent = db ? `${db.label}${db.nm ? " · " + db.nm.short : ""}` : "select a destination block";
+    $("fillSrc").textContent = sb ? `${sb.label} (${sb.range})${sb.nm ? " · " + sb.nm.short : ""}` : "select a source block";
+    const fp = fillPlan(); $("fillMax").textContent = fp ? `max ${fp.max}` : ""; $("fillBtn").disabled = !fp || !fp.plan.length;
+}
+function warningsFor(pk, v) {
+    const [key, field] = pk.split("|"); if (field === "delay") return [];
+    const w = [], d = R.dst.get(key), s = R.src.get(v);
+    if (d && !d.enabled) w.push(d.kind === "emb" ? "embedder off" : "destination stream disabled");
     if (s && !s.enabled) w.push("source disabled");
-    if (!s && srcId !== 0) w.push("unknown source");
+    if (!s && v !== 0) w.push("unknown source");
     return w;
 }
 function renderPending() {
-    const items = [...S.pending.entries()].map(([pk, v]) => { const [key, field] = pk.split("|"); return { key, field, v }; });
-    const order = k => { const d = S.dst.get(k); return [DST_CATS.findIndex(c => c.kind === d.kind), typeof d.block === "number" ? d.block : String(d.block), d.ch]; };
-    items.sort((a, b) => { const x = order(a.key), y = order(b.key); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; return a.field < b.field ? 1 : -1; });
+    const items = [...R.pending.entries()];
     $("pendCount").textContent = items.length;
-    $("discardBtn").disabled = $("exportBtn").disabled = !items.length;
+    $("discardBtn").disabled = !items.length; $("undoEditBtn").disabled = !R.history.length;
+    $("exportBtn").disabled = !items.length;
+    const live = R.info?.source === "live", dev = (F.state?.devices || []).find(d => d.name === R.device);
+    $("takeBtn").disabled = !items.length || !(dev && dev.write);
+    $("takeInfo").textContent = !dev ? "" : !dev.write ? "Take is disabled for this device (devices.json write = false). Writing over ACP2 is not implemented yet." : "Writing over ACP2 is not implemented yet.";
     let nWarn = 0;
-    $("pendBody").innerHTML = items.map(({ key, field, v }) => {
-        const w = warningsFor(key, v); if (w.length) nWarn++;
-        return `<tr><td title="${esc(dstLabel(key))}">${esc(dstLabel(key))}</td><td class="muted">${field === "main" ? "M" : "B"}</td>
-            <td><span class="old">${esc(srcShort(S.dst.get(key)[field]))}</span>${esc(srcShort(v))}${w.length ? ` <span class="warn" title="${esc(w.join(", "))}">⚠</span>` : ""}</td>
-            <td><button class="x" data-pk="${esc(key + "|" + field)}" title="Revert this change">×</button></td></tr>`;
-    }).join("") || `<tr><td class="muted small">No changes yet.</td></tr>`;
-    $("pendWarn").innerHTML = nWarn ? `<div class="note">${nWarn} change(s) marked ⚠. Hover for the reason, check before exporting.</div>` : "";
+    $("pendBody").innerHTML = items.map(([pk, v]) => { const [key, field] = pk.split("|"); const w = warningsFor(pk, v); if (w.length) nWarn++;
+        return `<tr><td title="${esc(dstLabel(key))}">${esc(dstLabel(key))}</td><td class="muted">${field === "main" ? "M" : field === "backup" ? "B" : "Δ"}</td>
+            <td><span class="old">${esc(fmtVal(pk, oldValue(pk)))}</span>${esc(fmtVal(pk, v))}${w.length ? ` <span class="warn" title="${esc(w.join(", "))}">⚠</span>` : ""}</td>
+            <td><button class="x" data-pk="${esc(pk)}" title="Revert">×</button></td></tr>`; }).join("") || `<tr><td class="muted small">No changes yet.</td></tr>`;
+    $("pendWarn").innerHTML = nWarn ? `<div class="note">${nWarn} change(s) marked ⚠ – hover for the reason.</div>` : "";
 }
 
-// ---------- events ----------
-$("fileSelect").onchange = e => loadModel(e.target.value).catch(err => msg(err.message));
-$("fileInput").onchange = e => upload(e.target.files[0]);
-$("srcCats").onclick = e => { const c = e.target.closest("[data-cat]"); if (c) { S.srcCat = c.dataset.cat; renderAll(); } };
-$("dstCats").onclick = e => { const c = e.target.closest("[data-cat]"); if (c) { S.dstCat = c.dataset.cat; renderAll(); } };
-$("srcFilter").oninput = renderSrcGrid;
-$("dstFilter").oninput = renderDstGrid;
-$("fieldToggle").onclick = e => { const b = e.target.closest("[data-f]"); if (b) { S.field = b.dataset.f; store("nar.field", S.field); renderField(); } };
-for (const id of ["fillDstStart", "fillSrcStart", "fillCount"]) $(id).oninput = renderFill;
-
+// ----- events -----
+$("viewToggle").onclick = e => { const b = e.target.closest("[data-v]"); if (b) { R.view = b.dataset.v; store("nar.view", R.view); renderAll(); } };
+$("modeToggle").onclick = e => { const b = e.target.closest("[data-m]"); if (b) { R.mode = b.dataset.m; store("nar.mode", R.mode); renderAll(); } };
+$("chGrid").onclick = e => { const t = e.target.closest("[data-n]"); if (!t) return; R.selCh = +t.dataset.n;
+    if (R.mode === "manual") { const c = R.byN[R.selCh]; R.dstCat = "emb"; R.selDstBlock = blockKey("emb", c.letter); }
+    renderAll(); };
+$("srcCats").onclick = e => { const c = e.target.closest("[data-cat]"); if (c) { R.srcCat = c.dataset.cat; renderAll(); } };
+$("dstCats").onclick = e => { const c = e.target.closest("[data-cat]"); if (c) { R.dstCat = c.dataset.cat; renderAll(); } };
+$("srcFilter").oninput = renderSrcGrid; $("dstFilter").oninput = renderDstGrid;
 $("srcGrid").onclick = e => {
     const b = e.target.closest("[data-bk]"); if (!b) return;
-    S.selSrcBlock = b.dataset.bk; S.selSrcId = null; $("fillSrcStart").value = 1;
+    R.selSrcBlock = b.dataset.bk; R.selSrcId = null;
+    if (R.mode === "assisted") { const users = channelsForSource(b.dataset.bk); if (users.length) R.selCh = users[0].n;
+        if (users.length > 1) msg(`This source is used by ${users.map(u => R.byN[u.n].letter + " " + u.side.field).join(", ")} – showing ${R.byN[users[0].n].letter}. Pick another channel tile to switch.`, "note"); else msg(""); }
     renderAll();
 };
-$("dstGrid").onclick = e => {
-    const b = e.target.closest("[data-bk]"); if (!b) return;
-    S.selDstBlock = b.dataset.bk; S.selSlot = null; $("fillDstStart").value = 1;
-    $("fillCount").value = S.dstBlocks.get(S.selDstBlock).keys.length;
-    renderAll();
-};
+$("dstGrid").onclick = e => { const b = e.target.closest("[data-bk]"); if (!b) return; R.selDstBlock = b.dataset.bk; R.selSlot = null; renderAll(); };
 $("srcChs").onclick = e => {
-    const c = e.target.closest("[data-id]"); if (!c) return;
-    const id = +c.dataset.id;
-    S.selSrcId = id;
-    if (S.selSlot) { // shuffle mode: assign and advance the slot cursor
-        assign(S.selSlot, id);
-        const keys = S.dstBlocks.get(S.selDstBlock).keys, i = keys.indexOf(S.selSlot);
-        S.selSlot = keys[i + 1] || null;
+    const c = e.target.closest("[data-id]"); if (!c) return; const id = +c.dataset.id; R.selSrcId = id;
+    if (R.mode === "manual" && R.selSlot) { assign(R.selSlot, id); const keys = R.dstBlocks.get(R.selDstBlock).keys; R.selSlot = keys[keys.indexOf(R.selSlot) + 1] || null; }
+    renderAll();
+};
+$("slotBody").onclick = e => { const r = e.target.closest("[data-key]"); if (!r) return; R.selSlot = R.selSlot === r.dataset.key ? null : r.dataset.key; renderAll(); };
+$("routeLeft").addEventListener("click", async e => {
+    const t = e.target;
+    if (t.closest("#fieldToggle [data-f]")) { R.field = t.closest("[data-f]").dataset.f; renderRouteLeft(); return; }
+    if (t.id === "fillBtn") { const fp = fillPlan(); if (fp) { setValues(fp.plan.flatMap(([k, id]) => fields().map(f => [k, f, id]))); renderAll(); } return; }
+    if (t.id === "clearChPreset") { const ck = channelKeys(R.selCh); const undo = [];
+        for (const k of [...R.pending.keys()]) if (ck.has(k)) { undo.push([k, R.pending.get(k)]); R.pending.delete(k); }
+        if (undo.length) R.history.push(undo); persist(); renderAll(); return; }
+    if (t.id === "delayResetBtn") { for (const s of Object.values((R.analysis[R.selCh] || {}).sides || {})) if (s.case) store(delayKey(delayId(s)), null); renderAll(); return; }
+    if (t.id === "planBtn") { const ch = plannedFor(R.selCh, R.withDelay); setValues(ch.map(c => [c.key, c.field, c.value])); renderAll(); return; }
+    if (t.id === "checkBtn") {
+        const n = R.selCh;
+        t.disabled = true; $("checkResult").innerHTML = '<span class="small muted">Reading this channel over ACP2 (get property only) and NMOS …</span>';
+        try { const r = await post("/api/check", { device: R.device, channel: n });
+            const nm = r.nmos ? Object.entries(r.nmos).map(([k, v]) => `${k} ${v.enabled ? "on" : "OFF"}${v.source ? " · " + v.source : ""}`).join(" · ") : (r.nmos_error || "");
+            $("checkResult").innerHTML = `<div class="${/problem|SILENT/.test(r.verdict) ? "alert" : /not in use|warning/.test(r.verdict) ? "note" : "ok"}"><b>${esc(r.verdict)}</b><br>
+                ${r.acp2_requests} ACP2 reads in ${r.seconds} s via ${esc(r.link)} · ${r.fresh_changed.length} value(s) changed since the routing read<br>
+                Embedder input current (on air): ${esc(r.embedder_current.join(", ").slice(0, 80))}<br>NMOS: ${esc(nm)}</div>`
+                + r.analysis.findings.map(f => `<div class="find"><span class="lv lv-${f.level}">${f.level.toUpperCase()}</span>${esc(f.text)}</div>`).join("");
+            R.checks[n] = `<div class="small muted">Live check ${new Date().toLocaleTimeString()}:</div>` + $("checkResult").innerHTML;
+        } catch (err) { $("checkResult").innerHTML = `<div class="alert">${esc(err.message)}</div>`; }
+        if (R.selCh !== n) renderRouteLeft();
+        t.disabled = false; return;
     }
-    renderAll();
-};
-$("slotBody").onclick = e => {
-    const r = e.target.closest("[data-key]"); if (!r) return;
-    S.selSlot = S.selSlot === r.dataset.key ? null : r.dataset.key;
-    const s = S.src.get(value(r.dataset.key, S.field === "backup" ? "backup" : "main"));
-    if (s && S.selSlot) { S.selSrcBlock = blockKey(s.kind, s.block); S.selSrcId = s.id; S.srcCat = SRC_CATS.find(c => c.kind === s.kind && (!c.test || c.test(s.block))).id; }
-    renderAll();
-};
-$("fillBtn").onclick = () => doFill();
-$("undoBtn").onclick = undo;
-$("discardBtn").onclick = () => { if (confirm(`Discard all ${S.pending.size} pending changes?`)) { S.pending.clear(); S.history = []; persist(); renderAll(); } };
-$("pendBody").onclick = e => { const x = e.target.closest("[data-pk]"); if (!x) return; const pk = x.dataset.pk; S.history.push([[pk, S.pending.get(pk)]]); S.pending.delete(pk); persist(); renderAll(); };
-document.addEventListener("keydown", e => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "z" && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); undo(); }
-    if (e.key === "Escape") { S.selSlot = null; renderSlots(); }
 });
-
-// drag & drop: source block -> destination block (fill), source channel -> slot
-let drag = null;
+$("routeLeft").addEventListener("change", e => { if (e.target.id === "withDelay") { R.withDelay = e.target.checked; renderRouteLeft(); } });
+$("routeLeft").addEventListener("input", e => { if (/^fill/.test(e.target.id)) renderFill(); });
+$("dstAssisted").addEventListener("change", e => {
+    const inp = e.target.closest("[data-delay]"); if (!inp) return;
+    const id = inp.dataset.delay, cas = id[0], v = +inp.value;
+    if (!(v >= 0 && v <= DELAY_MAX[cas])) { msg(`Delay must be 0–${DELAY_MAX[cas]} ms (device limit)`); inp.value = recall(delayKey(id)) ?? DELAY_DEFAULT[cas]; return; }
+    store(delayKey(id), Math.round(v * 1000) / 1000); msg(""); renderAll();
+});
+$("undoEditBtn").onclick = undoEdit;
+$("discardBtn").onclick = () => { if (confirm(`Discard all ${R.pending.size} pending changes?`)) { R.pending.clear(); R.history = []; persist(); renderAll(); } };
+$("pendBody").onclick = e => { const x = e.target.closest("[data-pk]"); if (!x) return; R.history.push([[x.dataset.pk, R.pending.get(x.dataset.pk)]]); R.pending.delete(x.dataset.pk); persist(); renderAll(); };
+document.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key === "z" && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); undoEdit(); } if (e.key === "Escape") { R.selSlot = null; renderAll(); } });
+const changeList = () => [...R.pending.entries()].map(([pk, v]) => { const [key, field] = pk.split("|"); return { key, field, value: v }; });
+$("takeBtn").onclick = async () => {
+    if (!confirm(`TAKE: write ${R.pending.size} change(s) into ${R.device} (LIVE) over ACP2?`)) return;
+    try { await post("/api/take", { device: R.device, changes: changeList() }); } catch (e) { $("applyResult").innerHTML = `<div class="alert">${esc(e.message)}</div>`; }
+};
+$("undoTakeBtn").onclick = async () => {
+    if (!confirm(`Undo the last Take on ${R.device} (LIVE)?`)) return;
+    try { await post("/api/undo", { device: R.device }); } catch (e) { $("applyResult").innerHTML = `<div class="alert">${esc(e.message)}</div>`; }
+};
+$("exportBtn").onclick = async () => {
+    if (!confirm(`Write ${R.pending.size} change(s) into a NEW copy of ${R.file}? The original is not modified.`)) return;
+    try { const r = await post("/api/export", { file: R.file, changes: changeList(), note: $("exportNote").value });
+        $("applyResult").innerHTML = `<div class="ok">Exported <b>${esc(r.export_file)}</b> (${r.changes.length} changes, verified). <a href="/api/download?file=${encodeURIComponent(r.export_file)}">Download</a></div>`; }
+    catch (e) { $("applyResult").innerHTML = `<div class="alert">Export failed: ${esc(e.message)}</div>`; }
+};
+// drag & drop (manual)
 document.addEventListener("dragstart", e => {
     const ch = e.target.closest?.(".ch[data-id]"), blk = e.target.closest?.("#srcGrid [data-bk]");
-    drag = ch ? { type: "ch", id: +ch.dataset.id } : blk ? { type: "blk", bk: blk.dataset.bk } : null;
-    if (drag) e.dataTransfer.setData("text/plain", JSON.stringify(drag));
+    R.drag = ch ? { type: "ch", id: +ch.dataset.id } : blk ? { type: "blk", bk: blk.dataset.bk } : null;
+    if (R.drag) e.dataTransfer.setData("text/plain", JSON.stringify(R.drag));
 });
-document.addEventListener("dragend", () => { drag = null; document.querySelectorAll(".dragover").forEach(x => x.classList.remove("dragover")); });
-function dropTarget(e) {
-    if (!drag) return null;
-    return drag.type === "blk" ? e.target.closest?.("#dstGrid [data-bk]") : e.target.closest?.("#slotBody [data-key]");
-}
-document.addEventListener("dragover", e => {
-    const t = dropTarget(e);
-    document.querySelectorAll(".dragover").forEach(x => x !== t && x.classList.remove("dragover"));
-    if (t) { e.preventDefault(); t.classList.add("dragover"); }
-    else if (!drag && e.dataTransfer.types.includes("Files")) { e.preventDefault(); document.body.classList.add("filedrag"); }
-});
-document.addEventListener("dragleave", e => { if (!e.relatedTarget) document.body.classList.remove("filedrag"); });
+document.addEventListener("dragend", () => { R.drag = null; document.querySelectorAll(".dragover").forEach(x => x.classList.remove("dragover")); });
+const dropTarget = e => !R.drag || R.mode !== "manual" ? null : R.drag.type === "blk" ? e.target.closest?.("#dstGrid [data-bk]") : e.target.closest?.("#slotBody [data-key]");
+document.addEventListener("dragover", e => { const t = dropTarget(e); document.querySelectorAll(".dragover").forEach(x => x !== t && x.classList.remove("dragover")); if (t) { e.preventDefault(); t.classList.add("dragover"); } });
 document.addEventListener("drop", e => {
     document.body.classList.remove("filedrag");
     const t = dropTarget(e);
-    if (t) {
-        e.preventDefault();
-        if (drag.type === "blk") { $("fillDstStart").value = 1; $("fillSrcStart").value = 1; $("fillCount").value = 999; doFill(t.dataset.bk, drag.bk); $("fillCount").value = S.dstBlocks.get(t.dataset.bk).keys.length; renderFill(); }
-        else { assign(t.dataset.key, drag.id); S.selSrcId = drag.id; renderAll(); }
-    } else if (e.dataTransfer.files.length) { e.preventDefault(); upload(e.dataTransfer.files[0]); }
-    drag = null;
+    if (t) { e.preventDefault();
+        if (R.drag.type === "blk") { const db = R.dstBlocks.get(t.dataset.bk), sb = R.srcBlocks.get(R.drag.bk); setValues(db.keys.slice(0, sb.ids.length).flatMap((k, i) => fields().map(f => [k, f, sb.ids[i]]))); R.selDstBlock = t.dataset.bk; R.selSrcBlock = R.drag.bk; }
+        else assign(t.dataset.key, R.drag.id);
+        renderAll();
+    } else if (e.dataTransfer.files.length) { e.preventDefault(); uploadLists([...e.dataTransfer.files]); }
+    R.drag = null;
 });
+function refreshJob() {
+    const d = (F.state?.devices || []).find(x => x.name === R.device);
+    if (d && d.job && d.job.state === "done" && R.lastJob !== d.job.finished) { R.lastJob = d.job.finished; if (R.info && d.job.finished) reloadModel(); }
+}
 
-$("exportBtn").onclick = async () => {
-    const changes = [...S.pending.entries()].map(([pk, v]) => { const [key, field] = pk.split("|"); return { key, field, value: v }; });
-    const warn = changes.filter(c => warningsFor(c.key, c.value).length).length;
-    if (!confirm(`Write ${changes.length} change(s) into a NEW copy of ${S.file}?` + (warn ? `\n\n${warn} change(s) carry a ⚠ warning.` : "") + "\n\nThe original file is not modified."))
-        return;
-    $("exportBtn").disabled = true;
-    try {
-        const r = await api("/api/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ file: S.file, changes, note: $("exportNote").value }) });
-        $("exportResult").innerHTML = `<div class="ok">Exported <b>${esc(r.export_file)}</b> with ${r.changes.length} change(s), Object_Count and read-back verified.<br>
-            <a href="/api/download?file=${encodeURIComponent(r.export_file)}">Download .cbf</a> · change log saved next to it in exports/.<br>
-            Pending changes stay here, so the next export again contains everything relative to the original.</div>`;
-    } catch (e) {
-        $("exportResult").innerHTML = `<div class="alert">Export failed, nothing written:\n${esc(e.message)}</div>`;
-    } finally { $("exportBtn").disabled = !S.pending.size; }
-};
-
-S.field = recall("nar.field") || "main";
-renderField();
-loadFiles().catch(e => msg("Server not reachable: " + e.message));
+// ================= start =================
+loadCbfList().catch(() => {});
+pollState();
+setInterval(pollState, 4000);
 </script>
 </body>
 </html>
