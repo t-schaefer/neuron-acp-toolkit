@@ -1,0 +1,181 @@
+"""
+Cerebrum route-master lists (sources = SRC, destinations = DST) -> stream names.
+
+Each row is one router source/destination, e.g.
+
+    2564  DCR.IPG03A-TX04  CC1 ...  NMOS2|95|IPG03A|VTX-04  NMOS2|95|IPG03A|DTX-04
+                                    NMOS2|95|IPG03A|ATX-13  NMOS2|95|IPG03A|ATX-14 ...
+
+The NMOS references name the device (here `IPG03A`, the same string the
+device's .cbf holds in GENERAL > NMOS > Label) and the stream (`ATX-13` =
+OUTPUT > IP > AUDIO > STREAM 13, `ARX-13` = INPUT > IP > AUDIO > STREAM 13).
+
+How many audio streams a row lists and how they are numbered differs from
+device to device (IPG03A: channel n -> streams (n-1)*4+1..+4; IPG03B/04B:
+channel n -> stream n; some rows list 1 or 3 refs). Nothing here assumes a
+formula: every name comes from the row that actually references that stream.
+See docs/id-formulas.md and docs/lessons-learned.md for why.
+
+Accepted file formats: .csv (semicolon), .tsv/.txt (tab), and .rtf as saved
+by TextEdit (tab-separated lines ending in a backslash).
+"""
+import csv
+import io
+import re
+from pathlib import Path
+
+CHANNEL_ROW_RE = re.compile(r'^(?P<site>[A-Z]+)\.(?P<dev>[^.]+?)-(?P<dir>TX|RX)(?P<n>\d+)$')  # not the ".A-" audio-only rows
+REF_RE = re.compile(r'^NMOS\d*\|[^|]*\|(?P<dev>[^|]+)\|(?P<kind>[AVD][TR]X)-(?P<num>\d+)\s*$')
+
+
+def normalize_device(name):
+    """'DCB.IPG 10A' / 'IPG10A' / 'DCR.IPG07A' / 'IPG7A' -> 'IPG10A' / 'IPG7A'."""
+    s = re.sub(r'^(DC[RB])\.', '', (name or '').strip().upper())
+    s = re.sub(r'[^A-Z0-9]', '', s)
+    return re.sub(r'(?<=[A-Z])0+(?=\d)', '', s)
+
+
+def _rtf_to_text(raw):
+    """Minimal RTF reader for TextEdit-exported plain tables: drop the header
+    groups and control words, keep the text, one line per `\\` line break."""
+    out, i, depth, skip_depth = [], 0, 0, None
+    n = len(raw)
+    while i < n:
+        c = raw[i]
+        if c == '{':
+            depth += 1
+            if skip_depth is None and raw.startswith(('{\\fonttbl', '{\\colortbl', '{\\*'), i):
+                skip_depth = depth
+            i += 1
+        elif c == '}':
+            if skip_depth == depth:
+                skip_depth = None
+            depth -= 1
+            i += 1
+        elif c == '\\':
+            nxt = raw[i + 1] if i + 1 < n else ''
+            if nxt in '\\{}':
+                if skip_depth is None:
+                    out.append(nxt)
+                i += 2
+            elif nxt == '\n' or nxt == '\r':
+                if skip_depth is None:
+                    out.append('\n')
+                i += 2
+            elif nxt == "'":
+                if skip_depth is None:
+                    out.append(bytes([int(raw[i + 2:i + 4], 16)]).decode('cp1252', 'replace'))
+                i += 4
+            else:
+                m = re.match(r'\\([a-zA-Z]+)(-?\d+)? ?', raw[i:])
+                if m:
+                    if m.group(1) in ('par', 'line') and skip_depth is None:
+                        out.append('\n')
+                    elif m.group(1) == 'tab' and skip_depth is None:
+                        out.append('\t')
+                    i += m.end()
+                else:
+                    i += 2
+        elif c in '\r\n':
+            i += 1
+        else:
+            if skip_depth is None:
+                out.append(c)
+            i += 1
+    return ''.join(out)
+
+
+def read_rows(path):
+    path = Path(path)
+    data = path.read_bytes()
+    if data.startswith(b'{\\rtf'):
+        text = _rtf_to_text(data.decode('latin-1'))
+    else:
+        for enc in ('utf-8-sig', 'cp1252'):
+            try:
+                text = data.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+    first = text.split('\n', 1)[0]
+    delim = '\t' if first.count('\t') >= first.count(';') else ';'
+    return [r for r in csv.reader(io.StringIO(text), delimiter=delim) if r]
+
+
+def parse_list(path):
+    """Returns {"kind": "SRC"|"DST", "name": file name, "devices": {norm_dev: {
+    "label": raw device label, "ATX"/"ARX": {stream: {...}}}}}"""
+    rows = read_rows(path)
+    header = [h.strip() for h in rows[0]]
+    if '_Mnemonic' not in header:
+        raise ValueError(f"{Path(path).name}: no _Mnemonic column - not a Cerebrum route list")
+    i_id, i_mn = header.index('_ID'), header.index('_Mnemonic')
+    i_alt = [i for i, h in enumerate(header) if h.startswith('_Alternate Mnemonic')]
+    i_lvl = [i for i, h in enumerate(header) if h.startswith('_Level ID')]
+    devices, kinds = {}, set()
+    for r in rows[1:]:
+        mnemonic = r[i_mn].strip() if i_mn < len(r) else ''
+        if not mnemonic:
+            continue
+        alts = [r[i].strip() for i in i_alt if i < len(r) and r[i].strip()]
+        row_m = CHANNEL_ROW_RE.match(mnemonic)
+        row_refs = []
+        audio_pos = 0
+        for i in i_lvl:
+            m = REF_RE.match(r[i].strip()) if i < len(r) else None
+            if not m or m.group('kind')[0] != 'A':
+                continue
+            audio_pos += 1
+            kinds.add(m.group('kind'))
+            dev = devices.setdefault(normalize_device(m.group('dev')),
+                                     {"label": m.group('dev'), "site": "", "ATX": {}, "ARX": {}, "TX": {}, "RX": {}})
+            num = int(m.group('num'))
+            row_refs.append((dev, num))
+            entry = {"row": r[i_id].strip(), "mnemonic": mnemonic, "alt": alts[0] if alts else "",
+                     "pos": audio_pos}
+            # the same stream referenced twice (seen on IPG10B RX) is kept as a list
+            dev[m.group('kind')].setdefault(num, []).append(entry)
+        if row_m and row_refs:
+            # one Neuron channel row: DCR.IPG03A-TX04 -> channel 4, its audio streams in order
+            dev = row_refs[0][0]
+            dev["site"] = dev["site"] or row_m.group('site')
+            dev[row_m.group('dir')][int(row_m.group('n'))] = {
+                "row": r[i_id].strip(), "mnemonic": mnemonic, "alt": alts[0] if alts else "",
+                "refs": [num for _, num in row_refs]}
+    kind = "SRC" if "ATX" in kinds and "ARX" not in kinds else "DST" if "ARX" in kinds and "ATX" not in kinds else \
+        ("DST" if '_TL Group' in header else "SRC")
+    return {"kind": kind, "name": Path(path).name, "devices": devices}
+
+
+def stream_names(lists, nmos_label):
+    """Names for one device: {"ipout": {stream: [entries]}, "ipin": {...},
+    "device": matched label or None, "available": [all device labels]}"""
+    key = normalize_device(nmos_label)
+    out = {"ipout": {}, "ipin": {}, "tx": {}, "rx": {}, "device": None, "site": "",
+           "lists": [l["name"] for l in lists],
+           "available": sorted({d["label"] for l in lists for d in l["devices"].values()})}
+    for l in lists:
+        dev = l["devices"].get(key)
+        if not dev:
+            continue
+        out["device"] = dev["label"]
+        out["site"] = out["site"] or dev.get("site", "")
+        out["tx"].update(dev["TX"])
+        out["rx"].update(dev["RX"])
+        for num, entries in dev["ATX"].items():
+            out["ipout"].setdefault(num, []).extend(entries)
+        for num, entries in dev["ARX"].items():
+            out["ipin"].setdefault(num, []).extend(entries)
+    return out
+
+
+def device_index(lists):
+    """All devices named in the lists: {norm_key: {"label", "site", "tx", "rx"}}."""
+    out = {}
+    for l in lists:
+        for key, d in l["devices"].items():
+            e = out.setdefault(key, {"label": d["label"], "site": "", "tx": 0, "rx": 0})
+            e["site"] = e["site"] or d.get("site", "")
+            e["tx"] = max(e["tx"], len(d.get("TX", {})))
+            e["rx"] = max(e["rx"], len(d.get("RX", {})))
+    return out

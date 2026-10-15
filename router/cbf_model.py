@@ -45,6 +45,9 @@ class Obj:
     end: int
     writable: bool
     enums: list
+    minimum: str = ""
+    maximum: str = ""
+    oid: int = 0  # ACP2 object id when the model comes from a live device
 
 
 @dataclass
@@ -56,6 +59,29 @@ class Group:
 def _num(name):
     m = re.search(r'(\d+)$', name)
     return int(m.group(1)) if m else None
+
+
+BANKS_PER_GROUP = 8  # 8 banks x 2 channels = one 16-channel group, as one audio stream
+
+
+def bank_group(bank, slot):
+    """Delay banks are 2-channel; we show them in 16-channel groups so a group
+    lines up with one 16-mono-channel stream. Banks 1-8 = group 1, 9-16 = group 2,
+    ... - the same fixed port-based scheme as docs/routing-architecture.md
+    (SDI port N uses banks (N-1)*8+1 .. N*8). Writing still happens per bank slot;
+    the destination key stays bank:<bank>:<slot>."""
+    g = (bank - 1) // BANKS_PER_GROUP + 1
+    first = (g - 1) * BANKS_PER_GROUP + 1
+    return {"block": g, "ch": (bank - first) * 2 + slot, "bank": bank, "slot": slot,
+            "block_label": f"Delay {g} · B{first} (Banks {first}-{first + BANKS_PER_GROUP - 1})"}
+
+
+def parse_input_label(label):
+    """'SDI 07' -> ('SDI', 7), 'Stream 9' -> ('Stream', 9), 'Pattern' -> ('Pattern', None)."""
+    m = re.match(r'^(SDI|Stream)\s+0*(\d+)$', label or "")
+    if m:
+        return m.group(1), int(m.group(2))
+    return (label or "OTHER"), None
 
 
 def channel_letter(path_name, channel_name):
@@ -107,6 +133,7 @@ class CbfModel:
                     start=m.start('val'), end=m.end('val'),
                     writable=attrs.get("WRITABLE", "1") != "0",
                     enums=[html.unescape(e) for e in enums.split(",")] if enums else [],
+                    minimum=attrs.get("MIN", ""), maximum=attrs.get("MAX", ""),
                 )
 
     def _pick_device(self):
@@ -157,6 +184,8 @@ class CbfModel:
                     dst["backup"] = int(g.objects["Input Backup"].value)
                     cur = g.objects.get("Input Current")
                     dst["current"] = int(cur.value) if cur and cur.value.lstrip('-').isdigit() else None
+                    own = g.objects.get("Identifier")  # delay-bank slots are also sources
+                    dst["own_id"] = int(own.value) if own and own.value.isdigit() else None
                     self.destinations[dst["key"]] = dst
 
     def _classify_source(self, p):
@@ -166,6 +195,7 @@ class CbfModel:
             sp = p[:4]
             return {"kind": "ipin", "block": n, "ch": k,
                     "block_label": f"IP In {n}", "name": self.sdp_name(sp),
+                    "stream_delay": self._float(self.obj(sp, "Stream Delay")),
                     "enabled": self.enum_label(self.obj(sp, "Stream")) == "Enabled"}
         # PROCESSING VIDEO/PATH X/CHANNEL nn/DE-EMBEDDER/AUDIO CHANNEL k
         if p[0] == "PROCESSING VIDEO" and len(p) == 5 and p[3] == "DE-EMBEDDER":
@@ -174,9 +204,7 @@ class CbfModel:
                     "block_label": f"De-Emb {letter}", "name": "", "enabled": True}
         # PROCESSING AUDIO/AUDIO DELAY/BANK n/AUDIO CHANNEL k
         if p[:2] == ("PROCESSING AUDIO", "AUDIO DELAY") and len(p) == 4:
-            n = _num(p[2])
-            return {"kind": "bank", "block": n, "ch": _num(p[3]),
-                    "block_label": f"Bank {n}", "name": "",
+            return {"kind": "bank", **bank_group(_num(p[2]), _num(p[3])), "name": "",
                     "delay": self._float(self.obj(p[:3], "Delay")), "enabled": True}
         # INPUT/MADI/OPTICAL n/AUDIO CHANNELS/AUDIO CHANNEL k
         if p[:2] == ("INPUT", "MADI") and len(p) == 5:
@@ -198,8 +226,7 @@ class CbfModel:
                     "enabled": self.enum_label(self.obj(ch_path, "Audio Embedder Mode")) != "Off"}
         if p[:2] == ("PROCESSING AUDIO", "AUDIO DELAY") and len(p) == 4:
             n, k = _num(p[2]), _num(p[3])
-            return {"key": f"bank:{n}:{k}", "kind": "bank", "block": n, "ch": k,
-                    "block_label": f"Bank {n}", "name": "",
+            return {"key": f"bank:{n}:{k}", "kind": "bank", **bank_group(n, k), "name": "",
                     "delay": self._float(self.obj(p[:3], "Delay")), "enabled": True}
         # OUTPUT/IP/AUDIO/STREAM m/AUDIO CHANNELS/AUDIO CHANNEL k
         if p[:3] == ("OUTPUT", "IP", "AUDIO") and len(p) == 6:
@@ -224,6 +251,25 @@ class CbfModel:
         except ValueError:
             return None
 
+    def channels(self):
+        """The 32 processing channels (A1..H4 = 1..32, path/channel order) with
+        their video Main/Backup Input - this decides Case A (Stream) vs Case B (SDI),
+        see docs/routing-architecture.md."""
+        out, n = [], 0
+        pv = [p for p in self.groups if len(p) == 3 and p[0] == "PROCESSING VIDEO"
+              and p[1].startswith("PATH ") and p[2].startswith("CHANNEL ")]
+        for p in sorted(pv, key=lambda p: (p[1], _num(p[2]))):
+            n += 1
+            main, backup = self.enum_label(self.obj(p, "Main Input")), self.enum_label(self.obj(p, "Backup Input"))
+            mk, mn = parse_input_label(main)
+            bk, bn = parse_input_label(backup)
+            out.append({"n": n, "letter": channel_letter(p[1], p[2]),
+                        "main": main, "main_kind": mk, "main_num": mn,
+                        "backup": backup, "backup_kind": bk, "backup_num": bn,
+                        "selection": self.enum_label(self.obj(p, "Input Selection")),
+                        "embedder_mode": self.enum_label(self.obj(p, "Audio Embedder Mode"))})
+        return out
+
     def info(self):
         a = self.device["attrs"]
         ident = ("IDENTITY",)
@@ -234,11 +280,34 @@ class CbfModel:
             "version": a.get("VERSION", ""),
             "card": self.enum_label(self.obj(ident, "Card Name")),
             "user_label": self.enum_label(self.obj(ident, "User Label 1")),
+            "nmos_label": self.enum_label(self.obj(("GENERAL", "NMOS"), "Label")),
             "sources": len(self.sources),
             "destinations": len(self.destinations),
         }
 
     # ---------- writing ----------
+
+    DELAY_TARGETS = {
+        # change key prefix -> (group path for number n, object name)
+        "bankdelay": (lambda n: ("PROCESSING AUDIO", "AUDIO DELAY", f"BANK {n}"), "Delay"),
+        "streamdelay": (lambda n: ("INPUT", "IP", "AUDIO", f"STREAM {n}"), "Stream Delay"),
+    }
+
+    def _delay_obj(self, key):
+        kind, _, n = key.partition(":")
+        if kind not in self.DELAY_TARGETS or not n.isdigit():
+            raise ValueError(f"unknown delay target {key}")
+        path_fn, name = self.DELAY_TARGETS[kind]
+        o = self.obj(path_fn(int(n)), name)
+        if o is None or not o.writable:
+            raise ValueError(f"{key}: {name} missing or read-only")
+        return o
+
+    def current_value(self, change):
+        """The value a change targets, as it is in this model (used for read-back)."""
+        if change["field"] == "delay":
+            return float(self._delay_obj(change["key"]).value)
+        return self.destinations[change["key"]][change["field"]]
 
     def build_patched(self, changes):
         """changes: [{"key": dest key, "field": "main"|"backup", "value": int}].
@@ -247,6 +316,18 @@ class CbfModel:
         is never produced."""
         edits, applied = [], []
         for c in changes:
+            if c["field"] == "delay":
+                o = self._delay_obj(c["key"])
+                value = float(c["value"])
+                lo = float(o.minimum or 0)
+                hi = float(o.maximum or 0) or float("inf")
+                if not lo <= value <= hi:
+                    raise ValueError(f"{c['key']}: delay {value} outside {lo}..{hi}")
+                if abs(float(o.value) - value) < 1e-6:
+                    continue
+                edits.append((o.start, o.end, f"{value:.6f}"))
+                applied.append({**c, "value": value, "old": float(o.value)})
+                continue
             dst = self.destinations.get(c["key"])
             if dst is None:
                 raise ValueError(f"unknown destination {c['key']}")
