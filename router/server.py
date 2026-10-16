@@ -41,7 +41,7 @@ from checks import analyse_channel                     # noqa: E402
 from client import Acp2Client, Acp2Error               # noqa: E402  (read-only)
 from live_check import run_check                       # noqa: E402
 from live_model import LiveModel                       # noqa: E402
-from route_lists import parse_list, stream_names, normalize_device, device_index  # noqa: E402
+from route_lists import parse_list, stream_names, normalize_device, device_index, normalize_paste  # noqa: E402
 import walk as acp2_walk                               # noqa: E402
 import take as take_mod                                # noqa: E402  (the only writer, gated by devices.json "write")
 
@@ -406,6 +406,51 @@ def check_channel(name, n):
     return report
 
 
+# ---------------- pasted route lists ----------------
+def paste_list(text, kind, save):
+    """Route master copied out of Cerebrum -> check (save=False) or store as the SRC/DST list.
+    Saving moves the other lists of the same kind to lists/replaced/ (kept, no longer used)."""
+    if kind not in (None, "", "SRC", "DST"):
+        raise ValueError("kind must be SRC or DST")
+    tsv, info = normalize_paste(text, kind or None)
+    LISTS_DIR.mkdir(exist_ok=True)
+    tmp = LISTS_DIR / "paste.part"
+    tmp.write_text(tsv, encoding="utf-8")
+    try:
+        parsed = parse_list(tmp)
+    except Exception:
+        tmp.unlink()
+        raise
+    if kind and parsed["kind"] != kind:
+        tmp.unlink()
+        raise ValueError(f"this looks like a {parsed['kind']} list (it has {'ATX' if parsed['kind'] == 'SRC' else 'ARX'} "
+                         f"streams), not {kind} - pick {parsed['kind']} or paste the other list")
+    devs = parsed["devices"]
+    res = {**info, "kind": parsed["kind"], "devices": len(devs),
+           "channels": sum(len(d["TX"]) + len(d["RX"]) for d in devs.values()),
+           "streams": sum(len(d["ATX"]) + len(d["ARX"]) for d in devs.values()),
+           "device_names": sorted(d["label"] for d in devs.values())[:60], "saved": None, "replaced": []}
+    if not save:
+        tmp.unlink()
+        return res
+    name = f"{parsed['kind']}-pasted.txt"
+    old_dir = LISTS_DIR / "replaced"
+    for p in sorted(LISTS_DIR.iterdir()):
+        if p.is_file() and SAFE_LIST_RE.match(p.name) and p.name != name:
+            try:
+                if parse_list(p)["kind"] != parsed["kind"]:
+                    continue
+            except Exception:
+                continue
+            old_dir.mkdir(exist_ok=True)
+            p.replace(old_dir / p.name)
+            res["replaced"].append(p.name)
+    tmp.replace(LISTS_DIR / name)
+    res["saved"] = name
+    log.info("route list pasted: %s, %d rows, %d devices, replaced %s", name, info["rows"], len(devs), res["replaced"])
+    return res
+
+
 # ---------------- /api/state ----------------
 def state_payload():
     lists, _ = load_lists()
@@ -586,6 +631,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise
                 tmp.replace(LISTS_DIR / name)
                 self._json({"name": name, "kind": parsed["kind"], "devices": len(parsed["devices"])})
+            elif u.path == "/api/paste-list":
+                self._json(paste_list(req.get("text", ""), req.get("kind"), bool(req.get("save"))))
             elif u.path == "/api/upload":
                 name = safe_name(self.headers.get("X-File-Name", ""), SAFE_CBF_RE, ".cbf")
                 data = self._body()

@@ -179,3 +179,50 @@ def device_index(lists):
             e["tx"] = max(e["tx"], len(d.get("TX", {})))
             e["rx"] = max(e["rx"], len(d.get("RX", {})))
     return out
+
+
+ANY_REF_RE = re.compile(r'^NMOS\d*\|[^|]*\|[^|]+\|[AVD][TR]X-\d+\s*$')
+MNEMONIC_RE = re.compile(r'^[A-Z]+\.\S')
+
+
+def normalize_paste(text, kind=None):
+    """Text copied out of the Cerebrum route master (grid copy = tab separated,
+    or a ';' export) -> (tsv text in the list format parse_list reads, info).
+
+    With the header row (_ID, _Mnemonic, ...) the text is kept as it is.
+    Without it, each row is taken apart by content: the first number is the
+    _ID, the first "SITE.xxx" cell the _Mnemonic, the next plain cell the
+    alternate mnemonic and every NMOS|..|DEV|ATX-n cell a level, in order.
+    kind "SRC"/"DST" (or None = detect) only labels header-less pastes."""
+    text = (text or "").replace("\r\n", "\n").replace("\r", "\n").strip("\n")
+    lines = [l for l in text.split("\n") if l.strip()]
+    if not lines:
+        raise ValueError("nothing pasted")
+    delim = "\t" if sum(l.count("\t") for l in lines[:20]) >= sum(l.count(";") for l in lines[:20]) else ";"
+    rows = [r for r in csv.reader(io.StringIO("\n".join(lines)), delimiter=delim) if r]
+    if any(h.strip() == "_Mnemonic" for h in rows[0]):
+        out_rows, with_header = rows, True
+    else:
+        with_header, body, maxrefs, skipped = False, [], 0, 0
+        for r in rows:
+            cells = [c.strip() for c in r]
+            refs = [c for c in cells if ANY_REF_RE.match(c)]
+            mi = next((i for i, c in enumerate(cells) if MNEMONIC_RE.match(c) and not ANY_REF_RE.match(c)), None)
+            if mi is None or not refs:
+                skipped += 1
+                continue
+            rid = next((c for c in cells[:mi] if c.isdigit()), "")
+            alt = next((c for c in cells[mi + 1:] if c and not ANY_REF_RE.match(c) and not c.isdigit()), "")
+            body.append([rid, cells[mi], alt] + refs)
+            maxrefs = max(maxrefs, len(refs))
+        if not body:
+            raise ValueError("no route-master rows found: expected rows with a mnemonic like DCR.IPG03A-TX04 "
+                             "and NMOS|..|IPG03A|ATX-13 level cells")
+        header = ["_ID", "_Mnemonic", "_Alternate Mnemonic 1"] + [f"_Level ID {i + 1}" for i in range(maxrefs)]
+        if kind == "DST":
+            header.append("_TL Group")          # parse_list's fallback hint for a DST list
+        out_rows = [header] + body
+    buf = io.StringIO()
+    csv.writer(buf, delimiter="\t", lineterminator="\n").writerows(out_rows)
+    return buf.getvalue(), {"rows": len(out_rows) - 1, "with_header": with_header,
+                            "skipped": 0 if with_header else skipped}

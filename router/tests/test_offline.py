@@ -31,7 +31,7 @@ import walk as acp2walk              # noqa: E402
 from checks import analyse_channel   # noqa: E402
 from fake_neuron import FakeNeuron   # noqa: E402
 from live_model import LiveModel     # noqa: E402
-from route_lists import normalize_device, parse_list, stream_names  # noqa: E402
+from route_lists import normalize_device, normalize_paste, parse_list, stream_names  # noqa: E402
 
 SRC_CSV = "_ID;_Mnemonic;_Alternate Mnemonic 1;_TL Inhibit;_Level ID 1;_Level ID 2;_Level ID 3;_Level ID 4\n" + "".join(
     f"{c};DCR.IPGT1-TX0{c};OUT {c};0;NMOS2|1|IPGT1|VTX-0{c};NMOS2|1|IPGT1|ATX-0{c};;\n" for c in range(1, 5))
@@ -303,6 +303,40 @@ class TakeTests(unittest.TestCase):
             with self.assertRaises(acp2client.Acp2Error):
                 w.set_value(1, 1, 1, 2)                     # s32 not allowed
         self.assertEqual(self.fake.set_attempts, [])
+
+
+class PasteTests(unittest.TestCase):
+    """Route master pasted out of Cerebrum, with and without the header row."""
+    SRC = ("_ID\t_Mnemonic\t_Alternate Mnemonic 1\t_TL Inhibit\t_Level ID 1\t_Level ID 2\t_Level ID 3\n"
+           "2564\tDCR.IPG03A-TX04\tCC1\t0\tNMOS2|95|IPG03A|VTX-04\tNMOS2|95|IPG03A|ATX-13\tNMOS2|95|IPG03A|ATX-14\n"
+           "2565\tDCR.OTHER\tfoo\t0\t\t\t\n")
+
+    def _parse(self, text, kind=None):
+        tsv, info = normalize_paste(text, kind)
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as f:
+            f.write(tsv)
+        try:
+            return parse_list(f.name), info
+        finally:
+            Path(f.name).unlink()
+
+    def test_with_and_without_header_agree(self):
+        a, ia = self._parse(self.SRC)
+        b, ib = self._parse(self.SRC.split("\n", 1)[1], "SRC")
+        self.assertTrue(ia["with_header"])
+        self.assertFalse(ib["with_header"])
+        self.assertEqual(ib["skipped"], 1)
+        for p in (a, b):
+            self.assertEqual(p["kind"], "SRC")
+            dev = p["devices"]["IPG3A"]
+            self.assertEqual(dev["TX"][4]["refs"], [13, 14])
+            self.assertEqual(dev["TX"][4]["alt"], "CC1")
+
+    def test_rubbish_is_refused(self):
+        with self.assertRaises(ValueError):
+            normalize_paste("hello\tworld\n")
+        with self.assertRaises(ValueError):
+            normalize_paste("   ")
 
 
 if __name__ == "__main__":

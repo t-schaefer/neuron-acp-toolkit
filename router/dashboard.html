@@ -33,6 +33,9 @@
     .setup-grid { display: grid; gap: 8px; }
     .srow { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: center; }
     .srow > span:last-child { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .srow.top { align-items: start; } .srow.top .sl { padding-top: 4px; }
+    .pastebox { display: grid; gap: 6px; }
+    .pastebox textarea { width: 100%; box-sizing: border-box; font: 0.75rem ui-monospace, Menlo, Consolas, monospace; white-space: pre; resize: vertical; }
     .srow .sl { font-weight: 600; font-size: 0.85rem; color: #495057; }
     #setupBtn.active { background: #e7f1ff; border-color: #0d6efd; }
     .flowhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -225,6 +228,21 @@
     .basis .brow { display: grid; grid-template-columns: 140px 1fr; gap: 8px; padding: 3px 0; }
     .basis .bl { color: #6c757d; }
     .pcard .pc-why { margin-top: 6px; font-size: 0.78rem; color: #495057; }
+    .help-wrap { position: fixed; inset: 0; background: rgba(33,37,41,0.45); display: flex; justify-content: center; align-items: flex-start; z-index: 90; padding: 3vh 16px; }
+    .help { background: #fff; border-radius: 10px; width: min(900px, 100%); max-height: 94vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+    .help-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 8px; border-bottom: 1px solid #dee2e6; }
+    .help-head h2 { margin: 0; }
+    .help-toc { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px 20px; font-size: 0.82rem; border-bottom: 1px solid #f1f3f5; }
+    .help-toc a { color: #0d6efd; text-decoration: none; }
+    .help-body { overflow-y: auto; padding: 4px 20px 20px; font-size: 0.9rem; line-height: 1.55; }
+    .help-body h3 { margin: 18px 0 6px; font-size: 1rem; scroll-margin-top: 8px; }
+    .help-body ul, .help-body ol { padding-left: 20px; margin: 6px 0; }
+    .help-body code { background: #f1f3f5; padding: 0 4px; border-radius: 3px; font-size: 0.82rem; }
+    .help-tab { border-collapse: collapse; width: 100%; font-size: 0.84rem; margin: 6px 0; }
+    .help-tab th, .help-tab td { border: 1px solid #dee2e6; padding: 5px 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; white-space: normal; }
+    .help-tab.three { table-layout: fixed; } .help-tab.three td:first-child, .help-tab.three th:first-child { width: 20%; }
+    .help-body { overflow-x: hidden; }
+    .help-tab th { background: #f8f9fa; }
     .cbox-wrap { position: fixed; inset: 0; background: rgba(33,37,41,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; }
     .cbox { background: #fff; border-radius: 10px; padding: 18px 20px; max-width: 560px; width: calc(100% - 32px); box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
     .cbox-text { white-space: pre-wrap; font-size: 0.9rem; line-height: 1.5; max-height: 60vh; overflow-y: auto; }
@@ -240,8 +258,112 @@
     <span class="title">Neuron Audio Router</span>
     <span class="badge light" id="writeBadge" title="Take/Undo only write to devices with &quot;write&quot;: true in devices.json">ACP2 read-only</span>
     <span id="offlineBadge"></span>
-    <button class="btn" id="setupBtn" style="margin-left:auto" title="Polling, SRC/DST lists, data source, devices">⚙ Setup</button>
+    <button class="btn" id="helpBtn" style="margin-left:auto" title="How the tool works">? Help</button>
+    <button class="btn" id="setupBtn" title="Polling, SRC/DST lists, data source, devices">⚙ Setup</button>
 </header>
+
+<!-- ================= HELP ================= -->
+<div class="help-wrap hidden" id="helpWrap"><div class="help" role="dialog" aria-label="Help">
+    <div class="help-head"><h2>How the Neuron Audio Router works</h2><button class="btn" id="helpClose">Close ✕</button></div>
+    <nav class="help-toc">
+        <a href="#h-what">What it does</a><a href="#h-flow">Workflow</a><a href="#h-assisted">How assisted mode finds SRC / DST</a>
+        <a href="#h-take">Preset, TAKE, Undo</a><a href="#h-check">Check live</a><a href="#h-manual">Manual mode</a>
+        <a href="#h-setup">Setup and lists</a><a href="#h-safety">Safety</a><a href="#h-ids">ID ranges</a><a href="#h-limits">Good to know</a>
+    </nav>
+    <div class="help-body">
+    <h3 id="h-what">What it does</h3>
+    <p>Graphical audio routing for EVS Neuron IPG units (Bridge / Convert IP), replacing the number entry of the Audio Stream Shuffler.
+       The service talks to the devices over <b>ACP2</b> (TCP 2072). The browser only talks to the service, never to a device.</p>
+    <ul>
+        <li><b>Sources (left)</b>: IP In streams, de-embedders (SDI in), delay banks, MADI In.</li>
+        <li><b>Destinations (right)</b>: embedders (SDI out), delay banks, IP Out streams, MADI Out – each with Input Main and Input Backup.</li>
+        <li>Names come from the Cerebrum route master (SRC / DST lists), so you see “NEURON 3A IP07” instead of bare numbers.</li>
+    </ul>
+
+    <h3 id="h-flow">Workflow</h3>
+    <ol>
+        <li><b>Pick a device</b> in the device list. Its routing tree is read once over ACP2 (“Read from device”, ~5 min, read-only) and stored.</li>
+        <li><b>1 Video path</b>: click a tile A1 … H4 (= channel 1 … 32). The badges show where Main | Backup get their video: <span class="case case-A">IP</span> IP input,
+            <span class="case case-B">SDI</span> SDI input, <span class="case case--">P</span> Pattern (not used). The left bar is the check result.</li>
+        <li><b>2 Source</b> and <b>3 Signal flow</b> show what the device does now and what the template wants, node by node, with the delay.</li>
+        <li><b>4 Add to Preset</b>: the checks and the exact values that would change. “Add to Preset” stages them – nothing is written yet.</li>
+        <li><b>5 Preset</b>: everything staged, grouped, with a TAKE per row.</li>
+        <li><b>6 TAKE</b> writes the Preset to the device; <b>Undo last Take</b> restores the values from before it.</li>
+    </ol>
+
+    <h3 id="h-assisted">How assisted mode finds SRC / DST</h3>
+    <p>Nothing is guessed from numbering. Every proposal is worked out from the <b>real allocation</b>: the device's own settings plus the Cerebrum route master.
+       Main and Backup are resolved <b>separately</b>, so IP/IP, SDI/SDI and mixed (e.g. SDI main, IP backup) all work.</p>
+    <table class="help-tab three">
+        <tr><th>Step</th><th>Where it comes from</th><th>Result</th></tr>
+        <tr><td>Video input of the path</td><td>Device: PROCESSING VIDEO › PATH › Main Input / Backup Input</td><td>“Stream x” → IP, “SDI N” → SDI, “Pattern” → P</td></tr>
+        <tr><td><b>IP</b>: which IP In</td><td>DST list: the channel's RX row, e.g. <code>DCR.IPG03A-RX07</code> → ARX-25, 26, 27, 28</td>
+            <td><b>IP In = first ARX</b> (here IP In 25). The “Stream 9” in the video dropdown is only a list index, not the stream number.</td></tr>
+        <tr><td><b>IP</b>: delay</td><td>Stream Delay on that IP In</td><td>target 19.5 ms</td></tr>
+        <tr><td><b>SDI</b>: which de-embedder</td><td>Device: the de-embedder that belongs to SDI N</td><td>De-Emb of that SDI input (16 ch)</td></tr>
+        <tr><td><b>SDI</b>: which delay group</td><td>Device: 1. the group this channel already uses, else 2. fixed port scheme SDI N → group N, or 3. a group you pick</td>
+            <td>Delay group g = 8 banks (16 mono ch), first bank B = (g−1)·8+1; target 18.0 ms</td></tr>
+        <tr><td>Embedder</td><td>Video path letter</td><td>Embedder A1 … H4, Input Main / Backup from the side's source (IP In or delay group)</td></tr>
+        <tr><td><b>SDI</b>: IP output</td><td>SRC list: the channel's TX row, e.g. <code>DCR.IPG03A-TX07</code> → ATX-25 …</td>
+            <td><b>IP Out = first ATX</b>, fed from the same delay group (Main + Backup)</td></tr>
+    </table>
+    <p>“Worked out from the real allocation” at the top of the signal flow shows these sources for the selected path. If a list row is missing,
+       the tool says so instead of guessing.</p>
+
+    <h3 id="h-take">Preset, TAKE, Undo</h3>
+    <ul>
+        <li><b>Preset</b> = staged values (orange). They live in your browser until TAKE or “Discard all”.</li>
+        <li><b>TAKE</b> (whole Preset, one video path, or one row): the service first reads the current values. If the device changed since you looked, it refuses.
+            It saves those values for Undo, writes, and <b>reads every value back</b>. It stops at the first error.</li>
+        <li><b>Undo last Take</b> writes the saved values back, again with read-back.</li>
+        <li>Every Take / Undo is logged per device (<code>live/&lt;device&gt;.takes.jsonl</code>).</li>
+    </ul>
+
+    <h3 id="h-check">Check live</h3>
+    <p>The view shows the stored routing read (the banner says how old it is). <b>Check live</b> (in the signal flow and in step 4) reads only the objects of the
+       selected path again over ACP2, plus NMOS receiver state. The view updates with what was read and says how many values had changed.
+       It is read-only and takes a few seconds.</p>
+
+    <h3 id="h-manual">Manual mode</h3>
+    <p>Everything, with no template: pick any source block on the left and any destination block on the right, then click slots to assign.
+       Same Preset / TAKE / Undo as assisted mode.</p>
+
+    <h3 id="h-setup">Setup and lists</h3>
+    <ul>
+        <li><b>Paste route master</b>: in Cerebrum select all rows of the route master, copy, paste into Setup, “Check”, then “Use as list”.
+            <b>SRC</b> (sources) gives the IP Out names via TX rows / ATX streams; <b>DST</b> (destinations) gives the IP In names via RX rows / ARX streams.
+            You need both. A new paste replaces the old list of the same kind (kept in <code>lists/replaced</code>).</li>
+        <li>Or upload the list files (.rtf / .csv / .tsv / .txt), or drop them on the page.</li>
+        <li><b>Data source</b>: “live device” (the ACP2 read) or an offline .cbf export to look at. A .cbf cannot be taken.</li>
+        <li><b>Polling</b>: one tiny ACP2 request per released device every 30 s, for the online/offline status.</li>
+    </ul>
+
+    <h3 id="h-safety">Safety</h3>
+    <ul>
+        <li>Only devices with <code>"poll": true</code> in devices.json are contacted at all.</li>
+        <li>Writing needs <code>"write": true</code> for that device (the <b>Write</b> switch in the router). The red badge at the top lists every device with writing on.</li>
+        <li>Every TAKE / Undo asks for confirmation and lists exactly what will be written.</li>
+        <li>Only one full routing read runs at a time, so the devices are never flooded.</li>
+    </ul>
+
+    <h3 id="h-ids">ID ranges (audio source IDs on the Neuron)</h3>
+    <table class="help-tab">
+        <tr><td>1 – 2048</td><td>IP In 16ch streams (16 IDs per stream)</td></tr>
+        <tr><td>2049 – 3072</td><td>IP In 64ch streams</td></tr>
+        <tr><td>3073 – 3584</td><td>De-embedders (SDI in), 16 per SDI input</td></tr>
+        <tr><td>3585 – 4096</td><td>Delay banks, 256 banks × 2 ch</td></tr>
+        <tr><td>4097 – 4352</td><td>MADI In</td></tr>
+    </table>
+    <p>Mono channel IDs are shown in brackets next to the block, e.g. IP In 125 = (1985–2000).</p>
+
+    <h3 id="h-limits">Good to know</h3>
+    <ul>
+        <li><b>Cerebrum GUI shows old values</b> after a TAKE until it re-reads the device. The device has the new value; trust Check live.</li>
+        <li>A Stream Delay only acts when the IP In receives media and its “Maximum Stream Delay” is above 0. The signal flow warns otherwise.</li>
+        <li>Delay limits: the device's own min / max apply; if it reports none, Stream Delay up to 5000 ms and bank delay up to 3000 ms.</li>
+    </ul>
+    </div>
+</div></div>
 
 <!-- ================= SETUP ================= -->
 <section class="card hidden" id="setupCard">
@@ -252,6 +374,19 @@
         <div class="srow"><span class="sl">SRC/DST lists</span><span><span class="small" id="listsInfo"></span>
             <label class="btn" title="Cerebrum SRC or DST route list (.rtf/.csv/.tsv/.txt)">Upload SRC/DST list<input type="file" id="listInput" accept=".rtf,.csv,.tsv,.txt" class="hidden" multiple></label>
             <span class="small muted" id="namesInfo"></span></span></div>
+        <div class="srow top"><span class="sl">Paste route master</span><div class="pastebox">
+            <div class="small muted">In Cerebrum open the route master (Sources or Destinations), select all rows (Ctrl+A), copy (Ctrl+C) and paste here.
+                With or without the header row. One list at a time: <b>SRC</b> gives the IP Out names (TX rows, ATX streams), <b>DST</b> the IP In names (RX rows, ARX streams).</div>
+            <textarea id="pasteText" rows="5" spellcheck="false" placeholder="2564&#9;DCR.IPG03A-TX04&#9;CC1&#9;…&#9;NMOS2|95|IPG03A|VTX-04&#9;…&#9;NMOS2|95|IPG03A|ATX-13 …"></textarea>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+                <span class="small"><b>This is</b></span>
+                <div class="field-toggle" id="pasteKind"><button data-k="">detect</button><button data-k="SRC">SRC</button><button data-k="DST">DST</button></div>
+                <button class="btn" id="pasteCheck">Check</button>
+                <button class="btn primary" id="pasteSave" disabled>Use as list</button>
+                <span class="small muted" id="pasteSize"></span>
+            </div>
+            <div id="pasteResult"></div>
+        </div></div>
         <div class="srow"><span class="sl">Data source</span><span><select id="cbfSelect" title="Data source: the live ACP2 read, or an offline .cbf export"></select>
             <span class="small muted">live = ACP2 read of the device; a .cbf export is offline and cannot be taken</span></span></div>
         <div class="srow"><span class="sl">Add device</span><span><form id="addDeviceForm">
@@ -543,6 +678,11 @@ $("fleetBody").onclick = async e => {
     const tr = e.target.closest("tr.datarow"); if (!tr) return;
     F.open = F.open === tr.dataset.dev ? null : tr.dataset.dev; renderFleet();
 };
+function showHelp(on) { $("helpWrap").classList.toggle("hidden", !on); }
+$("helpBtn").onclick = () => showHelp(true);
+$("helpClose").onclick = () => showHelp(false);
+$("helpWrap").onclick = e => { if (e.target.id === "helpWrap") showHelp(false); const a = e.target.closest(".help-toc a"); if (a) { e.preventDefault(); document.querySelector(a.getAttribute("href")).scrollIntoView({ behavior: "smooth" }); } };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("helpWrap").classList.contains("hidden")) showHelp(false); });
 $("setupBtn").onclick = () => { const h = $("setupCard").classList.toggle("hidden"); $("setupBtn").classList.toggle("active", !h); store("nar.setup", !h); };
 if (recall("nar.setup")) { $("setupCard").classList.remove("hidden"); $("setupBtn").classList.add("active"); }
 $("fleetToggle").onclick = () => setFleetCollapsed(!$("fleetCard").classList.contains("collapsed"));
@@ -563,6 +703,38 @@ async function uploadLists(files) {
         msg("Loaded " + done.join(", "), "ok"); pollState(); if (R.device || R.file) reloadModel();
     } catch (err) { msg("List upload failed: " + err.message); }
 }
+// ----- paste route master (Setup) -----
+const P = { kind: "", checked: null };
+function renderPasteKind() { for (const b of $("pasteKind").children) b.classList.toggle("active", b.dataset.k === P.kind); }
+renderPasteKind();
+$("pasteKind").onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; P.kind = b.dataset.k; P.checked = null; $("pasteSave").disabled = true; $("pasteResult").innerHTML = ""; renderPasteKind(); };
+$("pasteText").oninput = () => { const t = $("pasteText").value; P.checked = null; $("pasteSave").disabled = true; $("pasteResult").innerHTML = "";
+    $("pasteSize").textContent = t ? `${t.split("\n").filter(l => l.trim()).length} lines` : ""; };
+async function pasteSend(save) {
+    const text = $("pasteText").value;
+    if (!text.trim()) { $("pasteResult").innerHTML = '<div class="note">Paste the route master first.</div>'; return; }
+    $("pasteResult").innerHTML = `<div class="small muted">${save ? "Saving" : "Checking"} …</div>`;
+    try {
+        const r = await post("/api/paste-list", { text, kind: P.kind || null, save });
+        const lab = r.kind === "SRC" ? "SRC – sources: IP Out names (TX rows / ATX)" : "DST – destinations: IP In names (RX rows / ARX)";
+        const body = `<b>${esc(lab)}</b><br>${r.rows} rows${r.with_header ? " (with header)" : ` (no header – read by content, ${r.skipped} rows without NMOS references ignored)`} ·
+            ${r.devices} device(s) · ${r.channels} channel rows · ${r.streams} audio streams<br><span class="muted">${esc(r.device_names.join(", "))}</span>`;
+        if (save) {
+            $("pasteResult").innerHTML = `<div class="ok">Saved as <b>${esc(r.saved)}</b> and in use now.${r.replaced.length ? ` Replaced (moved to lists/replaced): ${esc(r.replaced.join(", "))}.` : ""}<br>${body}</div>`;
+            $("pasteText").value = ""; $("pasteSize").textContent = ""; $("pasteSave").disabled = true;
+            pollState(); if (R.device || R.file) reloadModel();
+        } else {
+            $("pasteResult").innerHTML = `<div class="${r.devices ? "ok" : "note"}">${body}</div>`;
+            P.checked = r.kind; $("pasteSave").disabled = !r.devices;
+            $("pasteSave").textContent = `Use as ${r.kind} list`;
+        }
+    } catch (err) { $("pasteResult").innerHTML = `<div class="alert">${esc(err.message)}</div>`; }
+}
+$("pasteCheck").onclick = () => pasteSend(false);
+$("pasteSave").onclick = async () => {
+    if (!(await confirmBox(`Use the pasted text as the ${P.checked} list?\n\nIt replaces the current ${P.checked} list(s) for all devices (the old files are kept in lists/replaced). The device is not touched.`, `Use as ${P.checked} list`))) return;
+    pasteSend(true);
+};
 $("listInput").onchange = e => { uploadLists([...e.target.files]); e.target.value = ""; };
 document.addEventListener("dragover", e => { if (!R.drag && e.dataTransfer.types.includes("Files")) { e.preventDefault(); document.body.classList.add("filedrag"); } });
 document.addEventListener("dragleave", e => { if (!e.relatedTarget) document.body.classList.remove("filedrag"); });
