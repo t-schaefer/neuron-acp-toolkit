@@ -28,6 +28,8 @@
     .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
     .dot.success { background: #198754; } .dot.danger { background: #dc3545; } .dot.secondary { background: #adb5bd; }
     .alert { background: #f8d7da; color: #842029; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; white-space: pre-wrap; }
+    #staleBar { line-height: 1.9; }
+    #staleBar .btn { padding: 1px 10px; margin-left: 6px; }
     .note { background: #fff3cd; color: #664d03; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .ok { background: #d1e7dd; color: #0f5132; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; min-width: 0; margin-bottom: 12px; }
@@ -280,6 +282,7 @@
 <section id="routerSection" class="hidden">
     <div class="card">
         <h2 id="routerTitle">Router</h2>
+        <div id="staleBar" class="hidden"></div>
         <div class="toolbar">
             <span class="small"><b>Mode</b></span>
             <div class="field-toggle" id="modeToggle"><button data-m="assisted">Assisted</button><button data-m="manual">Manual</button></div>
@@ -399,6 +402,29 @@ const post = (path, body) => api(path, { method: "POST", headers: { "Content-Typ
 const norm = n => String(n || "").toUpperCase().replace(/^(DC[RB])\./, "").replace(/[^A-Z0-9]/g, "").replace(/(?<=[A-Z])0+(?=\d)/g, "");
 function rows(table) { return table.rows.map(r => Object.fromEntries(table.cols.map((c, i) => [c, r[i]]))); }
 const blockKey = (kind, block) => `${kind}:${block}`;
+// Banner under the router title: the routing shown comes from a stored read; say so loudly when it is old
+const STALE_MIN = 15;
+function renderStale() {
+    const el = $("staleBar"), i = R.info;
+    if (!el || !i || i.source !== "live" || !R.device) { el && el.classList.add("hidden"); return; }
+    const d = (F.state?.devices || []).find(x => x.name === R.device), j = d?.job;
+    const age = (Date.now() - new Date(i.read_at)) / 60000;
+    let h = "";
+    // a TAKE also touches the snapshot file, so only a finished full read counts as "newer"
+    const running = j && j.state === "running";
+    if (R.readSeen === "running" && j && j.state === "done") { R.readSeen = null; openDevice(R.device); return; }
+    R.readSeen = running ? "running" : R.readSeen;
+    if (running) h = `<b>Reading ${esc(R.device)} …</b> ${j.progress} objects so far – the view reloads when it is done.`;
+    else if (age > STALE_MIN)
+        h = `<b>Shown routing was read ${esc(ago(i.read_at))}.</b> Changes made since (Cerebrum, device GUI) are not visible here. TAKE always re-reads the values it writes. <button class="btn" id="staleRead">Re-read device (~5 min, read-only)</button>`;
+    el.className = h ? "note" : "hidden"; el.innerHTML = h;
+}
+$("staleBar").onclick = async e => {
+    if (e.target.id !== "staleRead") return;
+    if (!(await confirmBox(`Re-read the routing tree of ${R.device} over ACP2?\n\nRead-only (get object only), about 41,000 requests one at a time, ~5 minutes. Nothing is written.`, "Read"))) return;
+    try { await post("/api/read", { device: R.device }); pollState(); } catch (err) { msg(err.message); }
+};
+setInterval(renderStale, 5000);
 const ago = iso => { if (!iso) return "never"; const s = (Date.now() - new Date(iso)) / 1000; return s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : s < 129600 ? `${Math.round(s / 3600)} h ago` : iso.replace("T", " ").slice(0, 16); };
 
 // ================= FLEET =================
@@ -668,6 +694,7 @@ function loadModel(j) {
     $("namesInfo").innerHTML = !(n.lists || []).length ? "no SRC/DST list – names missing" : n.device ? `names: ${esc(n.lists.join(", "))} → <b>${esc(n.device)}</b>` : `<span class="warn">device not found in ${esc(n.lists.join(", "))}</span>`;
     $("applyLive").classList.toggle("hidden", i.source !== "live"); $("applyCbf").classList.toggle("hidden", i.source === "live");
     $("routerSection").classList.remove("hidden");
+    renderStale();
     renderAll();
 }
 async function loadCbfList() {
@@ -717,13 +744,15 @@ function renderMode() {
 function caseCls(c) { return c === "A" ? "case-A" : c === "B" ? "case-B" : "case--"; }
 // shown names: Case A = IP, Case B = SDI, unused (Pattern) = P   (internal codes stay A / B)
 function caseLabel(c) { return c === "A" ? "IP" : c === "B" ? "SDI" : "P"; }
+// "NEURON 3A IP07" -> "IP07": the device prefix repeats on every tile and gets cut off
+const tileName = s => String(s || "").replace(/^NEURON\s+\S+\s+/i, "");
 function renderChGrid() {
     $("chGrid").innerHTML = R.channels.map(c => {
         const a = R.analysis[c.n] || {}; const [m, b] = (a.case || "-/-").split("/");
         const nm = chName(c.n);
         const hasPreset = [...R.pending.keys()].some(pk => pk.startsWith(`emb:${c.letter}:`) || ((a.changes || []).some(x => pk === `${x.key}|${x.field}`)));
         return `<div class="chtile st-${a.status || "info"} ${R.selCh === c.n ? "sel" : ""}" data-n="${c.n}" title="${esc(`${c.letter} (${c.n}) · video ${c.main} / ${c.backup}\n${nm.long}\nstatus ${a.status || "?"}`)}">
-            ${hasPreset ? '<span class="pdot" title="preset changes staged"></span>' : ""}<b>${c.letter}</b> <span class="case ${caseCls(m)}">${caseLabel(m)}</span><span class="case ${caseCls(b)}">${caseLabel(b)}</span><span class="sub">${esc(nm.short || c.main)}</span></div>`;
+            ${hasPreset ? '<span class="pdot" title="preset changes staged"></span>' : ""}<b>${c.letter}</b> <span class="case ${caseCls(m)}">${caseLabel(m)}</span><span class="case ${caseCls(b)}">${caseLabel(b)}</span><span class="sub">${esc(tileName(nm.short) || c.main)}</span></div>`;
     }).join("");
 }
 function catBlocks(cats, catId, blocks) { const c = cats.find(c => c.id === catId); return [...blocks.values()].filter(b => b.kind === c.kind && (!c.test || c.test(b.block))).sort((a, b) => typeof a.block === "number" ? a.block - b.block : String(a.block).localeCompare(String(b.block), undefined, { numeric: true })); }
@@ -914,13 +943,16 @@ function channelKeys(n) {
 // status of a node: ✓ active matches the template, ⚠ differs (tooltip), → preset when staged
 function nodeStatus(keys, fields, expected) {
     let pre = [], bad = [];
-    for (const f of fields) {
-        const act = describeFeed(keys, f, activeOf), prs = describeFeed(keys, f, presetOf);
-        if (prs !== act) pre.push(`${fields.length > 1 ? f + ": " : ""}${prs}`);
-        else if (expected && act !== expected) bad.push(`${fields.length > 1 ? f + ": " : ""}now ${act}`);
-    }
+    const acts = fields.map(f => describeFeed(keys, f, activeOf)), prss = fields.map(f => describeFeed(keys, f, presetOf));
+    const same = fields.length > 1 && acts[0] === acts[1] && prss[0] === prss[1];
+    fields.forEach((f, k) => {
+        if (same && k) return;
+        const who = fields.length > 1 && !same ? f + ": " : "";
+        if (prss[k] !== acts[k]) pre.push(`${who}${prss[k]}`);
+        else if (expected && acts[k] !== expected) bad.push(`${who}now ${acts[k]}`);
+    });
     if (pre.length) return { cls: "pre", html: `<span class="st st-pre" title="staged in the Preset, written on TAKE">→ Preset: ${esc(pre.join(" · "))}</span>` };
-    if (bad.length) return { cls: "", html: `<span class="st st-wn" title="the template wants: ${esc(expected)}">⚠ ${esc(bad.join(" · "))}</span>` };
+    if (bad.length) return { cls: "", html: `<span class="st st-wn" title="the template wants: ${esc(expected)}">⚠ ${esc(bad.join(" · "))}${same ? " (main + backup)" : ""} – should be ${esc(expected)}</span>` };
     return { cls: "", html: `<span class="st st-ok">✓ correct</span>` };
 }
 function sideFlow(n, field, side, a, both) {
@@ -1145,6 +1177,8 @@ function renderPending() {
     const canWrite = !!(live && dev && dev.write && dev.poll);
     $("takeBtn").disabled = !items.length || !canWrite;
     $("undoTakeBtn").disabled = !canWrite || !dev.undo_available;
+    $("takeBtn").textContent = !items.length ? "TAKE – nothing staged" : !canWrite ? `TAKE ${items.length} value(s) – writing is off` : `TAKE ${items.length} staged value(s) → ${R.device}`;
+    $("undoTakeBtn").textContent = dev?.undo_available ? "Undo last Take (restore the values from before it)" : "Undo last Take – nothing to undo";
     $("takeInfo").textContent = !dev ? "" : !canWrite ? `Writing to ${dev.name} is off (devices.json "write": false).`
         : dev.undo_available ? "Writing is ON for this device. Undo restores the last Take." : "Writing is ON for this device.";
     R.canWrite = canWrite;
