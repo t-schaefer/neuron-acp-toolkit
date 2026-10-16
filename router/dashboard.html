@@ -30,6 +30,13 @@
     .alert { background: #f8d7da; color: #842029; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; white-space: pre-wrap; }
     #staleBar { line-height: 1.9; }
     #staleBar .btn { padding: 1px 10px; margin-left: 6px; }
+    .setup-grid { display: grid; gap: 8px; }
+    .srow { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: center; }
+    .srow > span:last-child { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .srow .sl { font-weight: 600; font-size: 0.85rem; color: #495057; }
+    #setupBtn.active { background: #e7f1ff; border-color: #0d6efd; }
+    .flowhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    .flowhead .chk { font-size: 0.8rem; } .ok-t { color: #0f5132; }
     .note { background: #fff3cd; color: #664d03; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .ok { background: #d1e7dd; color: #0f5132; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; min-width: 0; margin-bottom: 12px; }
@@ -231,11 +238,30 @@
 <body>
 <header>
     <span class="title">Neuron Audio Router</span>
-    <span id="summaryBar"></span>
     <span class="badge light" id="writeBadge" title="Take/Undo only write to devices with &quot;write&quot;: true in devices.json">ACP2 read-only</span>
-    <button class="btn" id="pauseBtn" style="margin-left:auto">…</button>
-    <span class="muted small" id="lastUpdate"></span>
+    <span id="offlineBadge"></span>
+    <button class="btn" id="setupBtn" style="margin-left:auto" title="Polling, SRC/DST lists, data source, devices">⚙ Setup</button>
 </header>
+
+<!-- ================= SETUP ================= -->
+<section class="card hidden" id="setupCard">
+    <h2>Setup</h2>
+    <div class="setup-grid">
+        <div class="srow"><span class="sl">Devices</span><span><span id="summaryBar"></span> <span class="small muted">click to filter the device list</span></span></div>
+        <div class="srow"><span class="sl">Polling</span><span><button class="btn" id="pauseBtn">…</button> <span class="muted small" id="lastUpdate"></span></span></div>
+        <div class="srow"><span class="sl">SRC/DST lists</span><span><span class="small" id="listsInfo"></span>
+            <label class="btn" title="Cerebrum SRC or DST route list (.rtf/.csv/.tsv/.txt)">Upload SRC/DST list<input type="file" id="listInput" accept=".rtf,.csv,.tsv,.txt" class="hidden" multiple></label>
+            <span class="small muted" id="namesInfo"></span></span></div>
+        <div class="srow"><span class="sl">Data source</span><span><select id="cbfSelect" title="Data source: the live ACP2 read, or an offline .cbf export"></select>
+            <span class="small muted">live = ACP2 read of the device; a .cbf export is offline and cannot be taken</span></span></div>
+        <div class="srow"><span class="sl">Add device</span><span><form id="addDeviceForm">
+            <input type="text" id="newIp" placeholder="Device IP" required style="width:120px">
+            <input type="text" id="newName" placeholder="Name (e.g. IPG05A)" required style="width:140px">
+            <input type="text" id="newTag" placeholder="Tag (DCR/DCB)" style="width:90px">
+            <button type="submit" class="btn">+ Device</button>
+        </form></span></div>
+    </div>
+</section>
 
 <div id="msg"></div>
 
@@ -250,14 +276,6 @@
     <div class="toolbar">
         <input type="text" id="fleetFilter" placeholder="Filter: name, IP, tag" style="width:200px">
         <label class="small"><input type="checkbox" id="onlyProblems"> show only problems</label>
-        <span class="small muted" id="listsInfo"></span>
-        <label class="btn" title="Cerebrum SRC or DST route list (.rtf/.csv/.tsv/.txt)">Upload SRC/DST list<input type="file" id="listInput" accept=".rtf,.csv,.tsv,.txt" class="hidden" multiple></label>
-        <form id="addDeviceForm">
-            <input type="text" id="newIp" placeholder="Device IP" required style="width:120px">
-            <input type="text" id="newName" placeholder="Name (e.g. IPG05A)" required style="width:140px">
-            <input type="text" id="newTag" placeholder="Tag (DCR/DCB)" style="width:90px">
-            <button type="submit" class="btn">+ Device</button>
-        </form>
     </div>
     <div class="chips" id="groupBar"></div>
     <div class="table-wrap"><table>
@@ -289,8 +307,6 @@
             <span class="small"><b>Write</b></span>
             <button class="btn" id="writeToggle" title="Allow TAKE / Undo to write to this device (devices.json &quot;write&quot;)">…</button>
             <span id="presetBar" class="presetbar off"></span>
-            <span style="margin-left:auto" class="small muted" id="namesInfo"></span>
-            <select id="cbfSelect" title="Data source: the live ACP2 read, or an offline .cbf export"></select>
         </div>
         <h3 class="step" id="stepPaths" title="Per side Main/Backup: IP = from an IP input, SDI = from an SDI input via delay bank, P = Pattern (unused). Colour = check status, orange dot = preset staged.">Video paths</h3>
         <div class="legend2">
@@ -454,6 +470,7 @@ function renderFleet() {
         + ` <span class="badge light click ${!F.filter ? "active" : ""}" data-f="">${devs.length} total</span>`;
     const writers = devs.filter(d => d.write && d.poll).map(d => d.name);
     $("writeBadge").className = "badge " + (writers.length ? "danger" : "light");
+    $("offlineBadge").innerHTML = cnt.offline ? `<span class="badge danger" title="released devices that do not answer – see Setup">${cnt.offline} offline</span>` : "";
     $("writeBadge").textContent = writers.length ? `WRITE ON: ${writers.join(", ")}` : "ACP2 read-only";
     $("pauseBtn").textContent = st.paused ? "▶ Resume polling" : "⏸ Pause polling";
     $("pauseBtn").classList.toggle("danger", st.paused);
@@ -526,6 +543,8 @@ $("fleetBody").onclick = async e => {
     const tr = e.target.closest("tr.datarow"); if (!tr) return;
     F.open = F.open === tr.dataset.dev ? null : tr.dataset.dev; renderFleet();
 };
+$("setupBtn").onclick = () => { const h = $("setupCard").classList.toggle("hidden"); $("setupBtn").classList.toggle("active", !h); store("nar.setup", !h); };
+if (recall("nar.setup")) { $("setupCard").classList.remove("hidden"); $("setupBtn").classList.add("active"); }
 $("fleetToggle").onclick = () => setFleetCollapsed(!$("fleetCard").classList.contains("collapsed"));
 $("fleetQuick").onclick = e => { const q = e.target.closest("[data-q]"); if (!q) return;
     const d = (F.state?.devices || []).find(x => x.name === q.dataset.q);
@@ -566,7 +585,7 @@ const R = {
     src: new Map(), srcBlocks: new Map(), dst: new Map(), dstBlocks: new Map(),
     pending: new Map(), history: [], field: "main", mode: recall("nar.mode") || "assisted",
     srcCat: "ipin16", dstCat: "emb", selSrcBlock: null, selDstBlock: null, selSrcId: null, selSlot: null, selCh: null,
-    drag: null, withDelay: true, checks: {},   // channel n -> last live check result html
+    drag: null, withDelay: true, checks: {}, checked: {}, checking: null, checkErr: null,   // channel n -> last live check result html
     view: "preset",   // tables show Active and the staged Preset side by side; there is no separate view switch any more
 };
 // Delay targets (docs/device-status.md): Case A = Stream Delay on the IP input, Case B = Delay on the 8 banks.
@@ -1015,13 +1034,39 @@ function sameSource(m, b) {
     return m.case && m.case === b.case && (m.case === "A" ? m.stream === b.stream : m.group === b.group);
 }
 // what the assisted proposal is based on: the device's own video inputs + the site's stream allocation
+// Check live: fresh read-only ACP2 (get property) + NMOS of one channel. The service stores the
+// values it read, then the whole view is reloaded so signal flow, checks and tiles show them.
+async function checkLive(n) {
+    R.checking = n; R.checkErr = null; renderAll();
+    try {
+        const r = await post("/api/check", { device: R.device, channel: n });
+        const nm = r.nmos ? Object.entries(r.nmos).map(([k, v]) => `${k} ${v.enabled ? "on" : "OFF"}${v.source ? " · " + v.source : ""}`).join(" · ") : (r.nmos_error || "");
+        const cls = /problem|SILENT/.test(r.verdict) ? "alert" : /not in use|warning/.test(r.verdict) ? "note" : "ok";
+        R.checked[n] = { at: new Date(), verdict: r.verdict, cls, changed: r.fresh_changed.length };
+        R.checks[n] = `<div class="small muted">Live check ${new Date().toLocaleTimeString()}:</div><div class="${cls}"><b>${esc(r.verdict)}</b><br>
+            ${r.acp2_requests} ACP2 reads in ${r.seconds} s via ${esc(r.link)} · ${r.fresh_changed.length} value(s) changed since the routing read${r.fresh_changed.length ? ": " + esc(r.fresh_changed.slice(0, 6).map(c => `${c.object.split("/").slice(-3).join("/")} ${c.old} → ${c.new}`).join("; ")) : ""}<br>
+            Embedder input current (on air): ${esc(r.embedder_current.join(", ").slice(0, 80))}<br>NMOS: ${esc(nm)}</div>`;
+    } catch (err) { R.checkErr = { n, msg: err.message }; }
+    R.checking = null;
+    if (R.checkErr) renderAll(); else await reloadModel();
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-check]"); if (b && !R.checking && R.selCh) checkLive(R.selCh); });
+function checkLine(n) {
+    if (R.info?.source !== "live") return "";
+    const k = R.checked[n], busy = R.checking === n;
+    const st = busy ? `<span class="chk muted">reading this channel over ACP2 and NMOS …</span>`
+        : R.checkErr?.n === n ? `<span class="chk warn">check failed: ${esc(R.checkErr.msg)}</span>`
+        : k ? `<span class="chk ${k.cls === "ok" ? "ok-t" : "warn"}">checked live ${k.at.toLocaleTimeString()} – ${esc(k.verdict)}${k.changed ? ` · ${k.changed} value(s) were different and are now updated` : " · nothing had changed"}</span>`
+        : `<span class="chk muted">shown from the routing read ${esc(ago(R.info.read_at))}</span>`;
+    return `<button class="btn" data-check ${busy || R.checking ? "disabled" : ""} title="Fresh read-only ACP2 + NMOS check of this channel; the view is updated with the values read">${busy ? "Checking …" : "Check live"}</button>${st}`;
+}
 function basisHtml(n, a) {
     const c = R.byN[n], sides = a.sides || {}, i = R.info || {}, names = R.names || {};
     const rx = nameOf("rx", n), tx = nameOf("tx", n);
     const row = (label, html) => `<div class="brow"><span class="bl">${label}</span><span>${html}</span></div>`;
     const sideTxt = f => { const s = sides[f] || {}; return `${f === "main" ? "Main" : "Backup"} <b>${esc(s.label || "?")}</b>`; };
     let h = `<div class="basis"><div class="bh">Worked out from the real allocation</div>`;
-    h += row("Device", `${esc(R.device || i.file)} · video inputs ${sideTxt("main")}, ${sideTxt("backup")} <span class="muted">(routing read ${esc(ago(i.read_at))}${i.source === "live" ? " – “Check live” re-reads" : ""})</span>`);
+    h += row("Device", `${esc(R.device || i.file)} · video inputs ${sideTxt("main")}, ${sideTxt("backup")} <span class="muted">(${R.checked[n] ? `checked live ${R.checked[n].at.toLocaleTimeString()}` : `routing read ${esc(ago(i.read_at))}${i.source === "live" ? " – “Check live” re-reads this channel" : ""}`})</span>`);
     h += row("Stream allocation", names.device
         ? `${rx ? `<b>${esc(tail(rx.mnemonic))}</b> “${esc(rx.alt)}” → ARX-${rx.refs.join(", ")} → <b>IP In ${rx.refs[0]}</b>` : '<span class="warn">no RX row for this channel</span>'}<br>
            ${tx ? `<b>${esc(tail(tx.mnemonic))}</b> “${esc(tx.alt)}” → ATX-${tx.refs.join(", ")} → <b>IP Out ${tx.refs[0]}</b>` : '<span class="warn">no TX row for this channel</span>'}
@@ -1041,7 +1086,7 @@ function renderAssisted() {
     if (a.error) { $("dstAssisted").innerHTML = `<div class="alert">${esc(a.error)}</div>`; return; }
     const sides = a.sides || {}, m = sides.main || {}, b = sides.backup || {};
     const nm = chName(n);
-    let html = `<div style="margin-bottom:8px"><b style="font-size:1.05rem">${c.letter}</b> <span class="muted">${esc(nm.short || "")}</span></div>` + basisHtml(n, a);
+    let html = `<div class="flowhead"><span><b style="font-size:1.05rem">${c.letter}</b> <span class="muted">${esc(nm.short || "")}</span></span>${checkLine(n)}</div>` + basisHtml(n, a);
     html += sameSource(m, b) ? `<div class="flows2"><div class="span">${sideFlow(n, "main", m, a, true)}</div></div>`
                              : `<div class="flows2">${sideFlow(n, "main", m, a)}${sideFlow(n, "backup", b, a)}</div>`;
     let cards = sinkCard(`Embedder ${c.letter}`, Array.from({ length: 16 }, (_, i) => `emb:${c.letter}:${i + 1}`), n);
@@ -1086,7 +1131,7 @@ function renderRouteLeft() {
             <button class="btn primary" id="planBtn" ${notStaged.length ? "" : "disabled"}>Add to Preset (${notStaged.length} value${notStaged.length === 1 ? "" : "s"})</button>
             <label title="include the delay targets from the delay boxes"><input type="checkbox" id="withDelay" ${R.withDelay ? "checked" : ""}> include delays</label>
             <button class="btn" id="delayResetBtn" title="Delay targets back to 19.5 / 18.0 ms">reset delays</button>
-            ${R.info?.source === "live" ? `<button class="btn" id="checkBtn" title="Fresh read-only ACP2 + NMOS check of this channel">Check live</button>` : ""}
+            ${R.info?.source === "live" ? `<button class="btn" data-check title="Fresh read-only ACP2 + NMOS check of this channel; the view is updated with the values read">Check live</button>` : ""}
         </div>
         ${chPending.length ? `<h3>Staged in the Preset for ${c.letter}</h3>${summaryHtml(groupChanges(chPending))}
             <div style="margin-top:8px; display:flex; gap:8px">
@@ -1241,20 +1286,6 @@ $("routeLeft").addEventListener("click", async e => {
     if (t.id === "delayResetBtn") { for (const s of Object.values((R.analysis[R.selCh] || {}).sides || {})) if (s.case) store(delayKey(delayId(s)), null); renderAll(); return; }
     if (t.id === "planBtn") { const ch = plannedFor(R.selCh, R.withDelay); setValues(ch.map(c => [c.key, c.field, c.value])); renderAll(); return; }
     if (t.id === "takeChBtn") { takeChanges(R.chPending || [], `video path ${R.byN[R.selCh].letter}`); return; }
-    if (t.id === "checkBtn") {
-        const n = R.selCh;
-        t.disabled = true; $("checkResult").innerHTML = '<span class="small muted">Reading this channel over ACP2 (get property only) and NMOS …</span>';
-        try { const r = await post("/api/check", { device: R.device, channel: n });
-            const nm = r.nmos ? Object.entries(r.nmos).map(([k, v]) => `${k} ${v.enabled ? "on" : "OFF"}${v.source ? " · " + v.source : ""}`).join(" · ") : (r.nmos_error || "");
-            $("checkResult").innerHTML = `<div class="${/problem|SILENT/.test(r.verdict) ? "alert" : /not in use|warning/.test(r.verdict) ? "note" : "ok"}"><b>${esc(r.verdict)}</b><br>
-                ${r.acp2_requests} ACP2 reads in ${r.seconds} s via ${esc(r.link)} · ${r.fresh_changed.length} value(s) changed since the routing read<br>
-                Embedder input current (on air): ${esc(r.embedder_current.join(", ").slice(0, 80))}<br>NMOS: ${esc(nm)}</div>`
-                + r.analysis.findings.map(f => `<div class="find"><span class="lv lv-${f.level}">${f.level.toUpperCase()}</span>${esc(f.text)}</div>`).join("");
-            R.checks[n] = `<div class="small muted">Live check ${new Date().toLocaleTimeString()}:</div>` + $("checkResult").innerHTML;
-        } catch (err) { $("checkResult").innerHTML = `<div class="alert">${esc(err.message)}</div>`; }
-        if (R.selCh !== n) renderRouteLeft();
-        t.disabled = false; return;
-    }
 });
 $("routeLeft").addEventListener("change", e => { if (e.target.id === "withDelay") { R.withDelay = e.target.checked; renderRouteLeft(); } });
 $("routeLeft").addEventListener("input", e => { if (/^fill/.test(e.target.id)) renderFill(); });

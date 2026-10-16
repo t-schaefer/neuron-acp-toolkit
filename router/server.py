@@ -399,6 +399,9 @@ def check_channel(name, n):
     names = stream_names(lists, m.info()["nmos_label"])
     report, link = call_with_failover(d, lambda ip: run_check(m, names, n, ip=ip))
     report["link"] = link
+    values = report.pop("values", {})
+    if values:      # keep the fresh values, so the view (and a service restart) shows what was just read
+        take_mod.update_snapshot(snapshot_path(d["name"]), values)
     log.info("check %s ch %d: %s", d["name"], n, report["verdict"])
     return report
 
