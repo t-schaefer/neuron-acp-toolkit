@@ -76,18 +76,16 @@ Uninstall: powershell -ExecutionPolicy Bypass -File .\uninstall-task-windows.ps1
 Upgrading
 ---------
 Double-click ..\Update-NeuronRouter.bat in the repo root (asks for admin
-rights). It stops the services (router and, if installed, the landing page),
-stops a leftover python running one of their server.py files, updates the files
+rights). It stops the router service, stops a leftover python running
+router\server.py, updates the files
 (`git pull --ff-only`, or the GitHub main.zip copied over when git is not
-installed - nothing is deleted) and starts the services again. devices.json,
-lists/, live/ and landing/tools.json are not in git, so an update never touches them.
+installed - nothing is deleted) and starts the service again. devices.json,
+lists/ and live/ are not in git, so an update never touches them.
 
-Landing page (optional)
------------------------
-landing/ is a small start page for all web tools on the server (router,
-Fusion Dashboard, ...) with an up/down status per tool. Install it with
-..\Install-Landing.bat (port 80; another port: Install-Landing.bat 8080).
-Edit the tool list in the page ("Edit list") or in landing/tools.json.
+Landing page
+------------
+The start page for all web tools on the server (router, Fusion Dashboard,
+MNset, MuoN config) is its own repo: https://github.com/t-schaefer/tools-landing
 
 Devices and access (devices.json)
 ---------------------------------

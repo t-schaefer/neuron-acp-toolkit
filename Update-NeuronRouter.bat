@@ -1,6 +1,6 @@
 @echo off
-rem One double-click update: stops the services (router + landing page), updates the files
-rem (git pull, or the GitHub zip when git is not installed), starts the services again.
+rem One double-click update: stops the Neuron Audio Router service, updates the files
+rem (git pull, or the GitHub zip when git is not installed), starts the service again.
 rem Self-elevates via UAC, works from any folder depth, pauses so errors stay visible.
 setlocal
 set "HERE=%~dp0"
