@@ -50,6 +50,8 @@ uninstall-task-windows.ps1  removes the task and the firewall rule again
 ../Update-NeuronRouter.bat  double-click wrapper for the update (asks for admin rights)
 ../Install-NeuronRouter.bat double-click install of the service (asks for admin rights)
 ../Start-NeuronRouter.bat   run it in a console window for a quick test
+../Stop-NeuronRouter.bat    stop the service (starts again at boot, with Update-NeuronRouter.bat
+                            or: schtasks /run /tn NeuronAudioRouterService)
 tests/                      offline tests, load test, JS check, live channel check
 
 Requirements
