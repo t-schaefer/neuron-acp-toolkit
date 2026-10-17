@@ -263,6 +263,26 @@
     .help-tab.three { table-layout: fixed; } .help-tab.three td:first-child, .help-tab.three th:first-child { width: 20%; }
     .help-body { overflow-x: hidden; }
     .help-tab th { background: #f8f9fa; }
+    .h-lead { font-size: 0.98rem; margin: 10px 0 4px; }
+    .h-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+    .h-card { position: relative; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px 12px 10px 52px; background: #f8f9fa; }
+    .h-card h4 { margin: 0 0 4px; font-size: 0.95rem; } .h-card p { margin: 0; font-size: 0.85rem; }
+    .h-num { position: absolute; left: 12px; top: 12px; width: 28px; height: 28px; border-radius: 50%; background: #0d6efd; color: #fff;
+             display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .h-route { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .h-tag { min-width: 34px; text-align: center; }
+    .h-node { display: inline-flex; flex-direction: column; border: 1px solid #b6d4fe; background: #e7f1ff; border-radius: 8px; padding: 4px 10px; font-weight: 600; font-size: 0.85rem; }
+    .h-node small { font-weight: 400; color: #6c757d; font-size: 0.72rem; }
+    .h-node.dly { background: #fff8e6; border-color: #f0c36d; } .h-node.out { background: #eaf6ee; border-color: #8fd1ae; }
+    .h-arr { color: #6c757d; font-weight: 700; }
+    .h-legend { display: grid; gap: 5px; font-size: 0.86rem; } .h-legend .bar { display: inline-block; width: 5px; height: 14px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+    .h-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #fd7e14; margin-right: 6px; vertical-align: middle; }
+    .h-words { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 6px 0; font-size: 0.86rem; }
+    .h-words dt { font-weight: 600; } .h-words dd { margin: 0; }
+    @media (max-width: 560px) { .h-words { grid-template-columns: 1fr; } .h-words dd { margin-bottom: 6px; } }
+    .h-safe { list-style: none; padding-left: 0; } .h-safe li { margin: 4px 0; }
+    .h-det { border: 1px solid #dee2e6; border-radius: 8px; padding: 6px 12px; margin: 6px 0; }
+    .h-det summary { cursor: pointer; font-weight: 600; } .h-det[open] summary { margin-bottom: 6px; }
     .cbox-wrap { position: fixed; inset: 0; background: rgba(33,37,41,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; }
     .cbox { background: #fff; border-radius: 10px; padding: 18px 20px; max-width: 560px; width: calc(100% - 32px); box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
     .cbox-text { white-space: pre-wrap; font-size: 0.9rem; line-height: 1.5; max-height: 60vh; overflow-y: auto; }
@@ -285,36 +305,71 @@
 
 <!-- ================= HELP ================= -->
 <div class="help-wrap hidden" id="helpWrap"><div class="help" role="dialog" aria-label="Help">
-    <div class="help-head"><h2>How the Neuron Audio Router works</h2><button class="btn" id="helpClose">Close ✕</button></div>
+    <div class="help-head"><h2>Neuron Audio Router – how it works</h2><button class="btn" id="helpClose">Close ✕</button></div>
     <nav class="help-toc">
-        <a href="#h-what">What it does</a><a href="#h-flow">Workflow</a><a href="#h-assisted">How assisted mode finds SRC / DST</a>
-        <a href="#h-take">Preset, TAKE, Undo</a><a href="#h-check">Check live</a><a href="#h-manual">Manual mode</a>
-        <a href="#h-setup">Setup and lists</a><a href="#h-safety">Safety</a><a href="#h-ids">ID ranges</a><a href="#h-limits">Good to know</a>
+        <a href="#h-start">Quick start</a><a href="#h-routes">The two routes</a><a href="#h-screen">Reading the screen</a>
+        <a href="#h-words">Words used</a><a href="#h-safety">Safe by design</a><a href="#h-details">Details</a>
     </nav>
     <div class="help-body">
-    <h3 id="h-what">What it does</h3>
-    <p>Graphical audio routing for EVS Neuron IPG units (Bridge / Convert IP), replacing the number entry of the Audio Stream Shuffler.
-       The service talks to the devices over <b>ACP2</b> (TCP 2072). The browser only talks to the service, never to a device.</p>
-    <ul>
-        <li><b>Sources (left)</b>: IP In streams, de-embedders (SDI in), delay banks, MADI In.</li>
-        <li><b>Destinations (right)</b>: embedders (SDI out), delay banks, IP Out streams, MADI Out – each with Input Main and Input Backup.</li>
-        <li>Names come from the Cerebrum route master (SRC / DST lists), so you see “NEURON 3A IP07” instead of bare numbers.</li>
+    <p class="h-lead">Route the audio of an EVS Neuron by clicking instead of typing numbers. You pick a <b>video path</b>, the tool shows where its audio
+       comes from and what should change, you collect the changes in a <b>Preset</b> and write them with <b>TAKE</b> – with Undo.</p>
+
+    <h3 id="h-start">Quick start</h3>
+    <div class="h-cards">
+        <div class="h-card"><div class="h-num">1</div><h4>Try it</h4>
+            <p>Press <b>▶ Example Neuron – try it out</b> (top right). A copy of a real Neuron, offline – click anything, nothing is written.</p></div>
+        <div class="h-card"><div class="h-num">2</div><h4>Connect a device</h4>
+            <p>In the <b>Devices</b> list switch <b>Access</b> on → open the row → <b>Read from device</b> (≈ 5 min, read-only) → <b>Open router</b>.</p></div>
+        <div class="h-card"><div class="h-num">3</div><h4>Route a video path</h4>
+            <p>Click a tile <b>A1 … H4</b> → check the <b>signal flow</b> → <b>Add to Preset</b> → switch <b>Write</b> on → <b>TAKE</b>.</p></div>
+    </div>
+
+    <h3 id="h-routes">The two routes</h3>
+    <p>Every video path has a <b>Main</b> and a <b>Backup</b> input. Each one is either an IP stream or an SDI input – and the audio follows one of two routes:</p>
+    <div class="h-route"><span class="h-tag case case-A">IP</span>
+        <span class="h-node">IP In stream<small>from the DST list</small></span><span class="h-arr">→</span>
+        <span class="h-node dly">Stream Delay<small>target 19.5 ms</small></span><span class="h-arr">→</span>
+        <span class="h-node out">Embedder<small>→ SDI out</small></span></div>
+    <div class="h-route"><span class="h-tag case case-B">SDI</span>
+        <span class="h-node">SDI In<small>de-embedder</small></span><span class="h-arr">→</span>
+        <span class="h-node dly">Delay group<small>8 banks · 18.0 ms</small></span><span class="h-arr">→</span>
+        <span class="h-node out">Embedder<small>→ SDI out</small></span><span class="h-arr">+</span>
+        <span class="h-node out">IP Out<small>from the SRC list</small></span></div>
+    <div class="h-route"><span class="h-tag case case--">P</span><span class="muted">Pattern – input not used, nothing to route.</span></div>
+    <p class="muted">The tool works this out from the device itself and the Cerebrum lists – never from guessing numbers. Main and Backup may differ (e.g. SDI main, IP backup).</p>
+
+    <h3 id="h-screen">Reading the screen</h3>
+    <div class="h-legend">
+        <div><span class="bar" style="background:#198754"></span><b>Green bar</b> on a tile – routing matches the template.</div>
+        <div><span class="bar" style="background:#ffc107"></span><b>Yellow bar</b> – something to look at (e.g. a delay differs).</div>
+        <div><span class="bar" style="background:#dc3545"></span><b>Red bar</b> – a problem (wrong or missing source).</div>
+        <div><span class="case case-A">IP</span> <span class="case case-B">SDI</span> <span class="case case--">P</span> – where Main | Backup take their video.</div>
+        <div><span class="h-dot"></span><b>Orange</b> – a change is staged in the Preset, not on the device yet.</div>
+        <div><b>Device now / Target</b> in a delay box – what the device has vs. what the template wants.</div>
+    </div>
+
+    <h3 id="h-words">Words used</h3>
+    <dl class="h-words">
+        <dt>Video path</dt><dd>One of the 32 processing channels A1 … H4, each with 16 audio channels.</dd>
+        <dt>Assisted / Manual</dt><dd>Assisted proposes the routing for a video path; Manual lets you route any source to any destination.</dd>
+        <dt>Preset</dt><dd>Your list of changes waiting to be written. Kept in your browser.</dd>
+        <dt>TAKE / Undo</dt><dd>TAKE writes the Preset (it reads first and reads every value back). Undo restores the values from before the last TAKE.</dd>
+        <dt>Check live</dt><dd>Reads one video path again from the device (read-only, seconds) and updates the view.</dd>
+        <dt>De-embedder / Embedder</dt><dd>Takes audio out of an SDI input / puts audio into an SDI output.</dd>
+        <dt>Delay group</dt><dd>8 delay banks = 16 mono channels, used for SDI audio. Shown as “Delay g · B<i>first bank</i>”.</dd>
+        <dt>SRC / DST list</dt><dd>The Cerebrum route master: gives the stream names and which IP stream belongs to which video path.</dd>
+    </dl>
+
+    <h3 id="h-safety">Safe by design</h3>
+    <ul class="h-safe">
+        <li>🔒 A device is only contacted when its <b>Access</b> switch is on – all are off by default.</li>
+        <li>✍️ Writing needs the <b>Write</b> switch too; the red badge at the top lists every device with writing on.</li>
+        <li>✅ Every TAKE / Undo asks first and lists exactly what will be written; every value is read back.</li>
+        <li>↩️ <b>Undo last Take</b> restores the previous values.</li>
     </ul>
 
-    <h3 id="h-flow">Workflow</h3>
-    <ol>
-        <li><b>Just looking?</b> Press <b>▶ Example Neuron – try it out</b> (top right): an anonymised copy of a real Neuron, offline – nothing can be written.</li>
-        <li><b>Pick a device</b>: switch <b>Access</b> on for it in the device list, press “Read from device” (~5 min, read-only), then open it.</li>
-        <li><b>1 Video path</b>: click a tile A1 … H4 (= channel 1 … 32). The badges show where Main | Backup get their video: <span class="case case-A">IP</span> IP input,
-            <span class="case case-B">SDI</span> SDI input, <span class="case case--">P</span> Pattern (not used). The left bar is the check result.</li>
-        <li><b>2 Source</b> and <b>3 Signal flow</b> show what the device does now and what the template wants, node by node, with the delay.</li>
-        <li><b>4 Add to Preset</b>: the checks and the exact values that would change. “Add to Preset” stages them – nothing is written yet.</li>
-        <li><b>5 Preset</b>: everything staged, grouped, with a TAKE per row.</li>
-        <li><b>6 TAKE</b> writes the Preset to the device; <b>Undo last Take</b> restores the values from before it.</li>
-    </ol>
-
-    <h3 id="h-assisted">How assisted mode finds SRC / DST</h3>
-    <p>Nothing is guessed from numbering. Every proposal is worked out from the <b>real allocation</b>: the device's own settings plus the Cerebrum route master.
+    <h3 id="h-details">Details</h3>
+    <details class="h-det"><summary>How assisted mode finds sources and destinations</summary><p>Nothing is guessed from numbering. Every proposal is worked out from the <b>real allocation</b>: the device's own settings plus the Cerebrum route master.
        Main and Backup are resolved <b>separately</b>, so IP/IP, SDI/SDI and mixed (e.g. SDI main, IP backup) all work.</p>
     <table class="help-tab three">
         <tr><th>Step</th><th>Where it comes from</th><th>Result</th></tr>
@@ -330,60 +385,40 @@
             <td><b>IP Out = first ATX</b>, fed from the same delay group (Main + Backup)</td></tr>
     </table>
     <p>“Worked out from the real allocation” at the top of the signal flow shows these sources for the selected path. If a list row is missing,
-       the tool says so instead of guessing.</p>
-
-    <h3 id="h-take">Preset, TAKE, Undo</h3>
-    <ul>
+       the tool says so instead of guessing.</p></details>
+    <details class="h-det"><summary>Preset, TAKE and Undo in detail</summary><ul>
         <li><b>Preset</b> = staged values (orange). They live in your browser until TAKE or “Discard all”.</li>
         <li><b>TAKE</b> (whole Preset, one video path, or one row): the service first reads the current values. If the device changed since you looked, it refuses.
             It saves those values for Undo, writes, and <b>reads every value back</b>. It stops at the first error.</li>
         <li><b>Undo last Take</b> writes the saved values back, again with read-back.</li>
         <li>Every Take / Undo is logged per device (<code>live/&lt;device&gt;.takes.jsonl</code>).</li>
-    </ul>
-
-    <h3 id="h-check">Check live</h3>
-    <p>The view shows the stored routing read (the banner says how old it is). <b>Check live</b> (in the signal flow and in step 4) reads only the objects of the
+    </ul></details>
+    <details class="h-det"><summary>Check live</summary><p>The view shows the stored routing read (the banner says how old it is). <b>Check live</b> (in the signal flow and in step 4) reads only the objects of the
        selected path again over ACP2, plus NMOS receiver state. The view updates with what was read and says how many values had changed.
-       It is read-only and takes a few seconds.</p>
-
-    <h3 id="h-manual">Manual mode</h3>
-    <p>Everything, with no template: pick any source block on the left and any destination block on the right, then click slots to assign.
-       Same Preset / TAKE / Undo as assisted mode.</p>
-
-    <h3 id="h-setup">Setup and lists</h3>
-    <ul>
+       It is read-only and takes a few seconds.</p></details>
+    <details class="h-det"><summary>Manual mode</summary><p>Everything, with no template: pick any source block on the left and any destination block on the right, then click slots to assign.
+       Same Preset / TAKE / Undo as assisted mode.</p></details>
+    <details class="h-det"><summary>Setup and the SRC / DST lists</summary><ul>
         <li><b>Paste route master</b>: in Cerebrum select all rows of the route master, copy, paste into Setup, “Check”, then “Use as list”.
             <b>SRC</b> (sources) gives the IP Out names via TX rows / ATX streams; <b>DST</b> (destinations) gives the IP In names via RX rows / ARX streams.
             You need both. A new paste replaces the old list of the same kind (kept in <code>lists/replaced</code>).</li>
         <li>Or upload the list files (.rtf / .csv / .tsv / .txt), or drop them on the page.</li>
         <li><b>Data source</b>: “live device” (the ACP2 read) or an offline .cbf export to look at. A .cbf cannot be taken.</li>
         <li><b>Polling</b>: one tiny ACP2 request per released device every 30 s, for the online/offline status.</li>
-    </ul>
-
-    <h3 id="h-safety">Safety</h3>
-    <ul>
-        <li>Only devices with <code>"poll": true</code> in devices.json are contacted at all.</li>
-        <li>Writing needs <code>"write": true</code> for that device (the <b>Write</b> switch in the router). The red badge at the top lists every device with writing on.</li>
-        <li>Every TAKE / Undo asks for confirmation and lists exactly what will be written.</li>
-        <li>Only one full routing read runs at a time, so the devices are never flooded.</li>
-    </ul>
-
-    <h3 id="h-ids">ID ranges (audio source IDs on the Neuron)</h3>
-    <table class="help-tab">
+    </ul></details>
+    <details class="h-det"><summary>Audio ID ranges on the Neuron</summary><table class="help-tab">
         <tr><td>1 – 2048</td><td>IP In 16ch streams (16 IDs per stream)</td></tr>
         <tr><td>2049 – 3072</td><td>IP In 64ch streams</td></tr>
         <tr><td>3073 – 3584</td><td>De-embedders (SDI in), 16 per SDI input</td></tr>
         <tr><td>3585 – 4096</td><td>Delay banks, 256 banks × 2 ch</td></tr>
         <tr><td>4097 – 4352</td><td>MADI In</td></tr>
     </table>
-    <p>Mono channel IDs are shown in brackets next to the block, e.g. IP In 125 = (1985–2000).</p>
-
-    <h3 id="h-limits">Good to know</h3>
-    <ul>
+    <p>Mono channel IDs are shown in brackets next to the block, e.g. IP In 125 = (1985–2000).</p></details>
+    <details class="h-det"><summary>Good to know (Cerebrum shows old values, stream delay limits …)</summary><ul>
         <li><b>Cerebrum GUI shows old values</b> after a TAKE until it re-reads the device. The device has the new value; trust Check live.</li>
         <li>A Stream Delay only acts when the IP In receives media and its “Maximum Stream Delay” is above 0. The signal flow warns otherwise.</li>
         <li>Delay limits: the device's own min / max apply; if it reports none, Stream Delay up to 5000 ms and bank delay up to 3000 ms.</li>
-    </ul>
+    </ul></details>
     </div>
 </div></div>
 
