@@ -48,6 +48,15 @@
     .blk.txres { outline: 2px dashed #dc3545; outline-offset: -2px; }
     .txtag { background: #dc3545; color: #fff; border-radius: 4px; padding: 0 5px; font-size: 0.75rem; }
     #modeToggle button:disabled { opacity: 0.45; cursor: not-allowed; text-decoration: line-through; }
+    .example-btn { display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px 8px 12px; border: 0; border-radius: 10px; cursor: pointer;
+                   background: linear-gradient(135deg, #ff8a00, #e52e71); color: #fff; font: inherit; text-align: left;
+                   box-shadow: 0 4px 14px rgba(229,46,113,0.35); animation: ebPulse 2.4s ease-in-out infinite; transition: transform .15s; }
+    .example-btn:hover { transform: translateY(-1px) scale(1.03); animation: none; }
+    .example-btn .eb-icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.25); font-size: 0.9rem; }
+    .example-btn b { display: block; font-size: 1.05rem; line-height: 1.15; }
+    .example-btn small { display: block; font-size: 0.75rem; opacity: 0.95; }
+    @keyframes ebPulse { 0%, 100% { box-shadow: 0 4px 14px rgba(229,46,113,0.35); } 50% { box-shadow: 0 4px 22px 4px rgba(255,138,0,0.55); } }
+    @media (prefers-reduced-motion: reduce) { .example-btn { animation: none; } }
     #sampleBar { background: #e7f1ff; border: 1px solid #9ec5fe; color: #084298; border-radius: 8px; padding: 10px 14px; margin: 8px 0 12px; font-size: 0.88rem; }
     #sampleBar .sb-steps { margin-top: 8px; } #sampleBar ol { margin: 4px 0 6px; padding-left: 22px; } #sampleBar li { margin: 2px 0; }
     #sampleBar #sampleClose { margin-left: 10px; }
@@ -271,7 +280,7 @@
     <span id="offlineBadge"></span>
     <button class="btn" id="helpBtn" style="margin-left:auto" title="How the tool works">? Help</button>
     <button class="btn" id="setupBtn" title="Polling, SRC/DST lists, data source, devices">⚙ Setup</button>
-    <button class="btn primary" id="sampleBtn" title="Try the router on a sample device – no device needed, nothing is written">▶ Sample</button>
+    <button class="example-btn" id="sampleBtn" title="Try the router on an example device – no device needed, nothing is written"><span class="eb-icon">▶</span><span><b>Example Neuron</b><small>try it out – no device needed</small></span></button>
 </header>
 
 <!-- ================= HELP ================= -->
@@ -294,7 +303,7 @@
 
     <h3 id="h-flow">Workflow</h3>
     <ol>
-        <li><b>Just looking?</b> Press <b>▶ Sample</b> (top right): an anonymised copy of a real Neuron, offline – nothing can be written.</li>
+        <li><b>Just looking?</b> Press <b>▶ Example Neuron – try it out</b> (top right): an anonymised copy of a real Neuron, offline – nothing can be written.</li>
         <li><b>Pick a device</b>: switch <b>Access</b> on for it in the device list, press “Read from device” (~5 min, read-only), then open it.</li>
         <li><b>1 Video path</b>: click a tile A1 … H4 (= channel 1 … 32). The badges show where Main | Backup get their video: <span class="case case-A">IP</span> IP input,
             <span class="case case-B">SDI</span> SDI input, <span class="case case--">P</span> Pattern (not used). The left bar is the check result.</li>
@@ -449,7 +458,7 @@
     <div class="card">
         <h2 id="routerTitle">Router</h2>
         <div id="sampleBar" class="hidden">
-            <div class="sb-head"><b>Sample device – try it out.</b> This is an anonymised copy of a real Neuron (offline). Click around freely:
+            <div class="sb-head"><b>Example Neuron – try it out.</b> This is an anonymised copy of a real Neuron (offline). Click around freely:
                 pick a video path, look at the signal flow, add to the Preset, switch to Manual. Nothing is sent to any device – TAKE is off here.</div>
             <div class="sb-steps"><b>To work on a real device:</b>
                 <ol>
@@ -458,7 +467,7 @@
                     <li>When it is read, click the device (or <b>Open router</b>) – the router opens with its real routing.</li>
                 </ol>
                 <span class="muted">Writing (TAKE) additionally needs the <b>Write</b> switch for that device.</span>
-                <button class="btn" id="sampleClose">Close sample</button></div>
+                <button class="btn" id="sampleClose">Close example</button></div>
         </div>
         <div id="devWarn" class="hidden"></div>
         <div id="staleBar" class="hidden"></div>
@@ -922,7 +931,7 @@ function loadModel(j) {
     R.history = []; R.selSrcBlock = R.selDstBlock = R.selSrcId = R.selSlot = null;
     if (!R.selCh || !R.byN[R.selCh]) R.selCh = null;
     const i = R.info;
-    $("routerTitle").innerHTML = `Router · <b>${esc(R.device || i.file)}</b> <span class="muted small">${esc(i.device)} · ${esc(i.ip)} · FW ${esc(i.version)} · ${i.source === "live" ? `live ACP2 read ${esc(ago(i.read_at))}` : i.source === "sample" ? "SAMPLE – anonymised, offline" : "offline .cbf"}</span>`
+    $("routerTitle").innerHTML = `Router · <b>${esc(R.device || i.file)}</b> <span class="muted small">${esc(i.device)} · ${esc(i.ip)} · FW ${esc(i.version)} · ${i.source === "live" ? `live ACP2 read ${esc(ago(i.read_at))}` : i.source === "sample" ? "EXAMPLE – anonymised, offline" : "offline .cbf"}</span>`
 ;
     const n = R.names;
     $("namesInfo").innerHTML = !(n.lists || []).length ? "no SRC/DST list – names missing" : n.device ? `names: ${esc(n.lists.join(", "))} → <b>${esc(n.device)}</b>` : `<span class="warn">device not found in ${esc(n.lists.join(", "))}</span>`;
@@ -1454,7 +1463,7 @@ function renderPending() {
     $("undoTakeBtn").disabled = !canWrite || !dev.undo_available;
     $("takeBtn").textContent = !items.length ? "TAKE – nothing staged" : !canWrite ? `TAKE ${items.length} value(s) – writing is off` : `TAKE ${items.length} staged value(s) → ${R.device}`;
     $("undoTakeBtn").textContent = dev?.undo_available ? "Undo last Take (restore the values from before it)" : "Undo last Take – nothing to undo";
-    $("takeInfo").textContent = R.sample ? "Sample device – TAKE is off. Release a real device (Access), read it, then open it." : !dev ? "" : !canWrite ? `Writing to ${dev.name} is off (devices.json "write": false).`
+    $("takeInfo").textContent = R.sample ? "Example Neuron – TAKE is off. Release a real device (Access), read it, then open it." : !dev ? "" : !canWrite ? `Writing to ${dev.name} is off (devices.json "write": false).`
         : dev.undo_available ? "Writing is ON for this device. Undo restores the last Take." : "Writing is ON for this device.";
     R.canWrite = canWrite;
     R.presetGroups = groupChanges(changeList());

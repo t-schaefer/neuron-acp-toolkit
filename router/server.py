@@ -327,7 +327,7 @@ def model_payload(m, device_label, lists=None):
             analyses[c["n"]] = {"error": str(e)}
     info = m.info()
     if m is _models.get("sample"):
-        info.update(source="sample", ip="192.0.2.10 (sample)", file="sample DEMO")
+        info.update(source="sample", ip="192.0.2.10 (example)", file="Example Neuron (DEMO)")
     return {
         "info": info, "names": names, "channels": m.channels(), "analysis": analyses,
         "sources": {"cols": src_cols, "rows": [[s.get(c) for c in src_cols] for s in m.sources.values()]},

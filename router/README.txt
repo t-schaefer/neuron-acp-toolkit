@@ -134,7 +134,7 @@ p95 17 ms (tests/load_test.py).
 
 Using the router
 ----------------
-- ▶ Sample (top right): an anonymised copy of a real Neuron (sample/), offline,
+- ▶ Example Neuron – try it out (top right): an anonymised copy of a real Neuron (sample/), offline,
   TAKE off - for trying the tool without a device. Rebuild it with
   sample/make_sample.py from a real read (replaces names, IPs, UUIDs).
 - Devices: collapsible list with status badges (filter), groups (DCR / DCB),
