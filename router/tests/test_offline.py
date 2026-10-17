@@ -221,6 +221,15 @@ class ServiceTests(FakeDeviceCase):
         self.assertEqual((d["poll"], d["write"]), (False, False))
         self.assertEqual(self.call("/api/devices/access", {"device": "NOPE", "poll": True})[0], 400)
 
+    def test_2c_sample(self):
+        # the anonymised sample loads offline; nothing can be taken on it
+        st, j, _ = self.call("/api/model?sample=1")
+        self.assertEqual(st, 200)
+        self.assertEqual((j["info"]["source"], j["names"]["device"], len(j["channels"])), ("sample", "DEMO", 32))
+        self.assertNotIn("10.12.", json.dumps(j))
+        st, j, _ = self.call("/api/take", {"device": "DEMO", "changes": [{"key": "emb:A1:1", "field": "main", "value": 2}]})
+        self.assertGreaterEqual(st, 400)
+
     def test_3_read_model_check(self):
         st, job, _ = self.call("/api/read", {"device": "IPGT1"})
         self.assertEqual(st, 200)

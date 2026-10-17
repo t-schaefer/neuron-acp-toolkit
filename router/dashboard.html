@@ -48,6 +48,9 @@
     .blk.txres { outline: 2px dashed #dc3545; outline-offset: -2px; }
     .txtag { background: #dc3545; color: #fff; border-radius: 4px; padding: 0 5px; font-size: 0.75rem; }
     #modeToggle button:disabled { opacity: 0.45; cursor: not-allowed; text-decoration: line-through; }
+    #sampleBar { background: #e7f1ff; border: 1px solid #9ec5fe; color: #084298; border-radius: 8px; padding: 10px 14px; margin: 8px 0 12px; font-size: 0.88rem; }
+    #sampleBar .sb-steps { margin-top: 8px; } #sampleBar ol { margin: 4px 0 6px; padding-left: 22px; } #sampleBar li { margin: 2px 0; }
+    #sampleBar #sampleClose { margin-left: 10px; }
     .note { background: #fff3cd; color: #664d03; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .ok { background: #d1e7dd; color: #0f5132; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; min-width: 0; margin-bottom: 12px; }
@@ -268,6 +271,7 @@
     <span id="offlineBadge"></span>
     <button class="btn" id="helpBtn" style="margin-left:auto" title="How the tool works">? Help</button>
     <button class="btn" id="setupBtn" title="Polling, SRC/DST lists, data source, devices">⚙ Setup</button>
+    <button class="btn primary" id="sampleBtn" title="Try the router on a sample device – no device needed, nothing is written">▶ Sample</button>
 </header>
 
 <!-- ================= HELP ================= -->
@@ -290,7 +294,8 @@
 
     <h3 id="h-flow">Workflow</h3>
     <ol>
-        <li><b>Pick a device</b> in the device list. Its routing tree is read once over ACP2 (“Read from device”, ~5 min, read-only) and stored.</li>
+        <li><b>Just looking?</b> Press <b>▶ Sample</b> (top right): an anonymised copy of a real Neuron, offline – nothing can be written.</li>
+        <li><b>Pick a device</b>: switch <b>Access</b> on for it in the device list, press “Read from device” (~5 min, read-only), then open it.</li>
         <li><b>1 Video path</b>: click a tile A1 … H4 (= channel 1 … 32). The badges show where Main | Backup get their video: <span class="case case-A">IP</span> IP input,
             <span class="case case-B">SDI</span> SDI input, <span class="case case--">P</span> Pattern (not used). The left bar is the check result.</li>
         <li><b>2 Source</b> and <b>3 Signal flow</b> show what the device does now and what the template wants, node by node, with the delay.</li>
@@ -443,6 +448,18 @@
 <section id="routerSection" class="hidden">
     <div class="card">
         <h2 id="routerTitle">Router</h2>
+        <div id="sampleBar" class="hidden">
+            <div class="sb-head"><b>Sample device – try it out.</b> This is an anonymised copy of a real Neuron (offline). Click around freely:
+                pick a video path, look at the signal flow, add to the Preset, switch to Manual. Nothing is sent to any device – TAKE is off here.</div>
+            <div class="sb-steps"><b>To work on a real device:</b>
+                <ol>
+                    <li>Open <b>⚙ Setup</b> / the <b>Devices</b> list and switch <b>Access</b> on for the device (it is off for every device by default).</li>
+                    <li>Click the device row and press <b>Read from device</b> – a read-only ACP2 read, about 5 minutes.</li>
+                    <li>When it is read, click the device (or <b>Open router</b>) – the router opens with its real routing.</li>
+                </ol>
+                <span class="muted">Writing (TAKE) additionally needs the <b>Write</b> switch for that device.</span>
+                <button class="btn" id="sampleClose">Close sample</button></div>
+        </div>
         <div id="devWarn" class="hidden"></div>
         <div id="staleBar" class="hidden"></div>
         <div class="toolbar">
@@ -862,11 +879,15 @@ const fmtVal = (pk, v) => pk.endsWith("|delay") ? (v == null ? "?" : `${(+v).toF
 
 // ----- loading -----
 function setFleetCollapsed(c) { $("fleetCard").classList.toggle("collapsed", c); store("nar.fleetCollapsed", c); }
-async function openDevice(name) { R.device = name; R.file = null; $("cbfSelect").value = ""; setFleetCollapsed(true); await reloadModel(); renderFleet(); }
+async function openSample() { R.sample = true; R.device = null; R.file = null; $("cbfSelect").value = ""; setFleetCollapsed(true); await reloadModel(); renderFleet();
+    $("routerSection").scrollIntoView({ behavior: "smooth" }); }
+$("sampleBtn").onclick = openSample;
+$("sampleClose").onclick = () => { R.sample = false; R.info = null; $("routerSection").classList.add("hidden"); setFleetCollapsed(false); renderFleet(); };
+async function openDevice(name) { R.sample = false; R.device = name; R.file = null; $("cbfSelect").value = ""; setFleetCollapsed(true); await reloadModel(); renderFleet(); }
 async function reloadModel() {
     try {
         msg("Loading model …", "note");
-        const url = R.device ? "/api/model?device=" + encodeURIComponent(R.device) : "/api/model?file=" + encodeURIComponent(R.file);
+        const url = R.sample ? "/api/model?sample=1" : R.device ? "/api/model?device=" + encodeURIComponent(R.device) : "/api/model?file=" + encodeURIComponent(R.file);
         loadModel(await api(url)); msg("");
     } catch (e) { msg(e.message); }
 }
@@ -896,16 +917,18 @@ function loadModel(j) {
             b.nm = blockName(b.kind, b.block);
         }
     }
-    const pk = "nar.pending." + (R.device ? "dev:" + R.device : "cbf:" + R.file);
+    const pk = pendKey();
     R.pending = new Map((recall(pk) || []).filter(([k]) => k.split("|")[1] === "delay" || R.dst.has(k.split("|")[0])));
     R.history = []; R.selSrcBlock = R.selDstBlock = R.selSrcId = R.selSlot = null;
     if (!R.selCh || !R.byN[R.selCh]) R.selCh = null;
     const i = R.info;
-    $("routerTitle").innerHTML = `Router · <b>${esc(R.device || i.file)}</b> <span class="muted small">${esc(i.device)} · ${esc(i.ip)} · FW ${esc(i.version)} · ${i.source === "live" ? `live ACP2 read ${esc(ago(i.read_at))}` : "offline .cbf"}</span>`
+    $("routerTitle").innerHTML = `Router · <b>${esc(R.device || i.file)}</b> <span class="muted small">${esc(i.device)} · ${esc(i.ip)} · FW ${esc(i.version)} · ${i.source === "live" ? `live ACP2 read ${esc(ago(i.read_at))}` : i.source === "sample" ? "SAMPLE – anonymised, offline" : "offline .cbf"}</span>`
 ;
     const n = R.names;
     $("namesInfo").innerHTML = !(n.lists || []).length ? "no SRC/DST list – names missing" : n.device ? `names: ${esc(n.lists.join(", "))} → <b>${esc(n.device)}</b>` : `<span class="warn">device not found in ${esc(n.lists.join(", "))}</span>`;
-    $("applyLive").classList.toggle("hidden", i.source !== "live"); $("applyCbf").classList.toggle("hidden", i.source === "live");
+    const isCbf = i.source !== "live" && i.source !== "sample";
+    $("applyLive").classList.toggle("hidden", isCbf); $("applyCbf").classList.toggle("hidden", !isCbf);
+    $("sampleBar").classList.toggle("hidden", i.source !== "sample");
     $("routerSection").classList.remove("hidden");
     renderStale();
     renderAll();
@@ -914,10 +937,11 @@ async function loadCbfList() {
     const j = await api("/api/files");
     $("cbfSelect").innerHTML = `<option value="">— live device —</option>` + j.files.map(f => `<option>${esc(f)}</option>`).join("");
 }
-$("cbfSelect").onchange = e => { if (e.target.value) { R.file = e.target.value; R.device = null; reloadModel(); } else if (F.open) openDevice(F.open); };
+$("cbfSelect").onchange = e => { if (e.target.value) { R.sample = false; R.file = e.target.value; R.device = null; reloadModel(); } else if (F.open) openDevice(F.open); };
 
 // ----- editing -----
-function persist() { store("nar.pending." + (R.device ? "dev:" + R.device : "cbf:" + R.file), R.pending.size ? [...R.pending] : null); }
+function pendKey() { return "nar.pending." + (R.sample ? "sample" : R.device ? "dev:" + R.device : "cbf:" + R.file); }
+function persist() { store(pendKey(), R.pending.size ? [...R.pending] : null); }
 function setValues(list) {
     const undo = [];
     for (const [key, field, v] of list) {
@@ -1430,7 +1454,7 @@ function renderPending() {
     $("undoTakeBtn").disabled = !canWrite || !dev.undo_available;
     $("takeBtn").textContent = !items.length ? "TAKE – nothing staged" : !canWrite ? `TAKE ${items.length} value(s) – writing is off` : `TAKE ${items.length} staged value(s) → ${R.device}`;
     $("undoTakeBtn").textContent = dev?.undo_available ? "Undo last Take (restore the values from before it)" : "Undo last Take – nothing to undo";
-    $("takeInfo").textContent = !dev ? "" : !canWrite ? `Writing to ${dev.name} is off (devices.json "write": false).`
+    $("takeInfo").textContent = R.sample ? "Sample device – TAKE is off. Release a real device (Access), read it, then open it." : !dev ? "" : !canWrite ? `Writing to ${dev.name} is off (devices.json "write": false).`
         : dev.undo_available ? "Writing is ON for this device. Undo restores the last Take." : "Writing is ON for this device.";
     R.canWrite = canWrite;
     R.presetGroups = groupChanges(changeList());
@@ -1449,7 +1473,7 @@ function renderWriteToggle() {
     const live = R.info?.source === "live";
     b.disabled = !live || !dev || !dev.poll;
     b.className = "btn " + (dev && dev.write ? "take" : "");
-    b.textContent = !live ? "n/a (offline file)" : !dev ? "…" : dev.write ? "● ON – click to turn off" : "OFF – click to enable";
+    b.textContent = !live ? (R.sample ? "n/a (sample)" : "n/a (offline file)") : !dev ? "…" : dev.write ? "● ON – click to turn off" : "OFF – click to enable";
 }
 $("writeToggle").onclick = async () => {
     const dev = (F.state?.devices || []).find(d => d.name === R.device); if (!dev) return;

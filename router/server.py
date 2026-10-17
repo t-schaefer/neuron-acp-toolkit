@@ -66,6 +66,7 @@ CBF_DIR = BASE_DIR / "cbf"          # offline .cbf exports (illustration / fallb
 EXPORT_DIR = BASE_DIR / "exports"
 LISTS_DIR = BASE_DIR / "lists"      # Cerebrum SRC/DST route lists
 LIVE_DIR = BASE_DIR / "live"        # ACP2 routing snapshots, one per device
+SAMPLE_DIR = BASE_DIR / "sample"    # anonymised sample device ("Sample" page, no device needed)
 MAX_UPLOAD = 64 * 1024 * 1024
 
 # ---------------- logging ----------------
@@ -266,6 +267,28 @@ def get_live_model(name):
         return m
 
 
+def get_sample_model():
+    """The anonymised sample device (sample/make_sample.py). Offline - nothing is contacted."""
+    gz = SAMPLE_DIR / "demo-snapshot.json.gz"
+    if not gz.exists():
+        raise FileNotFoundError("no sample in this installation (router/sample/demo-snapshot.json.gz)")
+    LIVE_DIR.mkdir(exist_ok=True)
+    path = LIVE_DIR / "_SAMPLE.json"
+    with _models_lock:
+        if not path.exists() or path.stat().st_mtime < gz.stat().st_mtime:
+            with gzip.open(gz, "rb") as f:
+                tmp = path.with_suffix(".part")
+                tmp.write_bytes(f.read())
+                tmp.replace(path)
+        m = _models.get("sample")
+        if m is None or m.mtime != path.stat().st_mtime:
+            m = LiveModel(path, "DEMO")
+            m.mtime = path.stat().st_mtime
+            m.sample_lists = [parse_list(SAMPLE_DIR / f"DEMO-{k}.tsv") for k in ("SRC", "DST")]
+            _models["sample"] = m
+        return m
+
+
 def get_cbf_model(name):
     name = safe_name(name, SAFE_CBF_RE, ".cbf")
     path = CBF_DIR / name
@@ -285,12 +308,14 @@ def safe_name(name, pattern, what):
     return name
 
 
-def model_payload(m, device_label):
+def model_payload(m, device_label, lists=None):
     src_cols = ["id", "kind", "block", "ch", "block_label", "name", "enabled", "delay", "bank", "slot", "stream_delay",
                 "stream_max_delay", "stream_info"]
     dst_cols = ["key", "kind", "block", "ch", "block_label", "name", "enabled",
                 "main", "backup", "current", "channels", "delay", "bank", "slot", "own_id"]
-    lists, errors = load_lists()
+    errors = []
+    if lists is None:
+        lists, errors = load_lists()
     names = stream_names(lists, device_label or m.info()["nmos_label"])
     names["errors"] = errors
     analyses = {}
@@ -300,8 +325,11 @@ def model_payload(m, device_label):
             analyses[c["n"]] = {k: a[k] for k in ("case", "status", "sides", "rx_stream", "tx_stream", "findings", "changes")}
         except Exception as e:
             analyses[c["n"]] = {"error": str(e)}
+    info = m.info()
+    if m is _models.get("sample"):
+        info.update(source="sample", ip="192.0.2.10 (sample)", file="sample DEMO")
     return {
-        "info": m.info(), "names": names, "channels": m.channels(), "analysis": analyses,
+        "info": info, "names": names, "channels": m.channels(), "analysis": analyses,
         "sources": {"cols": src_cols, "rows": [[s.get(c) for c in src_cols] for s in m.sources.values()]},
         "destinations": {"cols": dst_cols, "rows": [[d.get(c) for c in dst_cols] for d in m.destinations.values()]},
     }
@@ -555,7 +583,10 @@ class Handler(BaseHTTPRequestHandler):
                 raw, gz = cached_state()
                 self._send(raw, gz=gz)
             elif u.path == "/api/model":
-                if q.get("device"):
+                if q.get("sample"):
+                    m = get_sample_model()
+                    self._json(model_payload(m, "DEMO", m.sample_lists))
+                elif q.get("device"):
                     d = find_device(q["device"][0], need_access=False)
                     self._json(model_payload(get_live_model(d["name"]), d["name"]))
                 else:
