@@ -12,5 +12,19 @@
     "port": 8100,
     "path": "/",
     "host": ""
+  },
+  {
+    "name": "MNset",
+    "description": "MNset on this server.",
+    "port": 8080,
+    "path": "/",
+    "host": ""
+  },
+  {
+    "name": "MuoN config",
+    "description": "MuoN configuration on this server.",
+    "port": 8090,
+    "path": "/",
+    "host": ""
   }
 ]
