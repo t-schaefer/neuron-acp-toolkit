@@ -51,7 +51,8 @@ try {
     $git = Get-Command git.exe -ErrorAction SilentlyContinue
     if ($git -and (Test-Path (Join-Path $RepoDir ".git"))) {
         Write-Host "git pull --ff-only ..."
-        git pull --ff-only
+        # safe.directory: also works when the clone belongs to another user (e.g. run as SYSTEM from the landing page)
+        git -c "safe.directory=$($RepoDir -replace '\\','/')" pull --ff-only
         if ($LASTEXITCODE -ne 0) { throw "git pull failed (local changes or diverged branch?)" }
     } else {
         Write-Host "No git clone here - downloading $ZipUrl ..."
