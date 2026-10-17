@@ -600,6 +600,20 @@ class Handler(BaseHTTPRequestHandler):
                 log.warning("WRITE %s for %s (switched in the UI)", "ENABLED" if on else "disabled", hit[0]["name"])
                 _state_cache["t"] = 0
                 self._json({"device": hit[0]["name"], "write": on})
+            elif u.path == "/api/devices/access":
+                # the "Access" switch in the device list; same effect as editing "poll" in devices.json
+                name, on = req.get("device", ""), bool(req.get("poll"))
+                devices = load_devices()
+                hit = [d for d in devices if normalize_device(d["name"]) == normalize_device(name)]
+                if not hit:
+                    raise ValueError(f"unknown device {name!r}")
+                hit[0]["poll"] = on
+                if not on:
+                    hit[0]["write"] = False          # no access means no writing either
+                save_devices(devices)
+                log.warning("ACCESS %s for %s (switched in the UI)", "released" if on else "withdrawn", hit[0]["name"])
+                _state_cache["t"] = 0
+                self._json({"device": hit[0]["name"], "poll": on, "write": hit[0].get("write", False)})
             elif u.path == "/api/read":
                 self._json(start_read(req.get("device", "")))
             elif u.path == "/api/check":

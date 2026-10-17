@@ -40,6 +40,11 @@
     #setupBtn.active { background: #e7f1ff; border-color: #0d6efd; }
     .flowhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
     .flowhead .chk { font-size: 0.8rem; } .ok-t { color: #0f5132; }
+    .sw { border: 1px solid #ced4da; background: #f8f9fa; color: #6c757d; border-radius: 12px; padding: 1px 10px; font-size: 0.78rem; cursor: pointer; min-width: 52px; }
+    .sw:hover:not(:disabled) { border-color: #0d6efd; }
+    .sw:disabled { opacity: 0.45; cursor: not-allowed; }
+    .sw.on-ok { background: #d1e7dd; border-color: #198754; color: #0f5132; font-weight: 600; }
+    .sw.on-danger { background: #dc3545; border-color: #dc3545; color: #fff; font-weight: 600; }
     .note { background: #fff3cd; color: #664d03; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .ok { background: #d1e7dd; color: #0f5132; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; min-width: 0; margin-bottom: 12px; }
@@ -421,10 +426,10 @@
             <th class="sortable" data-key="tag">Tag</th>
             <th class="sortable" data-key="type">Type</th>
             <th class="sortable" data-key="status">Status</th>
-            <th class="sortable" data-key="fw">FW</th>
-            <th class="sortable" data-key="snapshot">Routing read</th>
             <th class="sortable" data-key="poll" title="Released for device access (devices.json poll)">Access</th>
             <th class="sortable" data-key="write" title="Writing (Take) allowed (devices.json write)">Write</th>
+            <th class="sortable" data-key="fw">FW</th>
+            <th class="sortable" data-key="snapshot">Routing read</th>
         </tr></thead>
         <tbody id="fleetBody"></tbody>
     </table></div>
@@ -637,10 +642,10 @@ function renderFleet() {
         return `<tr class="datarow ${open ? "open" : ""} ${R.device === d.name ? "sel" : ""} ${s.key === "offline" ? "offline" : ""}" data-dev="${esc(d.name)}">
             <td><span class="chev">▸</span></td><td><b>${esc(d.name)}</b></td><td class="mono">${esc(d.ip)} ${red} ${blue}</td>
             <td>${esc(d.tag)}</td><td>${esc(d.type)}</td><td><span class="badge ${s.cls}">${esc(s.label)}</span>${job}</td>
+            <td><button class="sw ${d.poll ? "on-ok" : ""}" data-act="poll" data-dev="${esc(d.name)}" title="${d.poll ? "Released: the service talks to this device. Click to withdraw access (also turns writing off)." : "Not released: the service never contacts this device. Click to release it."}">${d.poll ? "● on" : "off"}</button></td>
+            <td><button class="sw ${d.write ? "on-danger" : ""}" data-act="write" data-dev="${esc(d.name)}" ${d.poll || d.write ? "" : "disabled"} title="${d.write ? "Writing ON: TAKE / Undo write to this device. Click to turn off." : d.poll ? "Writing off. Click to allow TAKE / Undo to write to this device." : "Release access first"}">${d.write ? "● on" : "off"}</button></td>
             <td>${s.key === "offline" ? "offline" : esc(d.config?.firmware || "–")}</td>
-            <td>${d.snapshot ? esc(ago(d.snapshot)) : '<span class="muted">not read</span>'}</td>
-            <td>${d.poll ? '<span class="badge success">yes</span>' : '<span class="badge light">no</span>'}</td>
-            <td>${d.write ? '<span class="badge danger">yes</span>' : '<span class="badge light">no</span>'}</td></tr>`
+            <td>${d.snapshot ? esc(ago(d.snapshot)) : '<span class="muted">not read</span>'}</td></tr>`
             + (open ? `<tr class="detail"><td></td><td colspan="9">${fleetDetail(d)}</td></tr>` : "");
     }).join("") || `<tr><td colspan="10" class="muted">No device matches.</td></tr>`;
 }
@@ -657,8 +662,20 @@ function fleetDetail(d) {
             <button class="btn" data-act="read" data-dev="${esc(d.name)}" ${d.poll && !(j && j.state === "running") ? "" : "disabled"}
                 title="Read the routing tree over ACP2 (read-only, about 41,000 requests, ~5 min)">Read from device</button>
             ${j ? `<span class="small">${j.state === "running" ? `reading… ${j.progress} objects` : j.state === "done" ? `last read: ${j.progress} objects in ${j.seconds} s` : `<span class="warn">read failed: ${esc(j.error)}</span>`}</span>` : ""}
-            ${!d.poll ? '<span class="small muted">Not released: set "poll": true in devices.json to allow access.</span>' : ""}
+            ${!d.poll ? '<span class="small muted">Not released: switch “Access” on to allow reading this device.</span>' : ""}
         </div></div>`;
+}
+// Access (devices.json "poll") and Write switches in the device list. Turning something ON asks first.
+async function toggleDeviceFlag(flag, name) {
+    const d = (F.state?.devices || []).find(x => x.name === name); if (!d) return;
+    const on = !d[flag];
+    if (flag === "poll" && on && !(await confirmBox(`Release ${d.name} (${d.ip}) for device access?\n\nThe service then sends one small read-only ACP2 request every 30 s (online check) and you can read its routing. Nothing is written.`, "Release access"))) return;
+    if (flag === "poll" && !on && d.write && !(await confirmBox(`Withdraw access to ${d.name}?\n\nWriting is ON for it and will be turned off too.`, "Withdraw access"))) return;
+    if (flag === "write" && on && !(await confirmBox(`Enable WRITING to ${d.name} (${d.ip}) – LIVE DEVICE?\n\nTAKE and Undo will then write routing and delay values over ACP2.`, "Enable writing", true))) return;
+    try {
+        await post(flag === "poll" ? "/api/devices/access" : "/api/devices/write", flag === "poll" ? { device: d.name, poll: on } : { device: d.name, write: on });
+        await pollState(); if (R.info) renderAll();
+    } catch (e) { msg(e.message); }
 }
 $("summaryBar").onclick = e => { const b = e.target.closest("[data-f]"); if (b) { F.filter = b.dataset.f || null; renderFleet(); } };
 $("groupBar").onclick = e => { const b = e.target.closest("[data-g]"); if (b) { F.group = b.dataset.g; store("nar.group", F.group); renderFleet(); } };
@@ -669,6 +686,7 @@ $("fleetBody").onclick = async e => {
     if (act) {
         const dev = act.dataset.dev;
         if (act.dataset.act === "open") return openDevice(dev);
+        if (act.dataset.act === "poll" || act.dataset.act === "write") return toggleDeviceFlag(act.dataset.act, dev);
         if (act.dataset.act === "read") {
             if (!(await confirmBox(`Read the routing tree of ${dev} over ACP2?\n\nRead-only (get object only), about 41,000 requests one at a time, ~5 minutes.`, "Read"))) return;
             try { await post("/api/read", { device: dev }); msg(`Reading ${dev} …`, "note"); pollState(); } catch (err) { msg(err.message); }

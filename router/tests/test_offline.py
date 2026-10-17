@@ -209,6 +209,18 @@ class ServiceTests(FakeDeviceCase):
         self.assertEqual(st, 403)
         self.assertIn("Nothing was sent", j["error"])
 
+    def test_2b_access_and_write_switches(self):
+        # write needs access; withdrawing access turns writing off; IPGT2 ends as it started
+        self.assertEqual(self.call("/api/devices/write", {"device": "IPGT2", "write": True})[0], 400)
+        self.assertEqual(self.call("/api/devices/access", {"device": "IPGT2", "poll": True})[1]["poll"], True)
+        self.assertEqual(self.call("/api/devices/write", {"device": "IPGT2", "write": True})[1]["write"], True)
+        st, j, _ = self.call("/api/devices/access", {"device": "IPGT2", "poll": False})
+        self.assertEqual((st, j["poll"], j["write"]), (200, False, False))
+        import server
+        d = [x for x in json.loads(server.DEVICES_FILE.read_text()) if x["name"] == "IPGT2"][0]
+        self.assertEqual((d["poll"], d["write"]), (False, False))
+        self.assertEqual(self.call("/api/devices/access", {"device": "NOPE", "poll": True})[0], 400)
+
     def test_3_read_model_check(self):
         st, job, _ = self.call("/api/read", {"device": "IPGT1"})
         self.assertEqual(st, 200)
