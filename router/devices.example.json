@@ -37,7 +37,7 @@
     "tag": "DCR",
     "type": "BRIDGE",
     "write": false,
-    "poll": true
+    "poll": false
   },
   {
     "ip": "10.12.80.21",
