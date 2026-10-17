@@ -93,6 +93,7 @@ def run_check(model, names, n, ip=None, nmos=True, pace=0.005):
     report = {"device": model.device_name, "channel": n, "analysis": after, "ip": ip,
               "acp2_requests": nreq, "seconds": round(time.time() - t0, 2),
               "snapshot_read_at": model.snapshot_info.get("read_at"),
+              "values": values,
               "fresh_changed": [{"object": by_oid.get(k, k), "old": a, "new": b} for k, (a, b) in changed.items()],
               "embedder_current": sorted({model.destinations[f"emb:{after['letter']}:{k}"]["current"] for k in range(1, 17)})}
     if nmos and NMOS_REGISTRY is None:

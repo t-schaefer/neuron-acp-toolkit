@@ -59,7 +59,7 @@ if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
 
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
     -Principal $principal -Settings $settings `
-    -Description "Neuron Audio Router - ACP2 health of released Neuron IPG units and graphical audio routing on port $Port. Read-only. Runs as SYSTEM, no login needed." | Out-Null
+    -Description "Neuron Audio Router - ACP2 health of released Neuron IPG units and graphical audio routing on port $Port. Writes only to devices with write=true (TAKE/Undo). Runs as SYSTEM, no login needed." | Out-Null
 
 Write-Host "Task '$TaskName' registered. Starting it now..."
 Start-ScheduledTask -TaskName $TaskName

@@ -122,11 +122,12 @@ class ChannelAnalysis:
                 side["deemb"] = deemb_letter
                 cur = side["current"]
                 if self.forced_group:
-                    g = self.forced_group
+                    g, side["group_from"] = self.forced_group, "chosen by hand"
                 elif isinstance(cur, tuple) and cur[0] == "bank":
-                    g = cur[1]                 # keep the group the device already uses
-                else:
-                    g = sdi_groups.get(num) or num   # fixed port scheme: SDI N -> group N
+                    g, side["group_from"] = cur[1], "already used for this channel on the device"
+                else:                          # fixed port scheme: SDI N -> group N
+                    g = sdi_groups.get(num) or num
+                    side["group_from"] = f"fixed port scheme (SDI {num} -> group {g}), not used on the device yet"
                 sdi_groups[num] = g
                 side["group"] = g
                 side["source"] = ("bank", g)

@@ -24,6 +24,17 @@ Verified read-only against IPG03A (10.12.80.20, FW 7.0.3):
 Writes live in a separate module, `writer.py` (ACP2 set property on the value
 of u32 / float objects only), used by `router/take.py` for Take/Undo.
 
+**Announces and the Cerebrum GUI (IPG03A, 2026-10-15):** every value change is
+announced by the device to all clients that enabled ACP2 events
+(`listen_events.py`): a change written by the router (Stream Delay of IP In 125,
+obj 167852, 19.0 -> 19.5) and a change made in the Cerebrum device GUI
+(19.5 -> 19.4 -> 19.5) appear identically (slot 1, obj 167852, pid 8). The
+Cerebrum GUI writes over ACP2 to the same object, but did NOT pick up the
+router's change: it kept showing 19.5 while the device, ACP2 and the Neuron
+REST API (`https://<ip>/api/v1/io/ip/receivers/audio`, `streamDelayMs`) had
+19.0. After a router TAKE, Cerebrum shows the new values only after it re-reads
+the device. Trust the router's "Check live", ACP2 or REST for the real state.
+
 **First live write, 2026-10-15, IPG03A** (approved by the user, on a path that
 was not in use: H4 / channel 32, VRX-32 and ARX-125..128 disabled):
 - object 81668 = PROCESSING VIDEO/PATH H/CHANNEL 04/EMBEDDER/AUDIO CHANNEL 1/Input Backup (u32)

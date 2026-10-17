@@ -31,7 +31,7 @@ import walk as acp2walk              # noqa: E402
 from checks import analyse_channel   # noqa: E402
 from fake_neuron import FakeNeuron   # noqa: E402
 from live_model import LiveModel     # noqa: E402
-from route_lists import normalize_device, parse_list, stream_names  # noqa: E402
+from route_lists import normalize_device, normalize_paste, parse_list, stream_names  # noqa: E402
 
 SRC_CSV = "_ID;_Mnemonic;_Alternate Mnemonic 1;_TL Inhibit;_Level ID 1;_Level ID 2;_Level ID 3;_Level ID 4\n" + "".join(
     f"{c};DCR.IPGT1-TX0{c};OUT {c};0;NMOS2|1|IPGT1|VTX-0{c};NMOS2|1|IPGT1|ATX-0{c};;\n" for c in range(1, 5))
@@ -209,6 +209,18 @@ class ServiceTests(FakeDeviceCase):
         self.assertEqual(st, 403)
         self.assertIn("Nothing was sent", j["error"])
 
+    def test_2b_access_and_write_switches(self):
+        # write needs access; withdrawing access turns writing off; IPGT2 ends as it started
+        self.assertEqual(self.call("/api/devices/write", {"device": "IPGT2", "write": True})[0], 400)
+        self.assertEqual(self.call("/api/devices/access", {"device": "IPGT2", "poll": True})[1]["poll"], True)
+        self.assertEqual(self.call("/api/devices/write", {"device": "IPGT2", "write": True})[1]["write"], True)
+        st, j, _ = self.call("/api/devices/access", {"device": "IPGT2", "poll": False})
+        self.assertEqual((st, j["poll"], j["write"]), (200, False, False))
+        import server
+        d = [x for x in json.loads(server.DEVICES_FILE.read_text()) if x["name"] == "IPGT2"][0]
+        self.assertEqual((d["poll"], d["write"]), (False, False))
+        self.assertEqual(self.call("/api/devices/access", {"device": "NOPE", "poll": True})[0], 400)
+
     def test_3_read_model_check(self):
         st, job, _ = self.call("/api/read", {"device": "IPGT1"})
         self.assertEqual(st, 200)
@@ -288,12 +300,55 @@ class TakeTests(unittest.TestCase):
         self.assertIn("Nothing was written", str(cm.exception))
         self.assertEqual(self.fake.set_attempts, [])
 
+    def test_stream_delay_without_media_warns(self):
+        r = self.do_take([{"key": "streamdelay:7", "field": "delay", "value": 19.0},
+                          {"key": "streamdelay:1", "field": "delay", "value": 19.0}])
+        self.assertTrue(r["ok"], r)
+        by = {e["key"]: e for e in r["items"]}
+        self.assertIn("NOT effective", by["streamdelay:7"].get("warning", ""))   # no media: stored, cannot act
+        self.assertNotIn("warning", by["streamdelay:1"])                          # receiving: fine
+        self.assertEqual(self.model.sources[(7 - 1) * 16 + 1]["stream_info"], "No media found")
+
     def test_writer_refuses_other_types(self):
         import writer
         with writer.Acp2Writer("127.0.0.1") as w:
             with self.assertRaises(acp2client.Acp2Error):
                 w.set_value(1, 1, 1, 2)                     # s32 not allowed
         self.assertEqual(self.fake.set_attempts, [])
+
+
+class PasteTests(unittest.TestCase):
+    """Route master pasted out of Cerebrum, with and without the header row."""
+    SRC = ("_ID\t_Mnemonic\t_Alternate Mnemonic 1\t_TL Inhibit\t_Level ID 1\t_Level ID 2\t_Level ID 3\n"
+           "2564\tDCR.IPG03A-TX04\tCC1\t0\tNMOS2|95|IPG03A|VTX-04\tNMOS2|95|IPG03A|ATX-13\tNMOS2|95|IPG03A|ATX-14\n"
+           "2565\tDCR.OTHER\tfoo\t0\t\t\t\n")
+
+    def _parse(self, text, kind=None):
+        tsv, info = normalize_paste(text, kind)
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as f:
+            f.write(tsv)
+        try:
+            return parse_list(f.name), info
+        finally:
+            Path(f.name).unlink()
+
+    def test_with_and_without_header_agree(self):
+        a, ia = self._parse(self.SRC)
+        b, ib = self._parse(self.SRC.split("\n", 1)[1], "SRC")
+        self.assertTrue(ia["with_header"])
+        self.assertFalse(ib["with_header"])
+        self.assertEqual(ib["skipped"], 1)
+        for p in (a, b):
+            self.assertEqual(p["kind"], "SRC")
+            dev = p["devices"]["IPG3A"]
+            self.assertEqual(dev["TX"][4]["refs"], [13, 14])
+            self.assertEqual(dev["TX"][4]["alt"], "CC1")
+
+    def test_rubbish_is_refused(self):
+        with self.assertRaises(ValueError):
+            normalize_paste("hello\tworld\n")
+        with self.assertRaises(ValueError):
+            normalize_paste("   ")
 
 
 if __name__ == "__main__":

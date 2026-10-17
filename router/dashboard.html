@@ -28,6 +28,23 @@
     .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
     .dot.success { background: #198754; } .dot.danger { background: #dc3545; } .dot.secondary { background: #adb5bd; }
     .alert { background: #f8d7da; color: #842029; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; white-space: pre-wrap; }
+    #staleBar { line-height: 1.9; }
+    #staleBar .btn { padding: 1px 10px; margin-left: 6px; }
+    .setup-grid { display: grid; gap: 8px; }
+    .srow { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: center; }
+    .srow > span:last-child { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .srow.top { align-items: start; } .srow.top .sl { padding-top: 4px; }
+    .pastebox { display: grid; gap: 6px; }
+    .pastebox textarea { width: 100%; box-sizing: border-box; font: 0.75rem ui-monospace, Menlo, Consolas, monospace; white-space: pre; resize: vertical; }
+    .srow .sl { font-weight: 600; font-size: 0.85rem; color: #495057; }
+    #setupBtn.active { background: #e7f1ff; border-color: #0d6efd; }
+    .flowhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+    .flowhead .chk { font-size: 0.8rem; } .ok-t { color: #0f5132; }
+    .sw { border: 1px solid #ced4da; background: #f8f9fa; color: #6c757d; border-radius: 12px; padding: 1px 10px; font-size: 0.78rem; cursor: pointer; min-width: 52px; }
+    .sw:hover:not(:disabled) { border-color: #0d6efd; }
+    .sw:disabled { opacity: 0.45; cursor: not-allowed; }
+    .sw.on-ok { background: #d1e7dd; border-color: #198754; color: #0f5132; font-weight: 600; }
+    .sw.on-danger { background: #dc3545; border-color: #dc3545; color: #fff; font-weight: 600; }
     .note { background: #fff3cd; color: #664d03; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .ok { background: #d1e7dd; color: #0f5132; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; min-width: 0; margin-bottom: 12px; }
@@ -133,7 +150,6 @@
     .presetbar { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; }
     .presetbar.on { background: #fff3e0; border: 1px solid #fd7e14; color: #8a3c00; } .presetbar.off { background: #e8f5ee; border: 1px solid #8fd1ae; color: #0f5132; }
     .chtile .pdot { position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%; background: #fd7e14; }
-    body.view-active .slots td.chg { background: transparent; }
     .ap { font-size: 0.72rem; line-height: 1.35; margin-top: 2px; }
     .ap .act { color: #146c43; } .ap .pre { color: #b45309; font-weight: 600; } .ap .eq { color: #6c757d; }
     .plan td.act { color: #146c43; } .plan td.pre { background: #fff3e0; color: #8a3c00; font-weight: 600; } .plan td.eq { color: #adb5bd; text-align: center; }
@@ -150,7 +166,7 @@
     .node { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; border: 1px solid #dee2e6; border-radius: 6px; padding: 6px 10px; font-size: 0.86rem; background: #fff; }
     .node.src { background: #e7f1ff; border-color: #9ec5fe; } .node.dly { background: #fffaeb; border-color: #f5d06f; }
     .node.idle { background: #f8f9fa; color: #6c757d; } .node.pre { box-shadow: inset 4px 0 0 #fd7e14; }
-    .node .sub { color: #6c757d; } .node .st { margin-left: auto; white-space: nowrap; font-weight: 600; }
+    .node .sub { color: #6c757d; } .node .st { margin-left: auto; white-space: normal; font-weight: 600; }
     .node input { width: 64px; padding: 2px 6px; font-weight: 700; }
     .st-ok { color: #198754; } .st-wn { color: #b45309; } .st-pre { color: #c2410c; }
     .down { color: #adb5bd; padding: 1px 0 1px 16px; line-height: 1.1; }
@@ -212,6 +228,31 @@
     .legend2 { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.8rem; color: #495057; margin: 2px 0 10px 0; align-items: center; }
     .legend2 .bar { display: inline-block; width: 4px; height: 14px; border-radius: 2px; vertical-align: -2px; margin-right: 5px; }
     .node .st { font-weight: 600; font-size: 0.8rem; }
+    .basis { border: 1px solid #cfe2ff; background: #f6f9ff; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 0.84rem; }
+    .basis .bh { font-weight: 700; color: #084298; margin-bottom: 6px; }
+    .basis .brow { display: grid; grid-template-columns: 140px 1fr; gap: 8px; padding: 3px 0; }
+    .basis .bl { color: #6c757d; }
+    .pcard .pc-why { margin-top: 6px; font-size: 0.78rem; color: #495057; }
+    .help-wrap { position: fixed; inset: 0; background: rgba(33,37,41,0.45); display: flex; justify-content: center; align-items: flex-start; z-index: 90; padding: 3vh 16px; }
+    .help { background: #fff; border-radius: 10px; width: min(900px, 100%); max-height: 94vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+    .help-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 8px; border-bottom: 1px solid #dee2e6; }
+    .help-head h2 { margin: 0; }
+    .help-toc { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px 20px; font-size: 0.82rem; border-bottom: 1px solid #f1f3f5; }
+    .help-toc a { color: #0d6efd; text-decoration: none; }
+    .help-body { overflow-y: auto; padding: 4px 20px 20px; font-size: 0.9rem; line-height: 1.55; }
+    .help-body h3 { margin: 18px 0 6px; font-size: 1rem; scroll-margin-top: 8px; }
+    .help-body ul, .help-body ol { padding-left: 20px; margin: 6px 0; }
+    .help-body code { background: #f1f3f5; padding: 0 4px; border-radius: 3px; font-size: 0.82rem; }
+    .help-tab { border-collapse: collapse; width: 100%; font-size: 0.84rem; margin: 6px 0; }
+    .help-tab th, .help-tab td { border: 1px solid #dee2e6; padding: 5px 8px; text-align: left; vertical-align: top; overflow-wrap: anywhere; white-space: normal; }
+    .help-tab.three { table-layout: fixed; } .help-tab.three td:first-child, .help-tab.three th:first-child { width: 20%; }
+    .help-body { overflow-x: hidden; }
+    .help-tab th { background: #f8f9fa; }
+    .cbox-wrap { position: fixed; inset: 0; background: rgba(33,37,41,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .cbox { background: #fff; border-radius: 10px; padding: 18px 20px; max-width: 560px; width: calc(100% - 32px); box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+    .cbox-text { white-space: pre-wrap; font-size: 0.9rem; line-height: 1.5; max-height: 60vh; overflow-y: auto; }
+    .cbox-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+    .cbox-btns .btn { padding: 6px 16px; font-size: 0.9rem; }
     .hidden { display: none !important; }
     .drop-hint { position: fixed; inset: 0; background: rgba(13,110,253,0.12); border: 3px dashed #0d6efd; display: none; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 600; color: #0d6efd; z-index: 50; }
     body.filedrag .drop-hint { display: flex; }
@@ -220,11 +261,147 @@
 <body>
 <header>
     <span class="title">Neuron Audio Router</span>
-    <span id="summaryBar"></span>
     <span class="badge light" id="writeBadge" title="Take/Undo only write to devices with &quot;write&quot;: true in devices.json">ACP2 read-only</span>
-    <button class="btn" id="pauseBtn" style="margin-left:auto">…</button>
-    <span class="muted small" id="lastUpdate"></span>
+    <span id="offlineBadge"></span>
+    <button class="btn" id="helpBtn" style="margin-left:auto" title="How the tool works">? Help</button>
+    <button class="btn" id="setupBtn" title="Polling, SRC/DST lists, data source, devices">⚙ Setup</button>
 </header>
+
+<!-- ================= HELP ================= -->
+<div class="help-wrap hidden" id="helpWrap"><div class="help" role="dialog" aria-label="Help">
+    <div class="help-head"><h2>How the Neuron Audio Router works</h2><button class="btn" id="helpClose">Close ✕</button></div>
+    <nav class="help-toc">
+        <a href="#h-what">What it does</a><a href="#h-flow">Workflow</a><a href="#h-assisted">How assisted mode finds SRC / DST</a>
+        <a href="#h-take">Preset, TAKE, Undo</a><a href="#h-check">Check live</a><a href="#h-manual">Manual mode</a>
+        <a href="#h-setup">Setup and lists</a><a href="#h-safety">Safety</a><a href="#h-ids">ID ranges</a><a href="#h-limits">Good to know</a>
+    </nav>
+    <div class="help-body">
+    <h3 id="h-what">What it does</h3>
+    <p>Graphical audio routing for EVS Neuron IPG units (Bridge / Convert IP), replacing the number entry of the Audio Stream Shuffler.
+       The service talks to the devices over <b>ACP2</b> (TCP 2072). The browser only talks to the service, never to a device.</p>
+    <ul>
+        <li><b>Sources (left)</b>: IP In streams, de-embedders (SDI in), delay banks, MADI In.</li>
+        <li><b>Destinations (right)</b>: embedders (SDI out), delay banks, IP Out streams, MADI Out – each with Input Main and Input Backup.</li>
+        <li>Names come from the Cerebrum route master (SRC / DST lists), so you see “NEURON 3A IP07” instead of bare numbers.</li>
+    </ul>
+
+    <h3 id="h-flow">Workflow</h3>
+    <ol>
+        <li><b>Pick a device</b> in the device list. Its routing tree is read once over ACP2 (“Read from device”, ~5 min, read-only) and stored.</li>
+        <li><b>1 Video path</b>: click a tile A1 … H4 (= channel 1 … 32). The badges show where Main | Backup get their video: <span class="case case-A">IP</span> IP input,
+            <span class="case case-B">SDI</span> SDI input, <span class="case case--">P</span> Pattern (not used). The left bar is the check result.</li>
+        <li><b>2 Source</b> and <b>3 Signal flow</b> show what the device does now and what the template wants, node by node, with the delay.</li>
+        <li><b>4 Add to Preset</b>: the checks and the exact values that would change. “Add to Preset” stages them – nothing is written yet.</li>
+        <li><b>5 Preset</b>: everything staged, grouped, with a TAKE per row.</li>
+        <li><b>6 TAKE</b> writes the Preset to the device; <b>Undo last Take</b> restores the values from before it.</li>
+    </ol>
+
+    <h3 id="h-assisted">How assisted mode finds SRC / DST</h3>
+    <p>Nothing is guessed from numbering. Every proposal is worked out from the <b>real allocation</b>: the device's own settings plus the Cerebrum route master.
+       Main and Backup are resolved <b>separately</b>, so IP/IP, SDI/SDI and mixed (e.g. SDI main, IP backup) all work.</p>
+    <table class="help-tab three">
+        <tr><th>Step</th><th>Where it comes from</th><th>Result</th></tr>
+        <tr><td>Video input of the path</td><td>Device: PROCESSING VIDEO › PATH › Main Input / Backup Input</td><td>“Stream x” → IP, “SDI N” → SDI, “Pattern” → P</td></tr>
+        <tr><td><b>IP</b>: which IP In</td><td>DST list: the channel's RX row, e.g. <code>DCR.IPG03A-RX07</code> → ARX-25, 26, 27, 28</td>
+            <td><b>IP In = first ARX</b> (here IP In 25). The “Stream 9” in the video dropdown is only a list index, not the stream number.</td></tr>
+        <tr><td><b>IP</b>: delay</td><td>Stream Delay on that IP In</td><td>target 19.5 ms</td></tr>
+        <tr><td><b>SDI</b>: which de-embedder</td><td>Device: the de-embedder that belongs to SDI N</td><td>De-Emb of that SDI input (16 ch)</td></tr>
+        <tr><td><b>SDI</b>: which delay group</td><td>Device: 1. the group this channel already uses, else 2. fixed port scheme SDI N → group N, or 3. a group you pick</td>
+            <td>Delay group g = 8 banks (16 mono ch), first bank B = (g−1)·8+1; target 18.0 ms</td></tr>
+        <tr><td>Embedder</td><td>Video path letter</td><td>Embedder A1 … H4, Input Main / Backup from the side's source (IP In or delay group)</td></tr>
+        <tr><td><b>SDI</b>: IP output</td><td>SRC list: the channel's TX row, e.g. <code>DCR.IPG03A-TX07</code> → ATX-25 …</td>
+            <td><b>IP Out = first ATX</b>, fed from the same delay group (Main + Backup)</td></tr>
+    </table>
+    <p>“Worked out from the real allocation” at the top of the signal flow shows these sources for the selected path. If a list row is missing,
+       the tool says so instead of guessing.</p>
+
+    <h3 id="h-take">Preset, TAKE, Undo</h3>
+    <ul>
+        <li><b>Preset</b> = staged values (orange). They live in your browser until TAKE or “Discard all”.</li>
+        <li><b>TAKE</b> (whole Preset, one video path, or one row): the service first reads the current values. If the device changed since you looked, it refuses.
+            It saves those values for Undo, writes, and <b>reads every value back</b>. It stops at the first error.</li>
+        <li><b>Undo last Take</b> writes the saved values back, again with read-back.</li>
+        <li>Every Take / Undo is logged per device (<code>live/&lt;device&gt;.takes.jsonl</code>).</li>
+    </ul>
+
+    <h3 id="h-check">Check live</h3>
+    <p>The view shows the stored routing read (the banner says how old it is). <b>Check live</b> (in the signal flow and in step 4) reads only the objects of the
+       selected path again over ACP2, plus NMOS receiver state. The view updates with what was read and says how many values had changed.
+       It is read-only and takes a few seconds.</p>
+
+    <h3 id="h-manual">Manual mode</h3>
+    <p>Everything, with no template: pick any source block on the left and any destination block on the right, then click slots to assign.
+       Same Preset / TAKE / Undo as assisted mode.</p>
+
+    <h3 id="h-setup">Setup and lists</h3>
+    <ul>
+        <li><b>Paste route master</b>: in Cerebrum select all rows of the route master, copy, paste into Setup, “Check”, then “Use as list”.
+            <b>SRC</b> (sources) gives the IP Out names via TX rows / ATX streams; <b>DST</b> (destinations) gives the IP In names via RX rows / ARX streams.
+            You need both. A new paste replaces the old list of the same kind (kept in <code>lists/replaced</code>).</li>
+        <li>Or upload the list files (.rtf / .csv / .tsv / .txt), or drop them on the page.</li>
+        <li><b>Data source</b>: “live device” (the ACP2 read) or an offline .cbf export to look at. A .cbf cannot be taken.</li>
+        <li><b>Polling</b>: one tiny ACP2 request per released device every 30 s, for the online/offline status.</li>
+    </ul>
+
+    <h3 id="h-safety">Safety</h3>
+    <ul>
+        <li>Only devices with <code>"poll": true</code> in devices.json are contacted at all.</li>
+        <li>Writing needs <code>"write": true</code> for that device (the <b>Write</b> switch in the router). The red badge at the top lists every device with writing on.</li>
+        <li>Every TAKE / Undo asks for confirmation and lists exactly what will be written.</li>
+        <li>Only one full routing read runs at a time, so the devices are never flooded.</li>
+    </ul>
+
+    <h3 id="h-ids">ID ranges (audio source IDs on the Neuron)</h3>
+    <table class="help-tab">
+        <tr><td>1 – 2048</td><td>IP In 16ch streams (16 IDs per stream)</td></tr>
+        <tr><td>2049 – 3072</td><td>IP In 64ch streams</td></tr>
+        <tr><td>3073 – 3584</td><td>De-embedders (SDI in), 16 per SDI input</td></tr>
+        <tr><td>3585 – 4096</td><td>Delay banks, 256 banks × 2 ch</td></tr>
+        <tr><td>4097 – 4352</td><td>MADI In</td></tr>
+    </table>
+    <p>Mono channel IDs are shown in brackets next to the block, e.g. IP In 125 = (1985–2000).</p>
+
+    <h3 id="h-limits">Good to know</h3>
+    <ul>
+        <li><b>Cerebrum GUI shows old values</b> after a TAKE until it re-reads the device. The device has the new value; trust Check live.</li>
+        <li>A Stream Delay only acts when the IP In receives media and its “Maximum Stream Delay” is above 0. The signal flow warns otherwise.</li>
+        <li>Delay limits: the device's own min / max apply; if it reports none, Stream Delay up to 5000 ms and bank delay up to 3000 ms.</li>
+    </ul>
+    </div>
+</div></div>
+
+<!-- ================= SETUP ================= -->
+<section class="card hidden" id="setupCard">
+    <h2>Setup</h2>
+    <div class="setup-grid">
+        <div class="srow"><span class="sl">Devices</span><span><span id="summaryBar"></span> <span class="small muted">click to filter the device list</span></span></div>
+        <div class="srow"><span class="sl">Polling</span><span><button class="btn" id="pauseBtn">…</button> <span class="muted small" id="lastUpdate"></span></span></div>
+        <div class="srow"><span class="sl">SRC/DST lists</span><span><span class="small" id="listsInfo"></span>
+            <label class="btn" title="Cerebrum SRC or DST route list (.rtf/.csv/.tsv/.txt)">Upload SRC/DST list<input type="file" id="listInput" accept=".rtf,.csv,.tsv,.txt" class="hidden" multiple></label>
+            <span class="small muted" id="namesInfo"></span></span></div>
+        <div class="srow top"><span class="sl">Paste route master</span><div class="pastebox">
+            <div class="small muted">In Cerebrum open the route master (Sources or Destinations), select all rows (Ctrl+A), copy (Ctrl+C) and paste here.
+                With or without the header row. One list at a time: <b>SRC</b> gives the IP Out names (TX rows, ATX streams), <b>DST</b> the IP In names (RX rows, ARX streams).</div>
+            <textarea id="pasteText" rows="5" spellcheck="false" placeholder="2564&#9;DCR.IPG03A-TX04&#9;CC1&#9;…&#9;NMOS2|95|IPG03A|VTX-04&#9;…&#9;NMOS2|95|IPG03A|ATX-13 …"></textarea>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+                <span class="small"><b>This is</b></span>
+                <div class="field-toggle" id="pasteKind"><button data-k="">detect</button><button data-k="SRC">SRC</button><button data-k="DST">DST</button></div>
+                <button class="btn" id="pasteCheck">Check</button>
+                <button class="btn primary" id="pasteSave" disabled>Use as list</button>
+                <span class="small muted" id="pasteSize"></span>
+            </div>
+            <div id="pasteResult"></div>
+        </div></div>
+        <div class="srow"><span class="sl">Data source</span><span><select id="cbfSelect" title="Data source: the live ACP2 read, or an offline .cbf export"></select>
+            <span class="small muted">live = ACP2 read of the device; a .cbf export is offline and cannot be taken</span></span></div>
+        <div class="srow"><span class="sl">Add device</span><span><form id="addDeviceForm">
+            <input type="text" id="newIp" placeholder="Device IP" required style="width:120px">
+            <input type="text" id="newName" placeholder="Name (e.g. IPG05A)" required style="width:140px">
+            <input type="text" id="newTag" placeholder="Tag (DCR/DCB)" style="width:90px">
+            <button type="submit" class="btn">+ Device</button>
+        </form></span></div>
+    </div>
+</section>
 
 <div id="msg"></div>
 
@@ -239,14 +416,6 @@
     <div class="toolbar">
         <input type="text" id="fleetFilter" placeholder="Filter: name, IP, tag" style="width:200px">
         <label class="small"><input type="checkbox" id="onlyProblems"> show only problems</label>
-        <span class="small muted" id="listsInfo"></span>
-        <label class="btn" title="Cerebrum SRC or DST route list (.rtf/.csv/.tsv/.txt)">Upload SRC/DST list<input type="file" id="listInput" accept=".rtf,.csv,.tsv,.txt" class="hidden" multiple></label>
-        <form id="addDeviceForm">
-            <input type="text" id="newIp" placeholder="Device IP" required style="width:120px">
-            <input type="text" id="newName" placeholder="Name (e.g. IPG05A)" required style="width:140px">
-            <input type="text" id="newTag" placeholder="Tag (DCR/DCB)" style="width:90px">
-            <button type="submit" class="btn">+ Device</button>
-        </form>
     </div>
     <div class="chips" id="groupBar"></div>
     <div class="table-wrap"><table>
@@ -257,10 +426,10 @@
             <th class="sortable" data-key="tag">Tag</th>
             <th class="sortable" data-key="type">Type</th>
             <th class="sortable" data-key="status">Status</th>
-            <th class="sortable" data-key="fw">FW</th>
-            <th class="sortable" data-key="snapshot">Routing read</th>
             <th class="sortable" data-key="poll" title="Released for device access (devices.json poll)">Access</th>
             <th class="sortable" data-key="write" title="Writing (Take) allowed (devices.json write)">Write</th>
+            <th class="sortable" data-key="fw">FW</th>
+            <th class="sortable" data-key="snapshot">Routing read</th>
         </tr></thead>
         <tbody id="fleetBody"></tbody>
     </table></div>
@@ -271,14 +440,13 @@
 <section id="routerSection" class="hidden">
     <div class="card">
         <h2 id="routerTitle">Router</h2>
+        <div id="staleBar" class="hidden"></div>
         <div class="toolbar">
             <span class="small"><b>Mode</b></span>
             <div class="field-toggle" id="modeToggle"><button data-m="assisted">Assisted</button><button data-m="manual">Manual</button></div>
-            <span class="small"><b>View</b></span>
-            <div class="field-toggle viewtog" id="viewToggle" title="ACTIVE = what the device runs now · PRESET = active + your staged changes (what TAKE will activate)"><button data-v="active">Active</button><button data-v="preset">Preset</button></div>
+            <span class="small"><b>Write</b></span>
+            <button class="btn" id="writeToggle" title="Allow TAKE / Undo to write to this device (devices.json &quot;write&quot;)">…</button>
             <span id="presetBar" class="presetbar off"></span>
-            <span style="margin-left:auto" class="small muted" id="namesInfo"></span>
-            <select id="cbfSelect" title="Data source: the live ACP2 read, or an offline .cbf export"></select>
         </div>
         <h3 class="step" id="stepPaths" title="Per side Main/Backup: IP = from an IP input, SDI = from an SDI input via delay bank, P = Pattern (unused). Colour = check status, orange dot = preset staged.">Video paths</h3>
         <div class="legend2">
@@ -326,7 +494,7 @@
             <div class="route-cols">
                 <div id="routeLeft"></div>
                 <div>
-                    <h3 style="margin-top:0">Preset – what TAKE will write <span class="badge primary" id="pendCount" title="single values">0</span>
+                    <h3 style="margin-top:0" class="step"><span id="presetHead">Preset – what TAKE will write</span> <span class="badge primary" id="pendCount" title="single values">0</span>
                         <button class="btn" id="undoEditBtn" disabled title="Undo the last edit (Ctrl/Cmd+Z)">Undo edit</button>
                         <button class="btn danger" id="discardBtn" style="margin-left:auto" disabled>Discard all</button></h3>
                     <div id="pendWarn"></div>
@@ -355,6 +523,26 @@
 <script>
 "use strict";
 // ================= helpers =================
+// In-page confirmation dialog. window.confirm() is not shown by every browser
+// (the desktop app's browser pane answers it with "cancel" without a dialog).
+function confirmBox(text, okLabel = "OK", danger = false) {
+    return new Promise(resolve => {
+        const wrap = document.createElement("div");
+        wrap.className = "cbox-wrap";
+        wrap.innerHTML = `<div class="cbox" role="dialog" aria-modal="true">
+            <div class="cbox-text"></div>
+            <div class="cbox-btns"><button class="btn" data-a="no">Cancel</button>
+            <button class="btn ${danger ? "take" : "primary"}" data-a="yes"></button></div></div>`;
+        wrap.querySelector(".cbox-text").textContent = text;
+        wrap.querySelector('[data-a="yes"]').textContent = okLabel;
+        const done = v => { wrap.remove(); document.removeEventListener("keydown", key); resolve(v); };
+        const key = e => { if (e.key === "Escape") done(false); };
+        wrap.addEventListener("click", e => { const a = e.target.closest("[data-a]"); if (a) done(a.dataset.a === "yes"); else if (e.target === wrap) done(false); });
+        document.addEventListener("keydown", key);
+        document.body.appendChild(wrap);
+        wrap.querySelector('[data-a="no"]').focus();
+    });
+}
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 function msg(text, cls = "alert") { $("msg").innerHTML = text ? `<div class="${cls}">${esc(text)}</div>` : ""; }
@@ -370,6 +558,29 @@ const post = (path, body) => api(path, { method: "POST", headers: { "Content-Typ
 const norm = n => String(n || "").toUpperCase().replace(/^(DC[RB])\./, "").replace(/[^A-Z0-9]/g, "").replace(/(?<=[A-Z])0+(?=\d)/g, "");
 function rows(table) { return table.rows.map(r => Object.fromEntries(table.cols.map((c, i) => [c, r[i]]))); }
 const blockKey = (kind, block) => `${kind}:${block}`;
+// Banner under the router title: the routing shown comes from a stored read; say so loudly when it is old
+const STALE_MIN = 15;
+function renderStale() {
+    const el = $("staleBar"), i = R.info;
+    if (!el || !i || i.source !== "live" || !R.device) { el && el.classList.add("hidden"); return; }
+    const d = (F.state?.devices || []).find(x => x.name === R.device), j = d?.job;
+    const age = (Date.now() - new Date(i.read_at)) / 60000;
+    let h = "";
+    // a TAKE also touches the snapshot file, so only a finished full read counts as "newer"
+    const running = j && j.state === "running";
+    if (R.readSeen === "running" && j && j.state === "done") { R.readSeen = null; openDevice(R.device); return; }
+    R.readSeen = running ? "running" : R.readSeen;
+    if (running) h = `<b>Reading ${esc(R.device)} …</b> ${j.progress} objects so far – the view reloads when it is done.`;
+    else if (age > STALE_MIN)
+        h = `<b>Shown routing was read ${esc(ago(i.read_at))}.</b> Changes made since (Cerebrum, device GUI) are not visible here. TAKE always re-reads the values it writes. <button class="btn" id="staleRead">Re-read device (~5 min, read-only)</button>`;
+    el.className = h ? "note" : "hidden"; el.innerHTML = h;
+}
+$("staleBar").onclick = async e => {
+    if (e.target.id !== "staleRead") return;
+    if (!(await confirmBox(`Re-read the routing tree of ${R.device} over ACP2?\n\nRead-only (get object only), about 41,000 requests one at a time, ~5 minutes. Nothing is written.`, "Read"))) return;
+    try { await post("/api/read", { device: R.device }); pollState(); } catch (err) { msg(err.message); }
+};
+setInterval(renderStale, 5000);
 const ago = iso => { if (!iso) return "never"; const s = (Date.now() - new Date(iso)) / 1000; return s < 90 ? `${Math.round(s)} s ago` : s < 5400 ? `${Math.round(s / 60)} min ago` : s < 129600 ? `${Math.round(s / 3600)} h ago` : iso.replace("T", " ").slice(0, 16); };
 
 // ================= FLEET =================
@@ -385,6 +596,7 @@ async function pollState() {
     try {
         F.state = await api("/api/state");
         renderFleet();
+        if (R.info) { renderWriteToggle(); renderPending(); }
         if (R.device) refreshJob();
     } catch (e) { $("lastUpdate").textContent = "service not reachable: " + e.message; }
 }
@@ -398,6 +610,7 @@ function renderFleet() {
         + ` <span class="badge light click ${!F.filter ? "active" : ""}" data-f="">${devs.length} total</span>`;
     const writers = devs.filter(d => d.write && d.poll).map(d => d.name);
     $("writeBadge").className = "badge " + (writers.length ? "danger" : "light");
+    $("offlineBadge").innerHTML = cnt.offline ? `<span class="badge danger" title="released devices that do not answer – see Setup">${cnt.offline} offline</span>` : "";
     $("writeBadge").textContent = writers.length ? `WRITE ON: ${writers.join(", ")}` : "ACP2 read-only";
     $("pauseBtn").textContent = st.paused ? "▶ Resume polling" : "⏸ Pause polling";
     $("pauseBtn").classList.toggle("danger", st.paused);
@@ -429,10 +642,10 @@ function renderFleet() {
         return `<tr class="datarow ${open ? "open" : ""} ${R.device === d.name ? "sel" : ""} ${s.key === "offline" ? "offline" : ""}" data-dev="${esc(d.name)}">
             <td><span class="chev">▸</span></td><td><b>${esc(d.name)}</b></td><td class="mono">${esc(d.ip)} ${red} ${blue}</td>
             <td>${esc(d.tag)}</td><td>${esc(d.type)}</td><td><span class="badge ${s.cls}">${esc(s.label)}</span>${job}</td>
+            <td><button class="sw ${d.poll ? "on-ok" : ""}" data-act="poll" data-dev="${esc(d.name)}" title="${d.poll ? "Released: the service talks to this device. Click to withdraw access (also turns writing off)." : "Not released: the service never contacts this device. Click to release it."}">${d.poll ? "● on" : "off"}</button></td>
+            <td><button class="sw ${d.write ? "on-danger" : ""}" data-act="write" data-dev="${esc(d.name)}" ${d.poll || d.write ? "" : "disabled"} title="${d.write ? "Writing ON: TAKE / Undo write to this device. Click to turn off." : d.poll ? "Writing off. Click to allow TAKE / Undo to write to this device." : "Release access first"}">${d.write ? "● on" : "off"}</button></td>
             <td>${s.key === "offline" ? "offline" : esc(d.config?.firmware || "–")}</td>
-            <td>${d.snapshot ? esc(ago(d.snapshot)) : '<span class="muted">not read</span>'}</td>
-            <td>${d.poll ? '<span class="badge success">yes</span>' : '<span class="badge light">no</span>'}</td>
-            <td>${d.write ? '<span class="badge danger">yes</span>' : '<span class="badge light">no</span>'}</td></tr>`
+            <td>${d.snapshot ? esc(ago(d.snapshot)) : '<span class="muted">not read</span>'}</td></tr>`
             + (open ? `<tr class="detail"><td></td><td colspan="9">${fleetDetail(d)}</td></tr>` : "");
     }).join("") || `<tr><td colspan="10" class="muted">No device matches.</td></tr>`;
 }
@@ -449,8 +662,20 @@ function fleetDetail(d) {
             <button class="btn" data-act="read" data-dev="${esc(d.name)}" ${d.poll && !(j && j.state === "running") ? "" : "disabled"}
                 title="Read the routing tree over ACP2 (read-only, about 41,000 requests, ~5 min)">Read from device</button>
             ${j ? `<span class="small">${j.state === "running" ? `reading… ${j.progress} objects` : j.state === "done" ? `last read: ${j.progress} objects in ${j.seconds} s` : `<span class="warn">read failed: ${esc(j.error)}</span>`}</span>` : ""}
-            ${!d.poll ? '<span class="small muted">Not released: set "poll": true in devices.json to allow access.</span>' : ""}
+            ${!d.poll ? '<span class="small muted">Not released: switch “Access” on to allow reading this device.</span>' : ""}
         </div></div>`;
+}
+// Access (devices.json "poll") and Write switches in the device list. Turning something ON asks first.
+async function toggleDeviceFlag(flag, name) {
+    const d = (F.state?.devices || []).find(x => x.name === name); if (!d) return;
+    const on = !d[flag];
+    if (flag === "poll" && on && !(await confirmBox(`Release ${d.name} (${d.ip}) for device access?\n\nThe service then sends one small read-only ACP2 request every 30 s (online check) and you can read its routing. Nothing is written.`, "Release access"))) return;
+    if (flag === "poll" && !on && d.write && !(await confirmBox(`Withdraw access to ${d.name}?\n\nWriting is ON for it and will be turned off too.`, "Withdraw access"))) return;
+    if (flag === "write" && on && !(await confirmBox(`Enable WRITING to ${d.name} (${d.ip}) – LIVE DEVICE?\n\nTAKE and Undo will then write routing and delay values over ACP2.`, "Enable writing", true))) return;
+    try {
+        await post(flag === "poll" ? "/api/devices/access" : "/api/devices/write", flag === "poll" ? { device: d.name, poll: on } : { device: d.name, write: on });
+        await pollState(); if (R.info) renderAll();
+    } catch (e) { msg(e.message); }
 }
 $("summaryBar").onclick = e => { const b = e.target.closest("[data-f]"); if (b) { F.filter = b.dataset.f || null; renderFleet(); } };
 $("groupBar").onclick = e => { const b = e.target.closest("[data-g]"); if (b) { F.group = b.dataset.g; store("nar.group", F.group); renderFleet(); } };
@@ -461,8 +686,9 @@ $("fleetBody").onclick = async e => {
     if (act) {
         const dev = act.dataset.dev;
         if (act.dataset.act === "open") return openDevice(dev);
+        if (act.dataset.act === "poll" || act.dataset.act === "write") return toggleDeviceFlag(act.dataset.act, dev);
         if (act.dataset.act === "read") {
-            if (!confirm(`Read the routing tree of ${dev} over ACP2?\n\nRead-only (get object only), about 41,000 requests one at a time, ~5 minutes.`)) return;
+            if (!(await confirmBox(`Read the routing tree of ${dev} over ACP2?\n\nRead-only (get object only), about 41,000 requests one at a time, ~5 minutes.`, "Read"))) return;
             try { await post("/api/read", { device: dev }); msg(`Reading ${dev} …`, "note"); pollState(); } catch (err) { msg(err.message); }
         }
         return;
@@ -470,12 +696,19 @@ $("fleetBody").onclick = async e => {
     const tr = e.target.closest("tr.datarow"); if (!tr) return;
     F.open = F.open === tr.dataset.dev ? null : tr.dataset.dev; renderFleet();
 };
+function showHelp(on) { $("helpWrap").classList.toggle("hidden", !on); }
+$("helpBtn").onclick = () => showHelp(true);
+$("helpClose").onclick = () => showHelp(false);
+$("helpWrap").onclick = e => { if (e.target.id === "helpWrap") showHelp(false); const a = e.target.closest(".help-toc a"); if (a) { e.preventDefault(); document.querySelector(a.getAttribute("href")).scrollIntoView({ behavior: "smooth" }); } };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("helpWrap").classList.contains("hidden")) showHelp(false); });
+$("setupBtn").onclick = () => { const h = $("setupCard").classList.toggle("hidden"); $("setupBtn").classList.toggle("active", !h); store("nar.setup", !h); };
+if (recall("nar.setup")) { $("setupCard").classList.remove("hidden"); $("setupBtn").classList.add("active"); }
 $("fleetToggle").onclick = () => setFleetCollapsed(!$("fleetCard").classList.contains("collapsed"));
 $("fleetQuick").onclick = e => { const q = e.target.closest("[data-q]"); if (!q) return;
     const d = (F.state?.devices || []).find(x => x.name === q.dataset.q);
     if (d && d.snapshot) openDevice(d.name); else { F.open = q.dataset.q; setFleetCollapsed(false); renderFleet(); } };
 if (recall("nar.fleetCollapsed")) $("fleetCard").classList.add("collapsed");
-$("pauseBtn").onclick = async () => { const p = !F.state?.paused; if (p || confirm("Resume polling the released devices?")) { await post("/api/polling", { paused: p }); pollState(); } };
+$("pauseBtn").onclick = async () => { const p = !F.state?.paused; if (p || await confirmBox("Resume polling the released devices?", "Resume")) { await post("/api/polling", { paused: p }); pollState(); } };
 $("addDeviceForm").onsubmit = async e => {
     e.preventDefault();
     try { await post("/api/devices", { ip: $("newIp").value, name: $("newName").value, tag: $("newTag").value }); e.target.reset(); msg("Device added (poll = no, write = no). Release it in devices.json.", "ok"); pollState(); }
@@ -488,6 +721,38 @@ async function uploadLists(files) {
         msg("Loaded " + done.join(", "), "ok"); pollState(); if (R.device || R.file) reloadModel();
     } catch (err) { msg("List upload failed: " + err.message); }
 }
+// ----- paste route master (Setup) -----
+const P = { kind: "", checked: null };
+function renderPasteKind() { for (const b of $("pasteKind").children) b.classList.toggle("active", b.dataset.k === P.kind); }
+renderPasteKind();
+$("pasteKind").onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; P.kind = b.dataset.k; P.checked = null; $("pasteSave").disabled = true; $("pasteResult").innerHTML = ""; renderPasteKind(); };
+$("pasteText").oninput = () => { const t = $("pasteText").value; P.checked = null; $("pasteSave").disabled = true; $("pasteResult").innerHTML = "";
+    $("pasteSize").textContent = t ? `${t.split("\n").filter(l => l.trim()).length} lines` : ""; };
+async function pasteSend(save) {
+    const text = $("pasteText").value;
+    if (!text.trim()) { $("pasteResult").innerHTML = '<div class="note">Paste the route master first.</div>'; return; }
+    $("pasteResult").innerHTML = `<div class="small muted">${save ? "Saving" : "Checking"} …</div>`;
+    try {
+        const r = await post("/api/paste-list", { text, kind: P.kind || null, save });
+        const lab = r.kind === "SRC" ? "SRC – sources: IP Out names (TX rows / ATX)" : "DST – destinations: IP In names (RX rows / ARX)";
+        const body = `<b>${esc(lab)}</b><br>${r.rows} rows${r.with_header ? " (with header)" : ` (no header – read by content, ${r.skipped} rows without NMOS references ignored)`} ·
+            ${r.devices} device(s) · ${r.channels} channel rows · ${r.streams} audio streams<br><span class="muted">${esc(r.device_names.join(", "))}</span>`;
+        if (save) {
+            $("pasteResult").innerHTML = `<div class="ok">Saved as <b>${esc(r.saved)}</b> and in use now.${r.replaced.length ? ` Replaced (moved to lists/replaced): ${esc(r.replaced.join(", "))}.` : ""}<br>${body}</div>`;
+            $("pasteText").value = ""; $("pasteSize").textContent = ""; $("pasteSave").disabled = true;
+            pollState(); if (R.device || R.file) reloadModel();
+        } else {
+            $("pasteResult").innerHTML = `<div class="${r.devices ? "ok" : "note"}">${body}</div>`;
+            P.checked = r.kind; $("pasteSave").disabled = !r.devices;
+            $("pasteSave").textContent = `Use as ${r.kind} list`;
+        }
+    } catch (err) { $("pasteResult").innerHTML = `<div class="alert">${esc(err.message)}</div>`; }
+}
+$("pasteCheck").onclick = () => pasteSend(false);
+$("pasteSave").onclick = async () => {
+    if (!(await confirmBox(`Use the pasted text as the ${P.checked} list?\n\nIt replaces the current ${P.checked} list(s) for all devices (the old files are kept in lists/replaced). The device is not touched.`, `Use as ${P.checked} list`))) return;
+    pasteSend(true);
+};
 $("listInput").onchange = e => { uploadLists([...e.target.files]); e.target.value = ""; };
 document.addEventListener("dragover", e => { if (!R.drag && e.dataTransfer.types.includes("Files")) { e.preventDefault(); document.body.classList.add("filedrag"); } });
 document.addEventListener("dragleave", e => { if (!e.relatedTarget) document.body.classList.remove("filedrag"); });
@@ -510,8 +775,8 @@ const R = {
     src: new Map(), srcBlocks: new Map(), dst: new Map(), dstBlocks: new Map(),
     pending: new Map(), history: [], field: "main", mode: recall("nar.mode") || "assisted",
     srcCat: "ipin16", dstCat: "emb", selSrcBlock: null, selDstBlock: null, selSrcId: null, selSlot: null, selCh: null,
-    drag: null, withDelay: true, checks: {},   // channel n -> last live check result html
-    view: recall("nar.view") || "preset",                   // "active" = device as it runs, "preset" = active + staged changes
+    drag: null, withDelay: true, checks: {}, checked: {}, checking: null, checkErr: null,   // channel n -> last live check result html
+    view: "preset",   // tables show Active and the staged Preset side by side; there is no separate view switch any more
 };
 // Delay targets (docs/device-status.md): Case A = Stream Delay on the IP input, Case B = Delay on the 8 banks.
 const DELAY_DEFAULT = { A: 19.5, B: 18.0 };
@@ -638,6 +903,7 @@ function loadModel(j) {
     $("namesInfo").innerHTML = !(n.lists || []).length ? "no SRC/DST list – names missing" : n.device ? `names: ${esc(n.lists.join(", "))} → <b>${esc(n.device)}</b>` : `<span class="warn">device not found in ${esc(n.lists.join(", "))}</span>`;
     $("applyLive").classList.toggle("hidden", i.source !== "live"); $("applyCbf").classList.toggle("hidden", i.source === "live");
     $("routerSection").classList.remove("hidden");
+    renderStale();
     renderAll();
 }
 async function loadCbfList() {
@@ -649,7 +915,6 @@ $("cbfSelect").onchange = e => { if (e.target.value) { R.file = e.target.value; 
 // ----- editing -----
 function persist() { store("nar.pending." + (R.device ? "dev:" + R.device : "cbf:" + R.file), R.pending.size ? [...R.pending] : null); }
 function setValues(list) {
-    if (R.view !== "preset") { R.view = "preset"; store("nar.view", "preset"); }   // editing always happens in the preset
     const undo = [];
     for (const [key, field, v] of list) {
         const pk = `${key}|${field}`; undo.push([pk, R.pending.get(pk)]);
@@ -672,28 +937,31 @@ function renderMode() {
     document.body.classList.toggle("mode-manual", R.mode === "manual");
     const A = R.mode === "assisted", num = k => A ? `<span class="num">${k}</span>` : "";
     $("stepPaths").innerHTML = `${num(1)}Video path${A ? "" : "s"}`;
-    $("activateHead").innerHTML = `${num(5)}Activate`;
+    $("presetHead").innerHTML = `${num(5)}Preset – review what TAKE will write`;
+    $("activateHead").innerHTML = `${num(6)}TAKE – activate`;
     $("srcHead").innerHTML = `${num(2)}${A ? "Source" : "Sources"}`;
     $("dstHeadText").innerHTML = `${num(3)}${A ? "Signal flow" : "Destinations"}`;
     if (!A) $("srcBrowse").open = true; else if (R.browseOpen !== undefined) $("srcBrowse").open = R.browseOpen; else $("srcBrowse").open = false;
-    for (const b of $("viewToggle").children) b.classList.toggle("active", b.dataset.v === R.view);
-    document.body.classList.toggle("view-active", R.view === "active");
     const np = R.pending.size;
     $("presetBar").className = "presetbar " + (np ? "on" : "off");
-    $("presetBar").innerHTML = np ? `PRESET: <b>${np}</b> change(s) staged – ${R.view === "active" ? "showing ACTIVE (device now)" : "showing PRESET (after TAKE)"}` : "Preset = Active (nothing staged)";
+    $("presetBar").innerHTML = np ? `Preset: <b>${np}</b> value(s) staged – not on the device until TAKE (orange = staged)`
+                                  : "Nothing staged – everything shown is what the device runs now";
+    renderWriteToggle();
     $("dstFilter").classList.toggle("hidden", R.mode !== "manual");
 
 }
 function caseCls(c) { return c === "A" ? "case-A" : c === "B" ? "case-B" : "case--"; }
 // shown names: Case A = IP, Case B = SDI, unused (Pattern) = P   (internal codes stay A / B)
 function caseLabel(c) { return c === "A" ? "IP" : c === "B" ? "SDI" : "P"; }
+// "NEURON 3A IP07" -> "IP07": the device prefix repeats on every tile and gets cut off
+const tileName = s => String(s || "").replace(/^NEURON\s+\S+\s+/i, "");
 function renderChGrid() {
     $("chGrid").innerHTML = R.channels.map(c => {
         const a = R.analysis[c.n] || {}; const [m, b] = (a.case || "-/-").split("/");
         const nm = chName(c.n);
         const hasPreset = [...R.pending.keys()].some(pk => pk.startsWith(`emb:${c.letter}:`) || ((a.changes || []).some(x => pk === `${x.key}|${x.field}`)));
         return `<div class="chtile st-${a.status || "info"} ${R.selCh === c.n ? "sel" : ""}" data-n="${c.n}" title="${esc(`${c.letter} (${c.n}) · video ${c.main} / ${c.backup}\n${nm.long}\nstatus ${a.status || "?"}`)}">
-            ${hasPreset ? '<span class="pdot" title="preset changes staged"></span>' : ""}<b>${c.letter}</b> <span class="case ${caseCls(m)}">${caseLabel(m)}</span><span class="case ${caseCls(b)}">${caseLabel(b)}</span><span class="sub">${esc(nm.short || c.main)}</span></div>`;
+            ${hasPreset ? '<span class="pdot" title="preset changes staged"></span>' : ""}<b>${c.letter}</b> <span class="case ${caseCls(m)}">${caseLabel(m)}</span><span class="case ${caseCls(b)}">${caseLabel(b)}</span><span class="sub">${esc(tileName(nm.short) || c.main)}</span></div>`;
     }).join("");
 }
 function catBlocks(cats, catId, blocks) { const c = cats.find(c => c.id === catId); return [...blocks.values()].filter(b => b.kind === c.kind && (!c.test || c.test(b.block))).sort((a, b) => typeof a.block === "number" ? a.block - b.block : String(a.block).localeCompare(String(b.block), undefined, { numeric: true })); }
@@ -754,20 +1022,20 @@ function renderProposal() {
         const sub = p.case === "A" ? `${esc(p.name)}` : `De-Emb ${esc(p.bk.split(":")[1])}${p.name ? " · " + esc(p.name) : ""}`;
         const st = p.match ? `<div class="pc-st st-ok">✓ routed</div>` : `<div class="pc-st st-wn">⚠ now ${esc(p.current)}</div>`;
         return `<div class="pcard ${p.bk === R.selSrcBlock ? "sel" : ""}" data-pbk="${esc(p.bk)}" data-pcat="${p.cat}" title="${esc(p.why)}">${head}
-            <div class="pc-src">${esc(p.label)}</div><div class="pc-sub">${sub}</div>${st}</div>`;
+            <div class="pc-src">${esc(p.label)}</div><div class="pc-sub">${sub}</div>${st}<div class="pc-why">${esc(p.why)}</div></div>`;
     }).join("");
 }
 function renderSrcGrid() {
     const hit = new Set(); const db = R.dstBlocks.get(R.selDstBlock);
     if (db) for (const k of db.keys) for (const f of ["main", "backup"]) { const s = R.src.get(value(k, f)); if (s) hit.add(blockKey(s.kind, s.block)); }
     const f = $("srcFilter").value.trim();
-    const used = R.mode === "assisted" ? assistedSourceBlocks() : null;
-    const list = catBlocks(SRC_CATS, R.srcCat, R.srcBlocks).filter(b => matches(b, f) && (!used || used.has(blockKey(b.kind, b.block))));
+    // always every source of the category ("Browse all sources" means all); proposals are marked M/B
+    const list = catBlocks(SRC_CATS, R.srcCat, R.srcBlocks).filter(b => matches(b, f));
     const marks = {};
     if (R.mode === "assisted" && R.selCh) for (const p of proposalFor(R.selCh)) if (p.bk) marks[p.bk] = (marks[p.bk] || "") + (p.field === "main" ? "M" : "B");
     $("srcGrid").innerHTML = list.map(b => { const bk = blockKey(b.kind, b.block);
         return `<div class="blk ${bk === R.selSrcBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""} ${marks[bk] ? "prop" : ""}" draggable="true" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}${marks[bk] ? `\nproposed for ${R.byN[R.selCh].letter} ${marks[bk]}` : ""}">${marks[bk] ? `<span class="mb">${marks[bk]}</span>` : ""}${esc(b.kind === "deemb" ? `SDI ${R.byLetter[b.block]?.n ?? b.block}` : b.block)}<span class="sub">${esc(b.kind === "deemb" ? b.block + " " + (b.nm?.short || "") : blockSub(b))}</span></div>`;
-    }).join("") || `<span class="small muted">${R.mode === "assisted" ? "No source is assigned to a channel (needs SRC/DST lists)." : "no match"}</span>`;
+    }).join("") || `<span class="small muted">no match</span>`;
 }
 function usedIds() { const u = new Set(); for (const k of R.dst.keys()) { u.add(value(k, "main")); u.add(value(k, "backup")); } return u; }
 function renderSrcChs() {
@@ -884,13 +1152,16 @@ function channelKeys(n) {
 // status of a node: ✓ active matches the template, ⚠ differs (tooltip), → preset when staged
 function nodeStatus(keys, fields, expected) {
     let pre = [], bad = [];
-    for (const f of fields) {
-        const act = describeFeed(keys, f, activeOf), prs = describeFeed(keys, f, presetOf);
-        if (prs !== act) pre.push(`${fields.length > 1 ? f + ": " : ""}${prs}`);
-        else if (expected && act !== expected) bad.push(`${fields.length > 1 ? f + ": " : ""}now ${act}`);
-    }
+    const acts = fields.map(f => describeFeed(keys, f, activeOf)), prss = fields.map(f => describeFeed(keys, f, presetOf));
+    const same = fields.length > 1 && acts[0] === acts[1] && prss[0] === prss[1];
+    fields.forEach((f, k) => {
+        if (same && k) return;
+        const who = fields.length > 1 && !same ? f + ": " : "";
+        if (prss[k] !== acts[k]) pre.push(`${who}${prss[k]}`);
+        else if (expected && acts[k] !== expected) bad.push(`${who}now ${acts[k]}`);
+    });
     if (pre.length) return { cls: "pre", html: `<span class="st st-pre" title="staged in the Preset, written on TAKE">→ Preset: ${esc(pre.join(" · "))}</span>` };
-    if (bad.length) return { cls: "", html: `<span class="st st-wn" title="the template wants: ${esc(expected)}">⚠ ${esc(bad.join(" · "))}</span>` };
+    if (bad.length) return { cls: "", html: `<span class="st st-wn" title="the template wants: ${esc(expected)}">⚠ ${esc(bad.join(" · "))}${same ? " (main + backup)" : ""} – should be ${esc(expected)}</span>` };
     return { cls: "", html: `<span class="st st-ok">✓ correct</span>` };
 }
 function sideFlow(n, field, side, a, both) {
@@ -905,8 +1176,11 @@ function sideFlow(n, field, side, a, both) {
     const curTxt = cur.length === 1 ? (+cur[0]).toFixed(1) : cur.length ? "mixed" : "?";
     const atTarget = cur.length === 1 && Math.abs(cur[0] - want) < 1e-6;
     const dly = (what) => `<div class="node dly ${pd.length ? "pre" : ""}" title="${esc(what)} – Active ${curTxt} ms${pd.length ? ", Preset " + pd.join("/") + " ms" : ""}">
-        ⏱ <b>Delay</b> <span class="sub">${curTxt} →</span><input type="number" step="0.1" min="0" max="${DELAY_MAX[side.case]}" value="${want}" data-delay="${delayId(side)}"> ms
-        ${pd.length ? `<span class="st st-pre">→ Preset: ${esc(pd.join("/"))} ms</span>` : atTarget ? '<span class="st st-ok">✓ at target</span>' : `<span class="st st-wn">⚠ template sets ${want} ms</span>`}</div>`;
+        <div style="width:100%">⏱ <b>${side.case === "A" ? "Stream Delay" : "Delay"}</b></div>
+        <div style="width:100%">Device now: <b style="font-size:1rem">${curTxt} ms</b></div>
+        <div style="width:100%; display:flex; align-items:center; gap:6px">Target: <input type="number" step="0.1" min="0" max="${DELAY_MAX[side.case]}" value="${want}" data-delay="${delayId(side)}" title="what the template sets – not the device value"> ms
+        ${pd.length ? `<span class="st st-pre">→ Preset: ${esc(pd.join("/"))} ms</span>` : atTarget ? '<span class="st st-ok">✓ device is at target</span>' : `<span class="st st-wn">⚠ differs – template would set ${want} ms</span>`}</div>
+        ${side.case === "A" ? streamEffect(side.stream) : ""}</div>`;
     if (side.case === "A") {
         const sn = streamName("in", side.stream);
         const es = nodeStatus(embKeys, fields, `IP In ${side.stream}`);
@@ -949,6 +1223,52 @@ function sinkCard(title, keys, n) {
 function sameSource(m, b) {
     return m.case && m.case === b.case && (m.case === "A" ? m.stream === b.stream : m.group === b.group);
 }
+// what the assisted proposal is based on: the device's own video inputs + the site's stream allocation
+// Check live: fresh read-only ACP2 (get property) + NMOS of one channel. The service stores the
+// values it read, then the whole view is reloaded so signal flow, checks and tiles show them.
+async function checkLive(n) {
+    R.checking = n; R.checkErr = null; renderAll();
+    try {
+        const r = await post("/api/check", { device: R.device, channel: n });
+        const nm = r.nmos ? Object.entries(r.nmos).map(([k, v]) => `${k} ${v.enabled ? "on" : "OFF"}${v.source ? " · " + v.source : ""}`).join(" · ") : (r.nmos_error || "");
+        const cls = /problem|SILENT/.test(r.verdict) ? "alert" : /not in use|warning/.test(r.verdict) ? "note" : "ok";
+        R.checked[n] = { at: new Date(), verdict: r.verdict, cls, changed: r.fresh_changed.length };
+        R.checks[n] = `<div class="small muted">Live check ${new Date().toLocaleTimeString()}:</div><div class="${cls}"><b>${esc(r.verdict)}</b><br>
+            ${r.acp2_requests} ACP2 reads in ${r.seconds} s via ${esc(r.link)} · ${r.fresh_changed.length} value(s) changed since the routing read${r.fresh_changed.length ? ": " + esc(r.fresh_changed.slice(0, 6).map(c => `${c.object.split("/").slice(-3).join("/")} ${c.old} → ${c.new}`).join("; ")) : ""}<br>
+            Embedder input current (on air): ${esc(r.embedder_current.join(", ").slice(0, 80))}<br>NMOS: ${esc(nm)}</div>`;
+    } catch (err) { R.checkErr = { n, msg: err.message }; }
+    R.checking = null;
+    if (R.checkErr) renderAll(); else await reloadModel();
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-check]"); if (b && !R.checking && R.selCh) checkLive(R.selCh); });
+function checkLine(n) {
+    if (R.info?.source !== "live") return "";
+    const k = R.checked[n], busy = R.checking === n;
+    const st = busy ? `<span class="chk muted">reading this channel over ACP2 and NMOS …</span>`
+        : R.checkErr?.n === n ? `<span class="chk warn">check failed: ${esc(R.checkErr.msg)}</span>`
+        : k ? `<span class="chk ${k.cls === "ok" ? "ok-t" : "warn"}">checked live ${k.at.toLocaleTimeString()} – ${esc(k.verdict)}${k.changed ? ` · ${k.changed} value(s) were different and are now updated` : " · nothing had changed"}</span>`
+        : `<span class="chk muted">shown from the routing read ${esc(ago(R.info.read_at))}</span>`;
+    return `<button class="btn" data-check ${busy || R.checking ? "disabled" : ""} title="Fresh read-only ACP2 + NMOS check of this channel; the view is updated with the values read">${busy ? "Checking …" : "Check live"}</button>${st}`;
+}
+function basisHtml(n, a) {
+    const c = R.byN[n], sides = a.sides || {}, i = R.info || {}, names = R.names || {};
+    const rx = nameOf("rx", n), tx = nameOf("tx", n);
+    const row = (label, html) => `<div class="brow"><span class="bl">${label}</span><span>${html}</span></div>`;
+    const sideTxt = f => { const s = sides[f] || {}; return `${f === "main" ? "Main" : "Backup"} <b>${esc(s.label || "?")}</b>`; };
+    let h = `<div class="basis"><div class="bh">Worked out from the real allocation</div>`;
+    h += row("Device", `${esc(R.device || i.file)} · video inputs ${sideTxt("main")}, ${sideTxt("backup")} <span class="muted">(${R.checked[n] ? `checked live ${R.checked[n].at.toLocaleTimeString()}` : `routing read ${esc(ago(i.read_at))}${i.source === "live" ? " – “Check live” re-reads this channel" : ""}`})</span>`);
+    h += row("Stream allocation", names.device
+        ? `${rx ? `<b>${esc(tail(rx.mnemonic))}</b> “${esc(rx.alt)}” → ARX-${rx.refs.join(", ")} → <b>IP In ${rx.refs[0]}</b>` : '<span class="warn">no RX row for this channel</span>'}<br>
+           ${tx ? `<b>${esc(tail(tx.mnemonic))}</b> “${esc(tx.alt)}” → ATX-${tx.refs.join(", ")} → <b>IP Out ${tx.refs[0]}</b>` : '<span class="warn">no TX row for this channel</span>'}
+           <span class="muted">(Cerebrum ${esc((names.lists || []).join(" + "))}, device ${esc(names.device)})</span>`
+        : '<span class="warn">no SRC/DST list for this device – IP streams cannot be assigned</span>');
+    for (const f of ["main", "backup"]) {
+        const s = sides[f] || {};
+        if (s.case === "B") h += row(`Delay group (${f})`, `SDI ${s.sdi} → <b>group ${s.group}</b> (banks ${firstBank(s.group)}–${firstBank(s.group) + 7}) <span class="muted">– ${esc(s.group_from || "")}</span>`);
+    }
+    if (rx && Object.values(sides).some(s => s.case === "A")) h += row("Note", `the video dropdown says “${esc(Object.values(sides).find(s => s.case === "A").label)}”, the real IP input comes from the RX row, not from that number`);
+    return h + `</div>`;
+}
 function renderAssisted() {
     const n = R.selCh;
     if (!n) { $("dstAssisted").innerHTML = `<p class="muted">Pick a video path above or a source on the left.</p>`; return; }
@@ -956,7 +1276,7 @@ function renderAssisted() {
     if (a.error) { $("dstAssisted").innerHTML = `<div class="alert">${esc(a.error)}</div>`; return; }
     const sides = a.sides || {}, m = sides.main || {}, b = sides.backup || {};
     const nm = chName(n);
-    let html = `<div style="margin-bottom:8px"><b style="font-size:1.05rem">${c.letter}</b> <span class="muted">${esc(nm.short || "")}</span></div>`;
+    let html = `<div class="flowhead"><span><b style="font-size:1.05rem">${c.letter}</b> <span class="muted">${esc(nm.short || "")}</span></span>${checkLine(n)}</div>` + basisHtml(n, a);
     html += sameSource(m, b) ? `<div class="flows2"><div class="span">${sideFlow(n, "main", m, a, true)}</div></div>`
                              : `<div class="flows2">${sideFlow(n, "main", m, a)}${sideFlow(n, "backup", b, a)}</div>`;
     let cards = sinkCard(`Embedder ${c.letter}`, Array.from({ length: 16 }, (_, i) => `emb:${c.letter}:${i + 1}`), n);
@@ -1001,7 +1321,7 @@ function renderRouteLeft() {
             <button class="btn primary" id="planBtn" ${notStaged.length ? "" : "disabled"}>Add to Preset (${notStaged.length} value${notStaged.length === 1 ? "" : "s"})</button>
             <label title="include the delay targets from the delay boxes"><input type="checkbox" id="withDelay" ${R.withDelay ? "checked" : ""}> include delays</label>
             <button class="btn" id="delayResetBtn" title="Delay targets back to 19.5 / 18.0 ms">reset delays</button>
-            ${R.info?.source === "live" ? `<button class="btn" id="checkBtn" title="Fresh read-only ACP2 + NMOS check of this channel">Check live</button>` : ""}
+            ${R.info?.source === "live" ? `<button class="btn" data-check title="Fresh read-only ACP2 + NMOS check of this channel; the view is updated with the values read">Check live</button>` : ""}
         </div>
         ${chPending.length ? `<h3>Staged in the Preset for ${c.letter}</h3>${summaryHtml(groupChanges(chPending))}
             <div style="margin-top:8px; display:flex; gap:8px">
@@ -1092,6 +1412,8 @@ function renderPending() {
     const canWrite = !!(live && dev && dev.write && dev.poll);
     $("takeBtn").disabled = !items.length || !canWrite;
     $("undoTakeBtn").disabled = !canWrite || !dev.undo_available;
+    $("takeBtn").textContent = !items.length ? "TAKE – nothing staged" : !canWrite ? `TAKE ${items.length} value(s) – writing is off` : `TAKE ${items.length} staged value(s) → ${R.device}`;
+    $("undoTakeBtn").textContent = dev?.undo_available ? "Undo last Take (restore the values from before it)" : "Undo last Take – nothing to undo";
     $("takeInfo").textContent = !dev ? "" : !canWrite ? `Writing to ${dev.name} is off (devices.json "write": false).`
         : dev.undo_available ? "Writing is ON for this device. Undo restores the last Take." : "Writing is ON for this device.";
     R.canWrite = canWrite;
@@ -1106,7 +1428,20 @@ function renderPending() {
 }
 
 // ----- events -----
-$("viewToggle").onclick = e => { const b = e.target.closest("[data-v]"); if (b) { R.view = b.dataset.v; store("nar.view", R.view); renderAll(); } };
+function renderWriteToggle() {
+    const dev = (F.state?.devices || []).find(d => d.name === R.device), b = $("writeToggle");
+    const live = R.info?.source === "live";
+    b.disabled = !live || !dev || !dev.poll;
+    b.className = "btn " + (dev && dev.write ? "take" : "");
+    b.textContent = !live ? "n/a (offline file)" : !dev ? "…" : dev.write ? "● ON – click to turn off" : "OFF – click to enable";
+}
+$("writeToggle").onclick = async () => {
+    const dev = (F.state?.devices || []).find(d => d.name === R.device); if (!dev) return;
+    const on = !dev.write;
+    if (on && !(await confirmBox(`Enable WRITING to ${dev.name} (${dev.ip}) – LIVE DEVICE?\n\nTAKE and Undo will then write routing and delay values over ACP2.`, "Enable writing", true))) { msg("Writing stays off (cancelled).", "note"); return; }
+    try { await post("/api/devices/write", { device: dev.name, write: on }); await pollState(); renderAll(); }
+    catch (e) { msg(e.message); }
+};
 $("modeToggle").onclick = e => { const b = e.target.closest("[data-m]"); if (b) { R.mode = b.dataset.m; store("nar.mode", R.mode); renderAll(); } };
 $("chGrid").onclick = e => { const t = e.target.closest("[data-n]"); if (!t) return; R.selCh = +t.dataset.n;
     if (R.mode === "manual") { const c = R.byN[R.selCh]; R.dstCat = "emb"; R.selDstBlock = blockKey("emb", c.letter); }
@@ -1141,20 +1476,6 @@ $("routeLeft").addEventListener("click", async e => {
     if (t.id === "delayResetBtn") { for (const s of Object.values((R.analysis[R.selCh] || {}).sides || {})) if (s.case) store(delayKey(delayId(s)), null); renderAll(); return; }
     if (t.id === "planBtn") { const ch = plannedFor(R.selCh, R.withDelay); setValues(ch.map(c => [c.key, c.field, c.value])); renderAll(); return; }
     if (t.id === "takeChBtn") { takeChanges(R.chPending || [], `video path ${R.byN[R.selCh].letter}`); return; }
-    if (t.id === "checkBtn") {
-        const n = R.selCh;
-        t.disabled = true; $("checkResult").innerHTML = '<span class="small muted">Reading this channel over ACP2 (get property only) and NMOS …</span>';
-        try { const r = await post("/api/check", { device: R.device, channel: n });
-            const nm = r.nmos ? Object.entries(r.nmos).map(([k, v]) => `${k} ${v.enabled ? "on" : "OFF"}${v.source ? " · " + v.source : ""}`).join(" · ") : (r.nmos_error || "");
-            $("checkResult").innerHTML = `<div class="${/problem|SILENT/.test(r.verdict) ? "alert" : /not in use|warning/.test(r.verdict) ? "note" : "ok"}"><b>${esc(r.verdict)}</b><br>
-                ${r.acp2_requests} ACP2 reads in ${r.seconds} s via ${esc(r.link)} · ${r.fresh_changed.length} value(s) changed since the routing read<br>
-                Embedder input current (on air): ${esc(r.embedder_current.join(", ").slice(0, 80))}<br>NMOS: ${esc(nm)}</div>`
-                + r.analysis.findings.map(f => `<div class="find"><span class="lv lv-${f.level}">${f.level.toUpperCase()}</span>${esc(f.text)}</div>`).join("");
-            R.checks[n] = `<div class="small muted">Live check ${new Date().toLocaleTimeString()}:</div>` + $("checkResult").innerHTML;
-        } catch (err) { $("checkResult").innerHTML = `<div class="alert">${esc(err.message)}</div>`; }
-        if (R.selCh !== n) renderRouteLeft();
-        t.disabled = false; return;
-    }
 });
 $("routeLeft").addEventListener("change", e => { if (e.target.id === "withDelay") { R.withDelay = e.target.checked; renderRouteLeft(); } });
 $("routeLeft").addEventListener("input", e => { if (/^fill/.test(e.target.id)) renderFill(); });
@@ -1166,7 +1487,7 @@ $("dstAssisted").addEventListener("change", e => {
     store(delayKey(id), Math.round(v * 1000) / 1000); msg(""); renderAll();
 });
 $("undoEditBtn").onclick = undoEdit;
-$("discardBtn").onclick = () => { if (confirm(`Discard all ${R.pending.size} pending changes?`)) { R.pending.clear(); R.history = []; persist(); renderAll(); } };
+$("discardBtn").onclick = async () => { if (await confirmBox(`Discard all ${R.pending.size} staged value(s) from the Preset?\n\nNothing on the device changes.`, "Discard")) { R.pending.clear(); R.history = []; persist(); renderAll(); } };
 $("pendBody").onclick = e => { const x = e.target.closest("[data-pk]"); if (!x) return; R.history.push([[x.dataset.pk, R.pending.get(x.dataset.pk)]]); R.pending.delete(x.dataset.pk); persist(); renderAll(); };
 document.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key === "z" && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); undoEdit(); } if (e.key === "Escape") { R.selSlot = null; renderAll(); } });
 const changeList = () => [...R.pending.entries()].map(([pk, v]) => { const [key, field] = pk.split("|"); return { key, field, value: v }; });
@@ -1176,9 +1497,19 @@ async function writeCall(path, body) {
     const j = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
     return { ok: r.ok, status: r.status, ...j };
 }
+function streamEffect(S) {
+    // a Stream Delay only acts while the stream receives media (device: Maximum Stream Delay > 0, Info "Ok")
+    const s = R.src.get((S - 1) * 16 + 1); if (!s) return "";
+    const mx = s.stream_max_delay, info = s.stream_info || "";
+    if (mx === null || mx === undefined) return "";
+    if (mx > 0 && (!info || info === "Ok")) return `<div class="sub" style="width:100%">IP In ${S}: receiving, device can apply up to ${Math.round(mx)} ms</div>`;
+    return `<div class="st-wn" style="width:100%; font-weight:600">⚠ IP In ${S}: ${esc(info || "no media")} – the device cannot apply a delay now (max ${mx} ms). A value can be stored; it acts once the stream receives media.</div>`;
+}
 function writeResultHtml(kind, r) {
     const res = r.result || r, items = res.items || [];
-    const head = r.ok && res.ok ? `<div class="ok"><b>${kind} done</b>: ${res.written} value(s) written and read back in ${res.seconds} s${res.skipped?.length ? `, ${res.skipped.length} already at target` : ""}.</div>`
+    const warns = items.filter(e => e.warning);
+    const head = r.ok && res.ok ? `<div class="${warns.length ? "note" : "ok"}"><b>${kind} done</b>: ${res.written} value(s) written and read back in ${res.seconds} s${res.skipped?.length ? `, ${res.skipped.length} already at target` : ""}.`
+        + warns.map(e => `<br>⚠ <b>${esc(dstLabel(e.key))}</b>: ${esc(e.warning)}`).join("") + `</div>`
         : `<div class="alert"><b>${kind} ${res.written ? "stopped" : "refused"}</b>: ${esc(r.error || res.error || "")}${res.written ? `\n${res.written} value(s) were written before it stopped – use “Undo last Take”.` : "\nNothing was written."}</div>`;
     const rows = items.slice(0, 40).map(e => `<tr><td>${esc(dstLabel(e.key))}</td><td class="muted">${e.field === "main" ? "M" : e.field === "backup" ? "B" : "Δ"}</td>
         <td>${esc(String(e.before))} → ${esc(String(e.after ?? "?"))}</td><td>${e.ok ? '<span class="st-ok">✓</span>' : `<span class="warn" title="${esc(e.error || "")}">✗</span>`}</td></tr>`).join("");
@@ -1188,7 +1519,11 @@ async function takeChanges(changes, what) {
     // one code path for: whole preset, one change group, one video path
     if (!changes.length) return;
     const lines = groupChanges(changes).map(g => `• ${g.target}${g.what !== "delay" ? " · " + g.what : ""}: ${g.from} → ${g.to} (${g.count} ${g.unit === "ch" ? "ch" : g.unit + (g.count > 1 ? "s" : "")})`);
-    if (!confirm(`TAKE ${what} on ${R.device} – LIVE DEVICE\n\n${lines.join("\n")}\n\n${changes.length} value(s). The current values are read first and saved for “Undo last Take”; every value is read back after writing.`)) return;
+    if (!(await confirmBox(`TAKE ${what} on ${R.device} – LIVE DEVICE\n\n${lines.join("\n")}\n\n${changes.length} value(s). The current values are read first and saved for “Undo last Take”; every value is read back after writing.`, `TAKE ${changes.length} value(s)`, true))) {
+        $("applyResult").innerHTML = `<div class="note">TAKE ${esc(what)} cancelled – nothing was written.</div>`;
+        $("applyResult").scrollIntoView({ block: "nearest" });
+        return;
+    }
     $("takeBtn").disabled = true; $("applyResult").innerHTML = `<div class="note">Taking ${esc(what)} …</div>`;
     $("applyResult").scrollIntoView({ block: "nearest" });
     const r = await writeCall("/api/take", { device: R.device, changes });
@@ -1206,14 +1541,17 @@ $("pendSummary").onclick = e => {
         R.history.push(undo); persist(); renderAll(); }
 };
 $("undoTakeBtn").onclick = async () => {
-    if (!confirm(`UNDO on ${R.device} – LIVE DEVICE\n\nRestore the values from before the last Take?`)) return;
+    if (!(await confirmBox(`UNDO on ${R.device} – LIVE DEVICE\n\nRestore the values from before the last Take?`, "Undo last Take", true))) {
+        $("applyResult").innerHTML = `<div class="note">Undo cancelled – nothing was written.</div>`;
+        return;
+    }
     $("undoTakeBtn").disabled = true; $("applyResult").innerHTML = '<div class="note">Undoing …</div>';
     const r = await writeCall("/api/undo", { device: R.device });
     $("applyResult").innerHTML = writeResultHtml("UNDO", r);
     await reloadModel(); pollState();
 };
 $("exportBtn").onclick = async () => {
-    if (!confirm(`Write ${R.pending.size} change(s) into a NEW copy of ${R.file}? The original is not modified.`)) return;
+    if (!(await confirmBox(`Write ${R.pending.size} change(s) into a NEW copy of ${R.file}? The original is not modified.`, "Export"))) return;
     try { const r = await post("/api/export", { file: R.file, changes: changeList(), note: $("exportNote").value });
         $("applyResult").innerHTML = `<div class="ok">Exported <b>${esc(r.export_file)}</b> (${r.changes.length} changes, verified). <a href="/api/download?file=${encodeURIComponent(r.export_file)}">Download</a></div>`; }
     catch (e) { $("applyResult").innerHTML = `<div class="alert">Export failed: ${esc(e.message)}</div>`; }

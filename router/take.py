@@ -146,9 +146,39 @@ def take(model, ip, changes, undo_path, log_path, slot):
                                            "items": [{k: it[k] for k in ("key", "field", "oid", "ntype", "before", "value")}
                                                      for it in pre["before"]]}, indent=1), encoding="utf-8")
     result = next(gen)
+    check_effect(model, ip, slot, result)
     _log(log_path, {"kind": "take", **{k: result.get(k) for k in ("started", "ip", "ok", "written", "seconds", "error")},
                     "items": result["items"]})
     return result
+
+
+def check_effect(model, ip, slot, result):
+    """A Stream Delay is only applied while the stream receives media: the device
+    reports the delay it can apply as 'Maximum Stream Delay' (0 = no media). Read it
+    (and Info, Stream) after writing and warn when the written delay cannot act."""
+    from client import Acp2Client
+    status = {}
+    items = [e for e in result.get("items", []) if e.get("ok") and e["key"].startswith("streamdelay:")]
+    if not items:
+        return
+    with Acp2Client(ip) as c:
+        for e in items:
+            path = ("INPUT", "IP", "AUDIO", f"STREAM {e['key'].split(':')[1]}")
+            vals = {}
+            for name in ("Maximum Stream Delay", "Info", "Stream"):
+                o = model.obj(path, name)
+                if o is not None and o.oid:
+                    v = c.get_property(slot, o.oid, 8)
+                    status[o.oid] = v
+                    vals[name] = (o.enums[v] if o.enums and isinstance(v, int) and v < len(o.enums) and o.enums[v] else v)
+            e["status"] = vals
+            mx = vals.get("Maximum Stream Delay")
+            if isinstance(mx, (int, float)) and mx < float(e["after"]):
+                e["warning"] = (f"written, but NOT effective: the device can apply at most {mx} ms on this stream "
+                                f"(Info: {vals.get('Info') or '-'}, Stream: {vals.get('Stream') or '-'}). "
+                                f"It applies once the stream receives media.")
+    result["status_values"] = status
+    model.apply_values(status)
 
 
 def undo(model, ip, undo_path, log_path, slot):

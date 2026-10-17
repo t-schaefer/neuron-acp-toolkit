@@ -41,7 +41,7 @@ from checks import analyse_channel                     # noqa: E402
 from client import Acp2Client, Acp2Error               # noqa: E402  (read-only)
 from live_check import run_check                       # noqa: E402
 from live_model import LiveModel                       # noqa: E402
-from route_lists import parse_list, stream_names, normalize_device, device_index  # noqa: E402
+from route_lists import parse_list, stream_names, normalize_device, device_index, normalize_paste  # noqa: E402
 import walk as acp2_walk                               # noqa: E402
 import take as take_mod                                # noqa: E402  (the only writer, gated by devices.json "write")
 
@@ -286,7 +286,8 @@ def safe_name(name, pattern, what):
 
 
 def model_payload(m, device_label):
-    src_cols = ["id", "kind", "block", "ch", "block_label", "name", "enabled", "delay", "bank", "slot", "stream_delay"]
+    src_cols = ["id", "kind", "block", "ch", "block_label", "name", "enabled", "delay", "bank", "slot", "stream_delay",
+                "stream_max_delay", "stream_info"]
     dst_cols = ["key", "kind", "block", "ch", "block_label", "name", "enabled",
                 "main", "backup", "current", "channels", "delay", "bank", "slot", "own_id"]
     lists, errors = load_lists()
@@ -348,6 +349,7 @@ def _after_write(d, m, result):
                 written[m.target({"key": e["key"], "field": e["field"]}).oid] = e["after"]
             except Exception:
                 pass
+    written.update(result.get("status_values") or {})      # stream status read after a delay take
     if written:
         take_mod.update_snapshot(snapshot_path(d["name"]), written)
 
@@ -397,8 +399,56 @@ def check_channel(name, n):
     names = stream_names(lists, m.info()["nmos_label"])
     report, link = call_with_failover(d, lambda ip: run_check(m, names, n, ip=ip))
     report["link"] = link
+    values = report.pop("values", {})
+    if values:      # keep the fresh values, so the view (and a service restart) shows what was just read
+        take_mod.update_snapshot(snapshot_path(d["name"]), values)
     log.info("check %s ch %d: %s", d["name"], n, report["verdict"])
     return report
+
+
+# ---------------- pasted route lists ----------------
+def paste_list(text, kind, save):
+    """Route master copied out of Cerebrum -> check (save=False) or store as the SRC/DST list.
+    Saving moves the other lists of the same kind to lists/replaced/ (kept, no longer used)."""
+    if kind not in (None, "", "SRC", "DST"):
+        raise ValueError("kind must be SRC or DST")
+    tsv, info = normalize_paste(text, kind or None)
+    LISTS_DIR.mkdir(exist_ok=True)
+    tmp = LISTS_DIR / "paste.part"
+    tmp.write_text(tsv, encoding="utf-8")
+    try:
+        parsed = parse_list(tmp)
+    except Exception:
+        tmp.unlink()
+        raise
+    if kind and parsed["kind"] != kind:
+        tmp.unlink()
+        raise ValueError(f"this looks like a {parsed['kind']} list (it has {'ATX' if parsed['kind'] == 'SRC' else 'ARX'} "
+                         f"streams), not {kind} - pick {parsed['kind']} or paste the other list")
+    devs = parsed["devices"]
+    res = {**info, "kind": parsed["kind"], "devices": len(devs),
+           "channels": sum(len(d["TX"]) + len(d["RX"]) for d in devs.values()),
+           "streams": sum(len(d["ATX"]) + len(d["ARX"]) for d in devs.values()),
+           "device_names": sorted(d["label"] for d in devs.values())[:60], "saved": None, "replaced": []}
+    if not save:
+        tmp.unlink()
+        return res
+    name = f"{parsed['kind']}-pasted.txt"
+    old_dir = LISTS_DIR / "replaced"
+    for p in sorted(LISTS_DIR.iterdir()):
+        if p.is_file() and SAFE_LIST_RE.match(p.name) and p.name != name:
+            try:
+                if parse_list(p)["kind"] != parsed["kind"]:
+                    continue
+            except Exception:
+                continue
+            old_dir.mkdir(exist_ok=True)
+            p.replace(old_dir / p.name)
+            res["replaced"].append(p.name)
+    tmp.replace(LISTS_DIR / name)
+    res["saved"] = name
+    log.info("route list pasted: %s, %d rows, %d devices, replaced %s", name, info["rows"], len(devs), res["replaced"])
+    return res
 
 
 # ---------------- /api/state ----------------
@@ -536,6 +586,34 @@ class Handler(BaseHTTPRequestHandler):
                 save_devices(devices)
                 log.info("device added: %s %s", name, ip)
                 self._json({"ok": True, "devices": len(devices)})
+            elif u.path == "/api/devices/write":
+                # the "Write ON/OFF" switch in the router header; same effect as editing devices.json
+                name, on = req.get("device", ""), bool(req.get("write"))
+                devices = load_devices()
+                hit = [d for d in devices if normalize_device(d["name"]) == normalize_device(name)]
+                if not hit:
+                    raise ValueError(f"unknown device {name!r}")
+                if on and not hit[0].get("poll"):
+                    raise ValueError(f"{hit[0]['name']} is not released for device access (poll=false) - cannot enable writing")
+                hit[0]["write"] = on
+                save_devices(devices)
+                log.warning("WRITE %s for %s (switched in the UI)", "ENABLED" if on else "disabled", hit[0]["name"])
+                _state_cache["t"] = 0
+                self._json({"device": hit[0]["name"], "write": on})
+            elif u.path == "/api/devices/access":
+                # the "Access" switch in the device list; same effect as editing "poll" in devices.json
+                name, on = req.get("device", ""), bool(req.get("poll"))
+                devices = load_devices()
+                hit = [d for d in devices if normalize_device(d["name"]) == normalize_device(name)]
+                if not hit:
+                    raise ValueError(f"unknown device {name!r}")
+                hit[0]["poll"] = on
+                if not on:
+                    hit[0]["write"] = False          # no access means no writing either
+                save_devices(devices)
+                log.warning("ACCESS %s for %s (switched in the UI)", "released" if on else "withdrawn", hit[0]["name"])
+                _state_cache["t"] = 0
+                self._json({"device": hit[0]["name"], "poll": on, "write": hit[0].get("write", False)})
             elif u.path == "/api/read":
                 self._json(start_read(req.get("device", "")))
             elif u.path == "/api/check":
@@ -567,6 +645,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise
                 tmp.replace(LISTS_DIR / name)
                 self._json({"name": name, "kind": parsed["kind"], "devices": len(parsed["devices"])})
+            elif u.path == "/api/paste-list":
+                self._json(paste_list(req.get("text", ""), req.get("kind"), bool(req.get("save"))))
             elif u.path == "/api/upload":
                 name = safe_name(self.headers.get("X-File-Name", ""), SAFE_CBF_RE, ".cbf")
                 data = self._body()
