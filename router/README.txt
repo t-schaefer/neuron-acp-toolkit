@@ -76,9 +76,18 @@ Uninstall: powershell -ExecutionPolicy Bypass -File .\uninstall-task-windows.ps1
 Upgrading
 ---------
 Double-click ..\Update-NeuronRouter.bat in the repo root (asks for admin
-rights). It stops the task, stops a leftover python running this server.py,
-runs `git pull --ff-only` and starts the task again. devices.json, lists/ and
-live/ are not in git, so an update never touches them.
+rights). It stops the services (router and, if installed, the landing page),
+stops a leftover python running one of their server.py files, updates the files
+(`git pull --ff-only`, or the GitHub main.zip copied over when git is not
+installed - nothing is deleted) and starts the services again. devices.json,
+lists/, live/ and landing/tools.json are not in git, so an update never touches them.
+
+Landing page (optional)
+-----------------------
+landing/ is a small start page for all web tools on the server (router,
+Fusion Dashboard, ...) with an up/down status per tool. Install it with
+..\Install-Landing.bat (port 80; another port: Install-Landing.bat 8080).
+Edit the tool list in the page ("Edit list") or in landing/tools.json.
 
 Devices and access (devices.json)
 ---------------------------------
@@ -86,9 +95,10 @@ Each entry: {"ip", "name", "tag", "type", "poll", "write"}.
 - name must match the device in the SRC/DST lists (normalised: IPG03A =
   "DCR.IPG 03A" = IPG3A) and the device's NMOS label.
 - "poll": true  = the service may contact this device (health, routing read,
-  channel check). false = it is never contacted. Only IPG03A is released in the
-  example, every other unit is false until you release it.
-- "write": true = Take would be allowed for this device once implemented. All false.
+  channel check). false = it is never contacted. Every device starts with
+  false: release it with the "Access" switch in the device list.
+- "write": true = TAKE / Undo may write to this device ("Write" switch, only
+  with Access on). Every device starts with false.
 - "blue": optional backup (blue) control address. There is no blue rule set,
   because the Neuron control-network rule is not known yet (BLUE_RULE in server.py).
 New devices from an updated devices.example.json are appended to devices.json

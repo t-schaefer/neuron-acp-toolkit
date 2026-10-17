@@ -22,7 +22,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 where git >nul 2>&1
-if %errorlevel% neq 0 echo NOTE: git was not found on PATH - the service runs, but Update-NeuronRouter.bat needs git.
+if %errorlevel% neq 0 echo NOTE: git was not found - Update-NeuronRouter.bat will download the GitHub zip instead.
 
 powershell -NoProfile -ExecutionPolicy Bypass -File "%HERE%router\install-task-windows.ps1"
 echo.

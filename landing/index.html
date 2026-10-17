@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tools</title>
+<style>
+    :root { --bg: #f4f6f8; --card: #fff; --text: #212529; --muted: #6c757d; --line: #dee2e6; --accent: #0d6efd; --ok: #198754; --bad: #dc3545; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #16191d; --card: #1f2329; --text: #e9ecef; --muted: #9aa3ad; --line: #343a40; --accent: #6ea8fe; --ok: #4fbf87; --bad: #ff6b76; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 980px; margin: 0 auto; padding: 32px 16px; }
+    header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    h1 { margin: 0; font-size: 1.5rem; }
+    .muted { color: var(--muted); font-size: 0.85rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .tool { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+    a.tool:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .tool.down { opacity: 0.75; }
+    .tool h2 { margin: 0 0 4px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+    .dot.up { background: var(--ok); } .dot.down { background: var(--bad); }
+    .tool p { margin: 6px 0 10px; font-size: 0.9rem; }
+    .addr { font: 0.8rem ui-monospace, Menlo, Consolas, monospace; color: var(--muted); }
+    .st { font-size: 0.8rem; } .st.up { color: var(--ok); } .st.down { color: var(--bad); }
+    .btn { border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 6px; padding: 5px 12px; font: inherit; font-size: 0.85rem; cursor: pointer; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn:hover { border-color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 8px; font-size: 0.85rem; }
+    th, td { border-bottom: 1px solid var(--line); padding: 6px; text-align: left; }
+    td input { width: 100%; font: inherit; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--text); }
+    .edit { margin-top: 24px; } .edit .bar { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+    .err { color: var(--bad); font-size: 0.85rem; }
+    .hidden { display: none; }
+    @media (max-width: 640px) { .edit table, .edit thead, .edit tbody, .edit tr, .edit td { display: block; } .edit thead { display: none; } .edit tr { padding: 8px; border-bottom: 1px solid var(--line); } .edit td { border: 0; padding: 3px 0; } }
+</style>
+</head>
+<body>
+<main>
+    <header>
+        <div><h1>Tools on <span id="host"></span></h1><div class="muted">Status is checked by this server every <span id="iv">15</span> s.</div></div>
+        <button class="btn" id="editBtn">Edit list</button>
+    </header>
+    <div class="grid" id="grid"><div class="muted">Loading …</div></div>
+
+    <section class="edit hidden" id="edit">
+        <h2 style="font-size:1.05rem">Edit the tool list</h2>
+        <div class="muted">Host empty = this server (the links then work from every PC). Saved in landing/tools.json on the server.</div>
+        <table><thead><tr><th style="width:22%">Name</th><th>Description</th><th style="width:12%">Host</th><th style="width:9%">Port</th><th style="width:10%">Path</th><th style="width:40px"></th></tr></thead>
+        <tbody id="rows"></tbody></table>
+        <div class="bar"><button class="btn" id="addBtn">+ Tool</button><button class="btn primary" id="saveBtn">Save</button><button class="btn" id="cancelBtn">Cancel</button><span class="err" id="err"></span></div>
+    </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let tools = [], editing = false;
+$("host").textContent = location.hostname;
+const urlOf = t => `${location.protocol}//${t.host || location.hostname}:${t.port}${t.path || "/"}`;
+function render() {
+    $("grid").innerHTML = tools.map(t => {
+        const s = t.status, cls = !s ? "" : s.up ? "up" : "down";
+        const txt = !s ? "checking …" : s.up ? `running · ${s.ms} ms` : "not reachable";
+        return `<a class="tool ${cls}" href="${esc(urlOf(t))}" target="_blank" rel="noopener" title="${esc(s && s.error ? s.error : "")}">
+            <h2><span class="dot ${cls}"></span>${esc(t.name)}</h2>
+            <p>${esc(t.description)}</p>
+            <div class="addr">${esc(urlOf(t))}</div>
+            <div class="st ${cls}">${txt}</div></a>`;
+    }).join("") || `<div class="muted">No tools yet – use “Edit list”.</div>`;
+}
+function rowHtml(t) {
+    return `<tr><td><input data-f="name" value="${esc(t.name)}"></td><td><input data-f="description" value="${esc(t.description)}"></td>
+        <td><input data-f="host" value="${esc(t.host)}" placeholder="this server"></td><td><input data-f="port" type="number" min="1" max="65535" value="${esc(t.port)}"></td>
+        <td><input data-f="path" value="${esc(t.path || "/")}"></td><td><button class="btn" data-del title="Remove">✕</button></td></tr>`;
+}
+function openEdit(on) { editing = on; $("edit").classList.toggle("hidden", !on); $("err").textContent = ""; if (on) $("rows").innerHTML = tools.map(rowHtml).join(""); }
+async function load() {
+    try { const j = await (await fetch("/api/tools")).json(); $("iv").textContent = j.interval; tools = j.tools; render(); }
+    catch (e) { $("grid").innerHTML = `<div class="err">Landing service not reachable: ${esc(e.message)}</div>`; }
+}
+$("editBtn").onclick = () => openEdit(!editing);
+$("cancelBtn").onclick = () => openEdit(false);
+$("addBtn").onclick = () => $("rows").insertAdjacentHTML("beforeend", rowHtml({ name: "", description: "", host: "", port: "", path: "/" }));
+$("rows").onclick = e => { if (e.target.closest("[data-del]")) e.target.closest("tr").remove(); };
+$("saveBtn").onclick = async () => {
+    const list = [...$("rows").children].map(tr => Object.fromEntries([...tr.querySelectorAll("[data-f]")].map(i => [i.dataset.f, i.value])));
+    const r = await fetch("/api/tools", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tools: list }) });
+    const j = await r.json();
+    if (!r.ok) { $("err").textContent = j.error; return; }
+    openEdit(false); load();
+};
+load(); setInterval(() => { if (!editing) load(); }, 5000);
+</script>
+</body>
+</html>

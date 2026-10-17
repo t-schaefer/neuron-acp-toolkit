@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Neuron Audio Router",
+    "description": "Graphical audio routing for the EVS Neuron IPG units over ACP2 - assisted / manual mode, Preset, TAKE, Undo.",
+    "port": 8101,
+    "path": "/",
+    "host": ""
+  },
+  {
+    "name": "Fusion Dashboard",
+    "description": "Fleet monitoring and bulk config of the Fusion devices. Check the port in the page's Edit mode.",
+    "port": 8100,
+    "path": "/",
+    "host": ""
+  }
+]

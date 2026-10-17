@@ -452,6 +452,15 @@ def paste_list(text, kind, save):
 
 
 # ---------------- /api/state ----------------
+# Devices where the assisted templates must not be used (normalised name -> reason shown in the UI).
+# devices.json can set "assisted_off": "<reason>" for further units.
+ASSISTED_OFF = {
+    "IPG3B": "Delay banks 1–8 (delay group 1) are used for the TX chain on this device.",
+    "IPG4B": "Delay banks 1–8 (delay group 1) are used for the TX chain on this device.",
+}
+TX_CHAIN_GROUPS = {"IPG3B": [1], "IPG4B": [1]}     # delay groups reserved for the TX chain
+
+
 def state_payload():
     lists, _ = load_lists()
     idx = device_index(lists)
@@ -466,7 +475,9 @@ def state_payload():
                      "snapshot": datetime.fromtimestamp(sp.stat().st_mtime).isoformat(timespec="seconds")
                      if sp.exists() else None,
                      "undo_available": _take_paths(d)[0].exists(),
-                     "job": _jobs.get(d["name"])})
+                     "job": _jobs.get(d["name"]),
+                     "assisted_off": d.get("assisted_off") or ASSISTED_OFF.get(normalize_device(d["name"])),
+                     "tx_chain_groups": d.get("tx_chain_groups") or TX_CHAIN_GROUPS.get(normalize_device(d["name"]), [])})
     return {"devices": devs, "paused": POLLING_PAUSED.is_set(), "last_sweep": st["last_sweep"],
             "sweep_seconds": st["sweep_seconds"], "started": st["started"], "now": now_iso(),
             "lists": [l["name"] for l in lists],
