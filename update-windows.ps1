@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
-  Updates the toolkit on this server and restarts its services:
-    NeuronAudioRouterService (router\server.py, port 8101)
-    ToolsLandingPage         (landing\server.py, port 80 or as installed)
+  Updates the toolkit on this server and restarts the Neuron Audio Router
+  service (NeuronAudioRouterService, router\server.py, port 8101).
+  The landing page is its own repo now: github.com/t-schaefer/tools-landing.
 
   1. stops the installed tasks and waits until they are stopped
   2. stops a leftover python that still runs one of these server.py files
@@ -12,14 +12,13 @@
 
   Usually started by double-clicking Update-NeuronRouter.bat (self-elevates).
   Local data is never touched: router\devices.json, lists\, live\, cbf\,
-  exports\, landing\tools.json, service.log (git-ignored, not in the zip).
+  exports\, service.log (git-ignored, not in the zip).
 #>
 $ErrorActionPreference = "Stop"
 $RepoDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ZipUrl = "https://github.com/t-schaefer/neuron-acp-toolkit/archive/refs/heads/main.zip"
 $Services = @(
-    @{ Task = "NeuronAudioRouterService"; Py = (Join-Path $RepoDir "router\server.py") },
-    @{ Task = "ToolsLandingPage";         Py = (Join-Path $RepoDir "landing\server.py") }
+    @{ Task = "NeuronAudioRouterService"; Py = (Join-Path $RepoDir "router\server.py") }
 )
 Set-Location $RepoDir
 Write-Host "Folder: $RepoDir"
