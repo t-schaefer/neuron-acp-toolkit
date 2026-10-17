@@ -12,5 +12,12 @@
     "port": 8100,
     "path": "/",
     "host": ""
+  },
+  {
+    "name": "MNset",
+    "description": "MNset on this server.",
+    "port": 8080,
+    "path": "/",
+    "host": ""
   }
 ]
