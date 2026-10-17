@@ -45,6 +45,9 @@
     .sw:disabled { opacity: 0.45; cursor: not-allowed; }
     .sw.on-ok { background: #d1e7dd; border-color: #198754; color: #0f5132; font-weight: 600; }
     .sw.on-danger { background: #dc3545; border-color: #dc3545; color: #fff; font-weight: 600; }
+    .blk.txres { outline: 2px dashed #dc3545; outline-offset: -2px; }
+    .txtag { background: #dc3545; color: #fff; border-radius: 4px; padding: 0 5px; font-size: 0.75rem; }
+    #modeToggle button:disabled { opacity: 0.45; cursor: not-allowed; text-decoration: line-through; }
     .note { background: #fff3cd; color: #664d03; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .ok { background: #d1e7dd; color: #0f5132; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; min-width: 0; margin-bottom: 12px; }
@@ -440,6 +443,7 @@
 <section id="routerSection" class="hidden">
     <div class="card">
         <h2 id="routerTitle">Router</h2>
+        <div id="devWarn" class="hidden"></div>
         <div id="staleBar" class="hidden"></div>
         <div class="toolbar">
             <span class="small"><b>Mode</b></span>
@@ -930,7 +934,19 @@ function undoEdit() { const u = R.history.pop(); if (!u) return; for (const [pk,
 
 // ----- rendering -----
 function renderAll() { renderMode(); renderChGrid(); renderProposal(); renderCats(); renderSrcGrid(); renderSrcChs(); if (R.mode === "manual") { renderDstGrid(); renderSlots(); } else renderAssisted(); renderRouteLeft(); renderPending(); }
+// Per-device rules from the service: assisted mode off (e.g. IPG03B/04B) and delay groups used by the TX chain
+function curDev() { return (F.state?.devices || []).find(d => d.name === R.device) || null; }
+function txChainGroups() { return R.device ? (curDev()?.tx_chain_groups || []) : []; }
+function isTxChain(b) { return b && b.kind === "bank" && txChainGroups().includes(+b.block); }
 function renderMode() {
+    const off = R.device ? curDev()?.assisted_off : null;
+    if (off && R.mode === "assisted") R.mode = "manual";
+    const ab = $("modeToggle").querySelector('[data-m="assisted"]');
+    ab.disabled = !!off; ab.title = off ? `Assisted mode is off for ${R.device}: ${off}` : "";
+    const g = txChainGroups();
+    $("devWarn").className = off || g.length ? "alert" : "hidden";
+    $("devWarn").innerHTML = off || g.length ? `<b>${esc(R.device)}: ${off ? "assisted mode is off." : "careful with the delay banks."}</b> ${esc(off || "")}
+        ${g.length ? `Delay group${g.length > 1 ? "s" : ""} ${g.join(", ")} (banks ${g.map(x => `${firstBank(x)}–${firstBank(x) + 7}`).join(", ")}) carry the TX chain – do not route audio paths over them; they are marked <span class="txtag">TX chain</span>.` : ""}` : "";
     for (const b of $("modeToggle").children) b.classList.toggle("active", b.dataset.m === R.mode);
     $("dstManual").classList.toggle("hidden", R.mode !== "manual"); $("dstAssisted").classList.toggle("hidden", R.mode === "manual");
     document.querySelector(".layout").classList.toggle("assisted", R.mode === "assisted");
@@ -973,9 +989,9 @@ function renderCats() {
     $("dstCats").innerHTML = DST_CATS.map(c => { const n = catBlocks(DST_CATS, c.id, R.dstBlocks).length; return n ? `<button class="chip ${c.id === R.dstCat ? "active" : ""}" data-cat="${c.id}">${c.label}<span class="n">${n}</span>${pendKinds[c.kind] ? `<span class="pend">${pendKinds[c.kind]}</span>` : ""}</button>` : ""; }).join("");
 }
 function matches(b, f) { if (!f) return true; f = f.toLowerCase(); return String(b.block).toLowerCase() === f || [b.name, b.label, b.nm?.long, b.nm?.tip, b.range].some(x => String(x || "").toLowerCase().includes(f)); }
-function blockTitle(b) { let t = `${b.label} (${b.range || ""})`; if (b.nm?.tip) t += `\n${b.nm.tip}`; if (b.name) t += `\nSDP: ${b.name}`; if (!b.enabled) t += "\n(disabled / off)"; if (b.delayText) t += `\nDelay ${b.delayText}`; return t; }
+function blockTitle(b) { let t = `${b.label} (${b.range || ""})`; if (isTxChain(b)) t += "\n⚠ used for the TX chain on this device – do not use for audio paths"; if (b.nm?.tip) t += `\n${b.nm.tip}`; if (b.name) t += `\nSDP: ${b.name}`; if (!b.enabled) t += "\n(disabled / off)"; if (b.delayText) t += `\nDelay ${b.delayText}`; return t; }
 const firstBank = g => (g - 1) * 8 + 1;   // 16ch delay group g = banks firstBank(g) .. firstBank(g)+7
-function blockSub(b) { if (b.kind === "bank") return [`B${firstBank(b.block)}`, b.delayText.replace(" ms", ""), b.nm?.short].filter(Boolean).join(" "); return b.nm?.short || b.name || ""; }
+function blockSub(b) { if (isTxChain(b)) return `TX chain · B${firstBank(b.block)}`; if (b.kind === "bank") return [`B${firstBank(b.block)}`, b.delayText.replace(" ms", ""), b.nm?.short].filter(Boolean).join(" "); return b.nm?.short || b.name || ""; }
 function assistedSourceBlocks() {
     // assisted: only sources a channel actually uses per its RX row (Case A) or SDI input (Case B)
     const want = new Set();
@@ -1034,7 +1050,7 @@ function renderSrcGrid() {
     const marks = {};
     if (R.mode === "assisted" && R.selCh) for (const p of proposalFor(R.selCh)) if (p.bk) marks[p.bk] = (marks[p.bk] || "") + (p.field === "main" ? "M" : "B");
     $("srcGrid").innerHTML = list.map(b => { const bk = blockKey(b.kind, b.block);
-        return `<div class="blk ${bk === R.selSrcBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""} ${marks[bk] ? "prop" : ""}" draggable="true" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}${marks[bk] ? `\nproposed for ${R.byN[R.selCh].letter} ${marks[bk]}` : ""}">${marks[bk] ? `<span class="mb">${marks[bk]}</span>` : ""}${esc(b.kind === "deemb" ? `SDI ${R.byLetter[b.block]?.n ?? b.block}` : b.block)}<span class="sub">${esc(b.kind === "deemb" ? b.block + " " + (b.nm?.short || "") : blockSub(b))}</span></div>`;
+        return `<div class="blk ${bk === R.selSrcBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""} ${marks[bk] ? "prop" : ""} ${isTxChain(b) ? "txres" : ""}" draggable="true" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}${marks[bk] ? `\nproposed for ${R.byN[R.selCh].letter} ${marks[bk]}` : ""}">${marks[bk] ? `<span class="mb">${marks[bk]}</span>` : ""}${esc(b.kind === "deemb" ? `SDI ${R.byLetter[b.block]?.n ?? b.block}` : b.block)}<span class="sub">${esc(b.kind === "deemb" ? b.block + " " + (b.nm?.short || "") : blockSub(b))}</span></div>`;
     }).join("") || `<span class="small muted">no match</span>`;
 }
 function usedIds() { const u = new Set(); for (const k of R.dst.keys()) { u.add(value(k, "main")); u.add(value(k, "backup")); } return u; }
@@ -1056,7 +1072,7 @@ function renderDstGrid() {
     const pend = new Set([...R.pending.keys()].map(pk => { const d = R.dst.get(pk.split("|")[0]); return d ? blockKey(d.kind, d.block) : null; }));
     const f = $("dstFilter").value.trim();
     $("dstGrid").innerHTML = catBlocks(DST_CATS, R.dstCat, R.dstBlocks).filter(b => matches(b, f)).map(b => { const bk = blockKey(b.kind, b.block);
-        return `<div class="blk ${bk === R.selDstBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""}" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}">${pend.has(bk) ? '<span class="dot2"></span>' : ""}${esc(b.block)}<span class="sub">${esc(blockSub(b))}</span></div>`;
+        return `<div class="blk ${bk === R.selDstBlock ? "sel" : b.enabled ? "on" : "off"} ${hit.has(bk) ? "hit" : ""} ${isTxChain(b) ? "txres" : ""}" data-bk="${esc(bk)}" title="${esc(blockTitle(b))}">${pend.has(bk) ? '<span class="dot2"></span>' : ""}${esc(b.block)}<span class="sub">${esc(blockSub(b))}</span></div>`;
     }).join("") || `<span class="small muted">no match</span>`;
 }
 function slotRows(keys, opts = {}) {
