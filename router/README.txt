@@ -48,6 +48,8 @@ install-task-windows.ps1    one-time setup: registers the Windows Scheduled Task
 uninstall-task-windows.ps1  removes the task and the firewall rule again
 ../update-windows.ps1       git pull + restart (see Upgrading)
 ../Update-NeuronRouter.bat  double-click wrapper for the update (asks for admin rights)
+../Install-NeuronRouter.bat double-click install of the service (asks for admin rights)
+../Start-NeuronRouter.bat   run it in a console window for a quick test
 tests/                      offline tests, load test, JS check, live channel check
 
 Requirements
@@ -56,12 +58,16 @@ Python 3.8 or newer. Check (PowerShell): python --version
 If missing: https://www.python.org/downloads/windows/ (tick "Add python.exe to
 PATH"), or unzip the "Windows embeddable package" anywhere and put it on PATH.
 
-Install as a service (once, as Administrator)
----------------------------------------------
-1. Copy / clone the whole neuron-acp-toolkit repo to the Windows PC.
-2. PowerShell as Administrator, cd into the router folder.
-3. powershell -ExecutionPolicy Bypass -File .\install-task-windows.ps1
-4. Open http://localhost:8101/ (or http://<that-PC>:8101/ from another PC).
+Install as a service (once)
+---------------------------
+1. Clone the repo on the Windows server (git is needed for updates later):
+       git clone https://github.com/t-schaefer/neuron-acp-toolkit.git
+2. Double-click Install-NeuronRouter.bat in the repo root (asks for admin rights).
+   By hand instead: PowerShell as Administrator in the router folder,
+       powershell -ExecutionPolicy Bypass -File .\install-task-windows.ps1
+3. Open http://localhost:8101/ (or http://<that-PC>:8101/ from another PC).
+Only a quick test, no service: double-click Start-NeuronRouter.bat (runs in its
+window until you close it; not at the same time as the service - same port).
 The script finds Python, opens TCP 8101 in the firewall, registers a task that
 starts at boot as SYSTEM and restarts on failure, and starts it right away.
 
