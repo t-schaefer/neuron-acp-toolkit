@@ -60,6 +60,7 @@
     #sampleBar { background: #e7f1ff; border: 1px solid #9ec5fe; color: #084298; border-radius: 8px; padding: 10px 14px; margin: 8px 0 12px; font-size: 0.88rem; }
     #sampleBar .sb-steps { margin-top: 8px; } #sampleBar ol { margin: 4px 0 6px; padding-left: 22px; } #sampleBar li { margin: 2px 0; }
     #sampleBar #sampleClose { margin-left: 10px; }
+    .node.warnnode { background: #fff3cd; border-color: #f0c36d; }
     .note { background: #fff3cd; color: #664d03; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .ok { background: #d1e7dd; color: #0f5132; padding: 6px 10px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 10px; }
     .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; min-width: 0; margin-bottom: 12px; }
@@ -505,6 +506,7 @@
                 <button class="btn" id="sampleClose">Close example</button></div>
         </div>
         <div id="devWarn" class="hidden"></div>
+        <div id="listWarn" class="hidden"></div>
         <div id="staleBar" class="hidden"></div>
         <div class="toolbar">
             <span class="small"><b>Mode</b></span>
@@ -969,6 +971,7 @@ function loadModel(j) {
     $("routerTitle").innerHTML = `Router · <b>${esc(R.device || i.file)}</b> <span class="muted small">${esc(i.device)} · ${esc(i.ip)} · FW ${esc(i.version)} · ${i.source === "live" ? `live ACP2 read ${esc(ago(i.read_at))}` : i.source === "sample" ? "EXAMPLE – anonymised, offline" : "offline .cbf"}</span>`
 ;
     const n = R.names;
+    renderListWarn();
     $("namesInfo").innerHTML = !(n.lists || []).length ? "no SRC/DST list – names missing" : n.device ? `names: ${esc(n.lists.join(", "))} → <b>${esc(n.device)}</b>` : `<span class="warn">device not found in ${esc(n.lists.join(", "))}</span>`;
     const isCbf = i.source !== "live" && i.source !== "sample";
     $("applyLive").classList.toggle("hidden", isCbf); $("applyCbf").classList.toggle("hidden", !isCbf);
@@ -1088,6 +1091,9 @@ function proposalFor(n) {
                        label: `SDI ${s.sdi}`, name: chName(R.byLetter[s.deemb]?.n)?.short || "",
                        why: `video ${s.label} → De-Emb ${s.deemb} (${3072 + (s.sdi - 1) * 16 + 1}–${3072 + s.sdi * 16}) → delay group ${s.group} (B${firstBank(s.group)})`,
                        current, match: current === want });
+        } else if (s.case === "A") {        // IP input, but the DST list has no RX row for this path
+            out.push({ field, case: "A", unknown: true, label: "IP In ?", current,
+                       why: `video ${s.label} is an IP input, but the DST list has no RX row for video path ${R.byN[n].letter} – the stream is unknown` });
         } else {
             out.push({ field, case: null, label: `no source – video ${s.label || "Pattern"} unused`, current });
         }
@@ -1103,6 +1109,7 @@ function renderProposal() {
     box.innerHTML = proposalFor(R.selCh).map(p => {
         const head = `<div class="pc-h">${p.field === "main" ? "Main" : "Backup"} <span class="case ${caseCls(p.case)}">${caseLabel(p.case)}</span></div>`;
         if (!p.case) return `<div class="pcard idle">${head}<div class="pc-src">not used</div><div class="pc-sub">video input is Pattern – nothing to route</div></div>`;
+        if (p.unknown) return `<div class="pcard">${head}<div class="pc-src">IP In ?</div><div class="pc-sub warn">stream unknown – no SRC/DST list row</div><div class="pc-why">${esc(p.why)}</div></div>`;
         const sub = p.case === "A" ? `${esc(p.name)}` : `De-Emb ${esc(p.bk.split(":")[1])}${p.name ? " · " + esc(p.name) : ""}`;
         const st = p.match ? `<div class="pc-st st-ok">✓ routed</div>` : `<div class="pc-st st-wn">⚠ now ${esc(p.current)}</div>`;
         return `<div class="pcard ${p.bk === R.selSrcBlock ? "sel" : ""}" data-pbk="${esc(p.bk)}" data-pcat="${p.cat}" title="${esc(p.why)}">${head}
@@ -1265,6 +1272,12 @@ function sideFlow(n, field, side, a, both) {
         <div style="width:100%; display:flex; align-items:center; gap:6px">Target: <input type="number" step="0.1" min="0" max="${DELAY_MAX[side.case]}" value="${want}" data-delay="${delayId(side)}" title="what the template sets – not the device value"> ms
         ${pd.length ? `<span class="st st-pre">→ Preset: ${esc(pd.join("/"))} ms</span>` : atTarget ? '<span class="st st-ok">✓ device is at target</span>' : `<span class="st st-wn">⚠ differs – template would set ${want} ms</span>`}</div>
         ${side.case === "A" ? streamEffect(side.stream) : ""}</div>`;
+    if (side.case === "A" && side.stream == null) {     // IP input, but no RX row in the DST list: the stream is unknown
+        const now = fields.map(f => `${fields.length > 1 ? f + ": " : ""}${describeFeed(embKeys, f, activeOf)}`).join(" · ");
+        return `<div class="sidecol">${head}<div class="cflow">
+            <div class="node src warnnode"><b>IP In ?</b> <span class="sub">unknown – no RX row for video path ${L} (channel ${n}) in the DST list</span></div>${down}
+            <div class="node"><b>Embedder ${L}</b> <span class="sub">→ SDI out · now: ${esc(now)}</span></div></div></div>`;
+    }
     if (side.case === "A") {
         const sn = streamName("in", side.stream);
         const es = nodeStatus(embKeys, fields, `IP In ${side.stream}`);
@@ -1334,6 +1347,20 @@ function checkLine(n) {
         : `<span class="chk muted">shown from the routing read ${esc(ago(R.info.read_at))}</span>`;
     return `<button class="btn" data-check ${busy || R.checking ? "disabled" : ""} title="Fresh read-only ACP2 + NMOS check of this channel; the view is updated with the values read">${busy ? "Checking …" : "Check live"}</button>${st}`;
 }
+// Without the Cerebrum SRC/DST lists the router can not know which IP stream belongs to which video path
+function listProblem() {
+    const n = R.names || {};
+    if (!(n.lists || []).length) return { none: true, text: "No SRC/DST lists are loaded on this server" };
+    if (!n.device) return { none: false, text: `${R.device || "This device"} is not in the loaded lists (${(n.lists || []).join(", ")})` };
+    return null;
+}
+function renderListWarn() {
+    const p = listProblem(), el = $("listWarn");
+    if (!p || R.sample) { el.className = "hidden"; return; }
+    el.className = "alert";
+    el.innerHTML = `<b>${esc(p.text)}.</b> Without them the router cannot tell which IP stream feeds which video path – IP inputs and outputs show as unknown and stream names are missing. ${p.none ? "Load them once" : "Load lists that contain this device"}: <b>⚙ Setup → Paste route master</b> (Cerebrum route master: Sources = SRC, Destinations = DST) or upload the SRC / DST files. <button class="btn" id="listWarnSetup" style="margin-left:6px">Open Setup</button>`;
+}
+document.addEventListener("click", e => { if (e.target.id === "listWarnSetup") { $("setupCard").classList.remove("hidden"); $("setupBtn").classList.add("active"); $("setupCard").scrollIntoView({ behavior: "smooth" }); } });
 function basisHtml(n, a) {
     const c = R.byN[n], sides = a.sides || {}, i = R.info || {}, names = R.names || {};
     const rx = nameOf("rx", n), tx = nameOf("tx", n);
@@ -1345,7 +1372,7 @@ function basisHtml(n, a) {
         ? `${rx ? `<b>${esc(tail(rx.mnemonic))}</b> “${esc(rx.alt)}” → ARX-${rx.refs.join(", ")} → <b>IP In ${rx.refs[0]}</b>` : '<span class="warn">no RX row for this channel</span>'}<br>
            ${tx ? `<b>${esc(tail(tx.mnemonic))}</b> “${esc(tx.alt)}” → ATX-${tx.refs.join(", ")} → <b>IP Out ${tx.refs[0]}</b>` : '<span class="warn">no TX row for this channel</span>'}
            <span class="muted">(Cerebrum ${esc((names.lists || []).join(" + "))}, device ${esc(names.device)})</span>`
-        : '<span class="warn">no SRC/DST list for this device – IP streams cannot be assigned</span>');
+        : `<span class="warn">${esc(listProblem()?.text || "no SRC/DST list for this device")} – IP streams cannot be assigned (⚙ Setup → Paste route master)</span>`);
     for (const f of ["main", "backup"]) {
         const s = sides[f] || {};
         if (s.case === "B") h += row(`Delay group (${f})`, `SDI ${s.sdi} → <b>group ${s.group}</b> (banks ${firstBank(s.group)}–${firstBank(s.group) + 7}) <span class="muted">– ${esc(s.group_from || "")}</span>`);
