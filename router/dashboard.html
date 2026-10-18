@@ -403,7 +403,7 @@
         <li><b>Paste route master</b>: in Cerebrum select all rows of the route master, copy, paste into Setup, “Check”, then “Use as list”.
             <b>SRC</b> (sources) gives the IP Out names via TX rows / ATX streams; <b>DST</b> (destinations) gives the IP In names via RX rows / ARX streams.
             You need both. A new paste replaces the old list of the same kind (kept in <code>lists/replaced</code>).</li>
-        <li>Or upload the list files (.rtf / .csv / .tsv / .txt), or drop them on the page.</li>
+        <li>Or upload the list files (.xlsx / .rtf / .csv / .tsv / .txt), or drop them on the page.</li>
         <li><b>Data source</b>: “live device” (the ACP2 read) or an offline .cbf export to look at. A .cbf cannot be taken.</li>
         <li><b>Polling</b>: one tiny ACP2 request per released device every 30 s, for the online/offline status.</li>
     </ul></details>
@@ -430,7 +430,7 @@
         <div class="srow"><span class="sl">Devices</span><span><span id="summaryBar"></span> <span class="small muted">click to filter the device list</span></span></div>
         <div class="srow"><span class="sl">Polling</span><span><button class="btn" id="pauseBtn">…</button> <span class="muted small" id="lastUpdate"></span></span></div>
         <div class="srow"><span class="sl">SRC/DST lists</span><span><span class="small" id="listsInfo"></span>
-            <label class="btn" title="Cerebrum SRC or DST route list (.rtf/.csv/.tsv/.txt)">Upload SRC/DST list<input type="file" id="listInput" accept=".rtf,.csv,.tsv,.txt" class="hidden" multiple></label>
+            <label class="btn" title="Cerebrum SRC or DST route list (.xlsx/.rtf/.csv/.tsv/.txt)">Upload SRC/DST list<input type="file" id="listInput" accept=".xlsx,.rtf,.csv,.tsv,.txt" class="hidden" multiple></label>
             <span class="small muted" id="namesInfo"></span></span></div>
         <div class="srow top"><span class="sl">Paste route master</span><div class="pastebox">
             <div class="small muted">In Cerebrum open the route master (Sources or Destinations), select all rows (Ctrl+A), copy (Ctrl+C) and paste here.

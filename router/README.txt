@@ -41,7 +41,7 @@ route_lists.py              Cerebrum SRC / DST route lists -> stream and channel
 devices.example.json        the tracked starting device list (20 IPG units)
 devices.json                (auto-created, not in git) the LIVE device list - edit this one
 devices.seeded.json         (auto-created, not in git) remembers which example entries were offered
-lists/                      (not in git) Cerebrum SRC.rtf / DST.rtf (or .csv/.tsv/.txt)
+lists/                      (not in git) Cerebrum SRC / DST lists (.xlsx, .rtf, .csv, .tsv, .txt)
 live/                       (not in git) ACP2 routing snapshots, one per device
 cbf/, exports/              (not in git) optional offline .cbf files and patched copies
 install-task-windows.ps1    one-time setup: registers the Windows Scheduled Task

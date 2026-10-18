@@ -16,12 +16,15 @@ channel n -> stream n; some rows list 1 or 3 refs). Nothing here assumes a
 formula: every name comes from the row that actually references that stream.
 See docs/id-formulas.md and docs/lessons-learned.md for why.
 
-Accepted file formats: .csv (semicolon), .tsv/.txt (tab), and .rtf as saved
-by TextEdit (tab-separated lines ending in a backslash).
+Accepted file formats: .csv (semicolon), .tsv/.txt (tab), .rtf as saved by
+TextEdit (tab-separated lines ending in a backslash), and .xlsx (first sheet,
+as exported from Cerebrum / Excel - read with the standard library only).
 """
 import csv
 import io
 import re
+import zipfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 CHANNEL_ROW_RE = re.compile(r'^(?P<site>[A-Z]+)\.(?P<dev>[^.]+?)-(?P<dir>TX|RX)(?P<n>\d+)$')  # not the ".A-" audio-only rows
@@ -85,9 +88,53 @@ def _rtf_to_text(raw):
     return ''.join(out)
 
 
+_XNS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+
+
+def _xlsx_rows(data):
+    """First worksheet of an .xlsx as lists of strings (shared + inline strings, numbers)."""
+    z = zipfile.ZipFile(io.BytesIO(data))
+    names = set(z.namelist())
+    sheet = "xl/worksheets/sheet1.xml" if "xl/worksheets/sheet1.xml" in names else \
+        sorted(n for n in names if n.startswith("xl/worksheets/sheet"))[0]
+    for part in ("xl/sharedStrings.xml", sheet):
+        if part in names and b"<!DOCTYPE" in z.open(part).read(4096):
+            raise ValueError("unexpected DOCTYPE in the .xlsx - not a normal Excel file")
+    shared = []
+    if "xl/sharedStrings.xml" in names:
+        shared = ["".join(t.text or "" for t in si.iter(_XNS + "t"))
+                  for si in ET.fromstring(z.read("xl/sharedStrings.xml")).findall(_XNS + "si")]
+    rows = []
+    for _, el in ET.iterparse(z.open(sheet)):
+        if el.tag != _XNS + "row":
+            continue
+        cells = {}
+        for c in el.findall(_XNS + "c"):
+            ref = re.match(r"[A-Z]+", c.get("r") or "")
+            if not ref:
+                continue
+            ci = 0
+            for ch in ref.group(0):
+                ci = ci * 26 + ord(ch) - 64
+            v, t = c.find(_XNS + "v"), c.get("t")
+            if t == "s" and v is not None:
+                val = shared[int(v.text)]
+            elif t == "inlineStr":
+                val = "".join(x.text or "" for x in c.iter(_XNS + "t"))
+            else:
+                val = v.text if v is not None else ""
+            cells[ci - 1] = val or ""
+        if cells:
+            rows.append([cells.get(i, "") for i in range(max(cells) + 1)])
+        el.clear()
+    return rows
+
+
 def read_rows(path):
     path = Path(path)
     data = path.read_bytes()
+    if data[:2] == b"PK":                                   # .xlsx (a zip)
+        return [r for r in _xlsx_rows(data) if any(c.strip() for c in r)]
     if data.startswith(b'{\\rtf'):
         text = _rtf_to_text(data.decode('latin-1'))
     else:
