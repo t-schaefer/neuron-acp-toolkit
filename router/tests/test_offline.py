@@ -326,6 +326,32 @@ class TakeTests(unittest.TestCase):
         self.assertEqual(self.fake.set_attempts, [])
 
 
+class XlsxTests(unittest.TestCase):
+    """A route master saved as .xlsx (Cerebrum / Excel) reads like the .tsv."""
+    def test_xlsx_list(self):
+        import zipfile, io
+        rows = [["_ID", "_Mnemonic", "_Alternate Mnemonic 1", "_TL Group", "_Level ID 1", "_Level ID 2"],
+                ["5351", "DCB.IPG8B-RX31", "EVS 08 IP 7", "0", "NMOS2|154|DCB.IPG08B|VRX-31", "NMOS2|154|DCB.IPG08B|ARX-121"]]
+        strings = sorted({c for r in rows for c in r})
+        sheet = "".join(f'<row r="{i + 1}">' + "".join(
+            f'<c r="{chr(65 + j)}{i + 1}" t="s"><v>{strings.index(c)}</v></c>' for j, c in enumerate(r)) + "</row>"
+            for i, r in enumerate(rows))
+        ns = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            z.writestr("xl/sharedStrings.xml", f'<sst {ns}>' + "".join(f"<si><t>{x}</t></si>" for x in strings) + "</sst>")
+            z.writestr("xl/worksheets/sheet1.xml", f'<worksheet {ns}><sheetData>{sheet}</sheetData></worksheet>')
+        with tempfile.NamedTemporaryFile(suffix=".part", delete=False) as f:
+            f.write(buf.getvalue())
+        try:
+            p = parse_list(f.name)
+        finally:
+            Path(f.name).unlink()
+        self.assertEqual(p["kind"], "DST")
+        self.assertEqual(p["devices"]["IPG8B"]["RX"][31]["refs"], [121])
+        self.assertEqual(p["devices"]["IPG8B"]["RX"][31]["alt"], "EVS 08 IP 7")
+
+
 class PasteTests(unittest.TestCase):
     """Route master pasted out of Cerebrum, with and without the header row."""
     SRC = ("_ID\t_Mnemonic\t_Alternate Mnemonic 1\t_TL Inhibit\t_Level ID 1\t_Level ID 2\t_Level ID 3\n"

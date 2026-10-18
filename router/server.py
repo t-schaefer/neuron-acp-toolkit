@@ -92,7 +92,7 @@ _lists_cache = {}
 _state_cache = {"t": 0, "raw": b"", "gz": b""}
 
 SAFE_CBF_RE = re.compile(r'^[\w .\-()]+\.cbf$', re.IGNORECASE)
-SAFE_LIST_RE = re.compile(r'^[\w .\-()]+\.(rtf|csv|tsv|txt)$', re.IGNORECASE)
+SAFE_LIST_RE = re.compile(r'^[\w .\-()]+\.(rtf|csv|tsv|txt|xlsx)$', re.IGNORECASE)
 IP_RE = re.compile(r'^\d{1,3}(\.\d{1,3}){3}$')
 NAME_RE = re.compile(r'^[\w .\-]{1,40}$')
 
